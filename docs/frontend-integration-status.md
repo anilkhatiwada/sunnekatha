@@ -25,7 +25,8 @@ blocked, or materially changed.
 | Homepage | Completed locally | Uses the aggregate `/home/` response and preserves backend section order |
 | Public catalog | Completed locally | Explore, taxonomy, tracks, playlists, authors, and narrators use remote services |
 | Audio stream authorization | Completed locally | Stream URL is requested only after playback intent |
-| Live browser verification | **Blocked** | Deployed backend does not currently allow the frontend origin through CORS |
+| Frontend deployment | Deployed to staging IP | Commit `9536ce9` runs on the existing Lightsail instance |
+| Live API verification | Partially verified | HTTP smoke tests pass; normal-browser data verification remains pending |
 | Search | Pending | Still uses local mock search |
 | Authentication and profile | Pending | JWT client foundation exists, but user-facing authentication is not connected |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
@@ -109,12 +110,17 @@ blocked, or materially changed.
 
 ## Blocked work
 
-### Browser CORS verification
+### Production domain and browser verification
 
-The deployed API responded to direct health and homepage requests, but did not
-return an `Access-Control-Allow-Origin` header for the tested frontend origin.
-Consequently, browser-based remote integration cannot yet be considered
-verified.
+The frontend is available from `http://13.205.30.123/`, with Nginx serving the
+Next.js application and preserving Django under `/api/`, `/admin/`, `/static/`,
+and `/media/`. The frontend and API are same-origin for this staging-IP build,
+so CORS is not required for that temporary route.
+
+Production domain verification remains incomplete. The final frontend will use
+`https://sunnekatha.com`, while the API will use
+`https://api.sunnekatha.com/api/v1`; those origins require restricted CORS and
+CSRF configuration.
 
 Required actions:
 
@@ -128,6 +134,31 @@ Required actions:
   actual browser origin.
 - [ ] Replace the temporary HTTP/IP API URL with an HTTPS API domain before
   production.
+
+### Current deployment
+
+- Commit: `9536ce9`
+- Frontend service: `sunnekatha-frontend.service`
+- Frontend runtime: Node.js 22.23.1 and Next.js 16.2.10
+- Frontend upstream: `127.0.0.1:3000`
+- Public staging URL: `http://13.205.30.123/`
+- API staging URL: `http://13.205.30.123/api/v1`
+- Fixed monthly cost added: `$0`
+
+Verified after deployment:
+
+- [x] Frontend root returns HTTP 200.
+- [x] Web app manifest returns HTTP 200.
+- [x] Django health endpoint returns HTTP 200.
+- [x] Django Admin remains reachable and redirects to its login page.
+- [x] Aggregated homepage API returns HTTP 200 and valid JSON.
+- [x] Frontend, Gunicorn, Celery worker, Celery Beat, and Nginx services are
+  active.
+- [x] Nginx configuration validation passes.
+- [x] The rendered application shell, navigation, and player are present.
+- [ ] Complete homepage data verification in a normal browser. The automated
+  in-app browser used during deployment does not expose `window.fetch`, so it
+  cannot validate client-side API requests.
 
 ## Known limitations
 
