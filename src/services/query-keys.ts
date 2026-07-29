@@ -3,6 +3,7 @@ import type { ContentType, SearchResultType } from "@/types";
 export const queryKeys = {
   home: {
     all: ["home"] as const,
+    detail: () => [...queryKeys.home.all, "detail"] as const,
     featuredPlaylists: () =>
       [...queryKeys.home.all, "featured-playlists"] as const,
     continueListening: () =>

@@ -14,6 +14,8 @@ export {
   getInitialUserLibrary,
   getLibraryCatalog,
 } from "@/services/library-service";
+export { getHomePage, mapHomeResponse } from "@/services/home-service";
+export { getTrackStream } from "@/services/media-service";
 export {
   getNarratorBySlug,
   getNarratorFeaturedPlaylists,
@@ -47,8 +49,28 @@ export {
 export { apiClient } from "@/services/api-client";
 export { ApiError, normalizeApiError } from "@/services/api-error";
 export {
+  DEFAULT_ARTWORK_PATH,
+  DEFAULT_AVATAR_PATH,
+  mapAuthenticatedUser,
+  mapAuthor,
+  mapAuthorSummary,
+  mapCompactPlaylist,
+  mapCompactTrack,
+  mapDetailedTrack,
+  mapListeningProgress,
+  mapNarratorSummary,
+  mapNarrator,
+  mapPlayableTrack,
+  mapPlaylistDetail,
+  mapTaxonomy,
+} from "@/services/api-mappers";
+export type {
+  AuthenticatedUserDomain,
+} from "@/services/api-mappers";
+export {
   clearAuthSession,
   configureAuthSession,
-  setAccessToken,
+  createBrowserAuthSession,
+  setAuthTokens,
 } from "@/services/auth-session";
 export { queryKeys } from "@/services/query-keys";

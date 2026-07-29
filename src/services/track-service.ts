@@ -1,8 +1,19 @@
 import { tracks, userLibrary } from "@/data";
+import { environment } from "@/config/environment";
+import { apiClient } from "@/services/api-client";
+import { mapCompactTrack, mapDetailedTrack } from "@/services/api-mappers";
 import { mockApiResponse } from "@/services/mock-api";
-import type { ContinueListeningItem, Track } from "@/types";
+import { nullOnNotFound, unwrapPage } from "@/services/public-api-utils";
+import type { ApiDetailedTrack, ApiTrackPage } from "@/types/backend-api";
+import type { CatalogTrack, ContinueListeningItem } from "@/types";
 
-export async function getTrendingTracks(): Promise<Track[]> {
+export async function getTrendingTracks(): Promise<CatalogTrack[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTrackPage>("/tracks/trending/", {
+      query: { pageSize: 12 },
+    });
+    return unwrapPage(payload).map(mapCompactTrack);
+  }
   const trending = [...tracks]
     .sort((a, b) => b.playCount - a.playCount)
     .slice(0, 12);
@@ -10,7 +21,13 @@ export async function getTrendingTracks(): Promise<Track[]> {
   return mockApiResponse(trending);
 }
 
-export async function getRecentlyAddedTracks(): Promise<Track[]> {
+export async function getRecentlyAddedTracks(): Promise<CatalogTrack[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTrackPage>("/tracks/recent/", {
+      query: { pageSize: 12 },
+    });
+    return unwrapPage(payload).map(mapCompactTrack);
+  }
   const recentlyAdded = [...tracks]
     .sort(
       (a, b) =>
@@ -39,16 +56,31 @@ export async function getContinueListening(): Promise<
   return mockApiResponse(items);
 }
 
-export async function getTrackBySlug(slug: string): Promise<Track | null> {
+export async function getTrackBySlug(slug: string): Promise<CatalogTrack | null> {
+  if (environment.apiMode === "remote") {
+    const payload = await nullOnNotFound(
+      apiClient.get<ApiDetailedTrack>(`/tracks/${slug}/`),
+    );
+    return payload ? mapDetailedTrack(payload) : null;
+  }
   const track = tracks.find((item) => item.slug === slug) ?? null;
   return mockApiResponse(track, undefined, null);
 }
 
 export async function getSimilarTracks(
-  trackId: string,
+  trackSlug: string,
   limit = 6,
-): Promise<Track[]> {
-  const sourceTrack = tracks.find((track) => track.id === trackId);
+): Promise<CatalogTrack[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTrackPage>(
+      `/tracks/${trackSlug}/related/`,
+      { query: { pageSize: limit } },
+    );
+    return unwrapPage(payload).map(mapCompactTrack);
+  }
+  const sourceTrack = tracks.find(
+    (track) => track.id === trackSlug || track.slug === trackSlug,
+  );
 
   if (!sourceTrack) {
     return mockApiResponse([]);

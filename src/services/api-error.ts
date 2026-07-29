@@ -6,6 +6,7 @@ export class ApiError extends Error {
   readonly status: number | null;
   readonly code: string;
   readonly fieldErrors: ApiFieldErrors;
+  readonly retryAfterSeconds: number | null;
   readonly cause?: unknown;
 
   constructor({
@@ -13,12 +14,14 @@ export class ApiError extends Error {
     status = null,
     code = "unknown_error",
     fieldErrors = {},
+    retryAfterSeconds = null,
     cause,
   }: {
     message?: string;
     status?: number | null;
     code?: string;
     fieldErrors?: ApiFieldErrors;
+    retryAfterSeconds?: number | null;
     cause?: unknown;
   } = {}) {
     super(message);
@@ -26,6 +29,7 @@ export class ApiError extends Error {
     this.status = status;
     this.code = code;
     this.fieldErrors = fieldErrors;
+    this.retryAfterSeconds = retryAfterSeconds;
     this.cause = cause;
   }
 }
@@ -43,6 +47,7 @@ export async function normalizeApiError(
       code: payload.code ?? `http_${response.status}`,
       message: payload.detail ?? getStatusMessage(response.status),
       fieldErrors: payload.errors ?? {},
+      retryAfterSeconds: parseRetryAfter(response.headers.get("Retry-After")),
       cause: error,
     });
   }
@@ -105,6 +110,17 @@ function getStatusMessage(status: number) {
   if (status === 401) return "कृपया फेरि साइन इन गर्नुहोस्।";
   if (status === 403) return "यो कार्य गर्न अनुमति छैन।";
   if (status === 404) return "मागिएको सामग्री भेटिएन।";
+  if (status === 429) return "धेरै अनुरोध भए। केहीबेरपछि फेरि प्रयास गर्नुहोस्।";
   if (status >= 500) return "सर्भरमा समस्या भयो।";
   return DEFAULT_ERROR_MESSAGE;
+}
+
+function parseRetryAfter(value: string | null) {
+  if (!value) return null;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds;
+
+  const retryDate = Date.parse(value);
+  if (Number.isNaN(retryDate)) return null;
+  return Math.max(0, Math.ceil((retryDate - Date.now()) / 1000));
 }

@@ -1,8 +1,35 @@
 import { authors, playlists, tracks } from "@/data";
+import { environment } from "@/config/environment";
+import { apiClient } from "@/services/api-client";
+import {
+  mapAuthor,
+  mapAuthorSummary,
+  mapCompactTrack,
+} from "@/services/api-mappers";
 import { mockApiResponse } from "@/services/mock-api";
-import type { Author, Playlist, Track } from "@/types";
+import { nullOnNotFound, unwrapPage } from "@/services/public-api-utils";
+import type {
+  ApiAuthor,
+  ApiAuthorSummary,
+  ApiTrackPage,
+} from "@/types/backend-api";
+import type { Author, CatalogPlaylist, CatalogTrack } from "@/types";
 
 export async function getPopularAuthors(): Promise<Author[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<{
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: ApiAuthorSummary[];
+    }>("/authors/featured/", { query: { pageSize: 8 } });
+    return unwrapPage(payload).map((value) => ({
+      ...mapAuthorSummary(value),
+      biography: "",
+      genres: [],
+      popularTracks: [],
+    }));
+  }
   const popularAuthors = [...authors]
     .sort(
       (a, b) =>
@@ -15,11 +42,24 @@ export async function getPopularAuthors(): Promise<Author[]> {
 }
 
 export async function getAuthorBySlug(slug: string): Promise<Author | null> {
+  if (environment.apiMode === "remote") {
+    const payload = await nullOnNotFound(
+      apiClient.get<ApiAuthor>(`/authors/${slug}/`),
+    );
+    return payload ? mapAuthor(payload) : null;
+  }
   const author = authors.find((item) => item.slug === slug) ?? null;
   return mockApiResponse(author, undefined, null);
 }
 
-export async function getAuthorTracks(authorId: string): Promise<Track[]> {
+export async function getAuthorTracks(authorId: string): Promise<CatalogTrack[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTrackPage>(
+      `/tracks/author/${authorId}/`,
+      { query: { ordering: "-play_count_cache", pageSize: 40 } },
+    );
+    return unwrapPage(payload).map(mapCompactTrack);
+  }
   const authorTracks = tracks
     .filter((track) => track.author.id === authorId)
     .sort((a, b) => b.playCount - a.playCount);
@@ -29,7 +69,8 @@ export async function getAuthorTracks(authorId: string): Promise<Track[]> {
 
 export async function getAuthorFeaturedCollections(
   authorId: string,
-): Promise<Playlist[]> {
+): Promise<CatalogPlaylist[]> {
+  if (environment.apiMode === "remote") return [];
   const collections = playlists
     .map((playlist) => ({
       playlist,
@@ -53,6 +94,7 @@ export async function getRelatedAuthors(
   authorId: string,
   limit = 6,
 ): Promise<Author[]> {
+  if (environment.apiMode === "remote") return [];
   const sourceAuthor = authors.find((author) => author.id === authorId);
 
   if (!sourceAuthor) {

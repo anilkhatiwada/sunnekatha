@@ -6,10 +6,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatPlayerTime } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { ContentType, Track } from "@/types";
+import type { CatalogTrack, ContentType } from "@/types";
 
 interface PlaylistTrackRowProps {
-  track: Track;
+  track: CatalogTrack;
   index: number;
   isActive: boolean;
   onPlay: () => void;

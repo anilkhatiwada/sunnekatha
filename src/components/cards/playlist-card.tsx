@@ -6,19 +6,19 @@ import {
   MediaArtwork,
 } from "@/components/cards/card-primitives";
 import { LoadingSkeleton } from "@/components/common/loading-skeleton";
-import type { Playlist } from "@/types";
+import type { CatalogPlaylist, Playlist } from "@/types";
 
-interface PlaylistCardProps {
-  playlist: Playlist;
-  onPlay: (playlist: Playlist) => void;
+interface PlaylistCardProps<TPlaylist extends CatalogPlaylist | Playlist> {
+  playlist: TPlaylist;
+  onPlay: (playlist: TPlaylist) => void;
   priority?: boolean;
 }
 
-export function PlaylistCard({
+export function PlaylistCard<TPlaylist extends CatalogPlaylist | Playlist>({
   playlist,
   onPlay,
   priority = false,
-}: PlaylistCardProps) {
+}: PlaylistCardProps<TPlaylist>) {
   return (
     <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
       <MediaArtwork
@@ -35,6 +35,7 @@ export function PlaylistCard({
         <CardPlayButton
           label={`${playlist.title} प्लेलिस्ट बजाउनुहोस्`}
           onPlay={() => onPlay(playlist)}
+          disabled={playlist.tracks.length === 0}
           className="absolute right-3 bottom-3 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
         />
       </MediaArtwork>

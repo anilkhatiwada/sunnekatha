@@ -19,7 +19,7 @@ import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/features/library/library-store";
-import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { formatDuration } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -29,7 +29,7 @@ import {
   getTrackBySlug,
   queryKeys,
 } from "@/services";
-import type { ContentType, Track } from "@/types";
+import type { ContentType } from "@/types";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   poem: "कविता",
@@ -63,11 +63,11 @@ export function TrackDetailPageContent({
     enabled: Boolean(track),
   });
   const similarQuery = useQuery({
-    queryKey: queryKeys.tracks.similar(track?.id),
-    queryFn: () => getSimilarTracks(track!.id),
+    queryKey: queryKeys.tracks.similar(track?.slug),
+    queryFn: () => getSimilarTracks(track!.slug),
     enabled: Boolean(track),
   });
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack } = useCatalogPlayback();
   const favoriteTrackIds = useLibraryStore(
     (state) => state.favoriteTrackIds,
   );
@@ -97,8 +97,6 @@ export function TrackDetailPageContent({
   const isFavorite = favoriteTrackIds.includes(track.id);
   const author = authorQuery.data;
   const narrator = narratorQuery.data;
-
-  const playTrack = (selectedTrack: Track) => replaceQueue([selectedTrack]);
 
   return (
     <div className="space-y-14 pb-8">
@@ -174,7 +172,7 @@ export function TrackDetailPageContent({
               <Button
                 type="button"
                 size="lg"
-                onClick={() => playTrack(track)}
+                onClick={() => void playTrack(track)}
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
@@ -287,7 +285,10 @@ export function TrackDetailPageContent({
                 key={similarTrack.id}
                 className="w-[70vw] max-w-56 shrink-0 snap-start sm:w-52"
               >
-                <TrackCard track={similarTrack} onPlay={playTrack} />
+                <TrackCard
+                  track={similarTrack}
+                  onPlay={(selectedTrack) => void playTrack(selectedTrack)}
+                />
               </div>
             ))}
       </HorizontalSection>

@@ -15,6 +15,31 @@ export type {
 } from "@/types/api";
 export type { ContentType, Language } from "@/types/common";
 export type {
+  ApiAuthenticatedUser,
+  ApiAuthor,
+  ApiAuthorSummary,
+  ApiCompactPlaylist,
+  ApiCompactTrack,
+  ApiContinueListeningItem,
+  ApiDetailedTrack,
+  ApiGroupedSearchResponse,
+  ApiHomeResponse,
+  ApiHomeSection,
+  ApiListeningProgress,
+  ApiNarrator,
+  ApiNarratorSummary,
+  ApiPlaylistDetail,
+  ApiPlaylistPage,
+  ApiQueueItem,
+  ApiStreamResponse,
+  ApiTaxonomy,
+  ApiTrackPage,
+  ApiUploadInstructions,
+  ApiUploadSession,
+  ApiUploadURLResponse,
+  ApiUserQueue,
+} from "@/types/backend-api";
+export type {
   ContinueListeningItem,
   Genre,
   ListeningProgress,
@@ -22,11 +47,25 @@ export type {
   QueueItem,
   UserLibrary,
 } from "@/types/library";
+export type {
+  HomeAlbum,
+  HomeContinueListeningItem,
+  HomeHero,
+  HomePageData,
+  HomeSection,
+} from "@/types/home";
 export type { Narrator, NarratorSummary } from "@/types/narrator";
-export type { Playlist } from "@/types/playlist";
+export type {
+  CatalogPlaylist,
+  Playlist,
+} from "@/types/playlist";
 export type {
   SearchRequest,
   SearchResults,
   SearchResultType,
 } from "@/types/search";
-export type { LiteraryWorkSummary, Track } from "@/types/track";
+export type {
+  CatalogTrack,
+  LiteraryWorkSummary,
+  Track,
+} from "@/types/track";

@@ -9,19 +9,19 @@ import {
 } from "@/components/cards/card-primitives";
 import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { formatDuration } from "@/lib/formatters";
-import type { Track } from "@/types";
+import type { CatalogTrack } from "@/types";
 
-interface TrackCardProps {
-  track: Track;
-  onPlay: (track: Track) => void;
+interface TrackCardProps<TTrack extends CatalogTrack> {
+  track: TTrack;
+  onPlay: (track: TTrack) => void;
   priority?: boolean;
 }
 
-export function TrackCard({
+export function TrackCard<TTrack extends CatalogTrack>({
   track,
   onPlay,
   priority = false,
-}: TrackCardProps) {
+}: TrackCardProps<TTrack>) {
   return (
     <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
       <MediaArtwork

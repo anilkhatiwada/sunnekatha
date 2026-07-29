@@ -10,17 +10,20 @@ import {
   formatPlayerTime,
   getProgressPercentage,
 } from "@/lib/formatters";
-import type { ContinueListeningItem, Track } from "@/types";
+import type { CatalogTrack, ListeningProgress } from "@/types";
 
-interface ContinueListeningCardProps {
-  item: ContinueListeningItem;
-  onPlay: (track: Track) => void;
+interface ContinueListeningCardProps<TTrack extends CatalogTrack> {
+  item: {
+    track: TTrack;
+    progress: ListeningProgress;
+  };
+  onPlay: (track: TTrack) => void;
 }
 
-export function ContinueListeningCard({
+export function ContinueListeningCard<TTrack extends CatalogTrack>({
   item,
   onPlay,
-}: ContinueListeningCardProps) {
+}: ContinueListeningCardProps<TTrack>) {
   const { track, progress } = item;
   const percentage = getProgressPercentage(
     progress.progressSeconds,

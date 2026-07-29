@@ -1,4 +1,4 @@
-import type { Track } from "@/types/track";
+import type { CatalogTrack, Track } from "@/types/track";
 
 export interface Playlist {
   id: string;
@@ -13,3 +13,7 @@ export interface Playlist {
   category: string;
   isFeatured: boolean;
 }
+
+export type CatalogPlaylist = Omit<Playlist, "tracks"> & {
+  tracks: CatalogTrack[];
+};

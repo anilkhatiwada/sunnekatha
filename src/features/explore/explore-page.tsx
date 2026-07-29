@@ -21,7 +21,7 @@ import {
   EXPLORE_FILTERS,
   type ExploreFilter,
 } from "@/features/explore/explore-config";
-import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import {
   getExploreTracks,
   getFeaturedPlaylists,
@@ -31,7 +31,7 @@ import {
   getPopularNarrators,
   queryKeys,
 } from "@/services";
-import type { ContentType, Playlist } from "@/types";
+import type { CatalogPlaylist, ContentType } from "@/types";
 
 interface ExplorePageContentProps {
   activeFilter: ExploreFilter["value"];
@@ -49,8 +49,7 @@ export function ExplorePageContent({
   genre,
   mood,
 }: ExplorePageContentProps) {
-  const playTrack = usePlayerStore((state) => state.play);
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack, playCollection } = useCatalogPlayback();
   const contentType =
     activeFilter === "all" ? undefined : (activeFilter as ContentType);
 
@@ -79,8 +78,8 @@ export function ExplorePageContent({
     queryFn: getPopularNarrators,
   });
 
-  const playPlaylist = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
+  const playPlaylist = (playlist: CatalogPlaylist) =>
+    void playCollection(playlist.tracks);
   const activeCollection =
     genresQuery.data?.find((item) => item.slug === genre) ??
     moodsQuery.data?.find((item) => item.slug === mood);
@@ -152,7 +151,7 @@ export function ExplorePageContent({
               <TrackCard
                 key={track.id}
                 track={track}
-                onPlay={playTrack}
+                onPlay={(track) => void playTrack(track)}
               />
             ))}
           </div>

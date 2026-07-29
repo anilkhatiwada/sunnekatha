@@ -1,9 +1,13 @@
 import { environment } from "@/config/environment";
-import { normalizeApiError } from "@/services/api-error";
-import { getAuthSessionAdapter } from "@/services/auth-session";
+import { ApiError, normalizeApiError } from "@/services/api-error";
+import {
+  getAuthSessionAdapter,
+  type AuthSessionAdapter,
+} from "@/services/auth-session";
 
 type QueryValue = string | number | boolean | null | undefined;
 type QueryParams = Record<string, QueryValue | QueryValue[]>;
+type RequestBody = Record<string, unknown> | unknown[] | BodyInit;
 
 export interface ApiRequestOptions<TBody = never> {
   body?: TBody;
@@ -17,12 +21,21 @@ interface InternalRequestOptions<TBody> extends ApiRequestOptions<TBody> {
   hasRetriedAuthentication?: boolean;
 }
 
-class ApiClient {
+interface ApiClientDependencies {
+  fetch: typeof fetch;
+  getAuthSession: () => AuthSessionAdapter;
+}
+
+export class ApiClient {
   private refreshPromise: Promise<boolean> | null = null;
 
   constructor(
     private readonly baseUrl: string,
     private readonly timeoutMs: number,
+    private readonly dependencies: ApiClientDependencies = {
+      fetch: globalThis.fetch,
+      getAuthSession: getAuthSessionAdapter,
+    },
   ) {}
 
   get<TResponse>(
@@ -32,64 +45,70 @@ class ApiClient {
     return this.request<TResponse>("GET", path, options);
   }
 
-  post<TResponse, TBody = never>(
+  post<TResponse, TBody extends RequestBody = never>(
     path: string,
     options?: ApiRequestOptions<TBody>,
   ): Promise<TResponse> {
     return this.request<TResponse, TBody>("POST", path, options);
   }
 
-  put<TResponse, TBody = never>(
+  put<TResponse, TBody extends RequestBody = never>(
     path: string,
     options?: ApiRequestOptions<TBody>,
   ): Promise<TResponse> {
     return this.request<TResponse, TBody>("PUT", path, options);
   }
 
-  patch<TResponse, TBody = never>(
+  patch<TResponse, TBody extends RequestBody = never>(
     path: string,
     options?: ApiRequestOptions<TBody>,
   ): Promise<TResponse> {
     return this.request<TResponse, TBody>("PATCH", path, options);
   }
 
-  delete<TResponse = void>(
+  delete<TResponse = void, TBody extends RequestBody = never>(
     path: string,
-    options?: ApiRequestOptions,
+    options?: ApiRequestOptions<TBody>,
   ): Promise<TResponse> {
-    return this.request<TResponse>("DELETE", path, options);
+    return this.request<TResponse, TBody>("DELETE", path, options);
   }
 
-  private async request<TResponse, TBody = never>(
+  private async request<
+    TResponse,
+    TBody extends RequestBody = never,
+  >(
     method: string,
     path: string,
     options: InternalRequestOptions<TBody> = {},
   ): Promise<TResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+    let didTimeout = false;
+    const timeoutId = setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, this.timeoutMs);
     const signal = combineSignals(options.signal, controller.signal);
-    const authSession = getAuthSessionAdapter();
+    const authSession = this.dependencies.getAuthSession();
     const accessToken = options.requiresAuth
       ? authSession.getAccessToken()
       : null;
+    const { body, contentType } = serializeBody(options.body);
 
     try {
-      const response = await fetch(this.createUrl(path, options.query), {
-        method,
-        signal,
-        headers: {
-          Accept: "application/json",
-          ...(options.body === undefined
-            ? {}
-            : { "Content-Type": "application/json" }),
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          ...options.headers,
+      const response = await this.dependencies.fetch(
+        this.createUrl(path, options.query),
+        {
+          method,
+          signal,
+          headers: {
+            Accept: "application/json",
+            ...(contentType ? { "Content-Type": contentType } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...options.headers,
+          },
+          body,
         },
-        body:
-          options.body === undefined
-            ? undefined
-            : JSON.stringify(options.body),
-      });
+      );
 
       if (
         response.status === 401 &&
@@ -110,6 +129,13 @@ class ApiClient {
       if (response.status === 204) return undefined as TResponse;
       return (await response.json()) as TResponse;
     } catch (error) {
+      if (didTimeout) {
+        throw new ApiError({
+          code: "request_timeout",
+          message: "सर्भरले समयमा जवाफ दिएन। फेरि प्रयास गर्नुहोस्।",
+          cause: error,
+        });
+      }
       throw await normalizeApiError(error);
     } finally {
       clearTimeout(timeoutId);
@@ -134,11 +160,12 @@ class ApiClient {
 
   private async refreshAuthentication() {
     if (!this.refreshPromise) {
-      this.refreshPromise = getAuthSessionAdapter()
+      const authSession = this.dependencies.getAuthSession();
+      this.refreshPromise = authSession
         .refreshAccessToken()
         .then((tokens) => {
           if (!tokens?.access) return false;
-          getAuthSessionAdapter().setTokens(tokens);
+          authSession.setTokens(tokens);
           return true;
         })
         .catch(() => false)
@@ -149,10 +176,27 @@ class ApiClient {
 
     const didRefresh = await this.refreshPromise;
     if (!didRefresh) {
-      getAuthSessionAdapter().onAuthenticationFailure();
+      this.dependencies.getAuthSession().onAuthenticationFailure();
     }
     return didRefresh;
   }
+}
+
+function serializeBody(body: RequestBody | undefined) {
+  if (body === undefined) return { body: undefined, contentType: null };
+  if (
+    typeof body === "string" ||
+    body instanceof FormData ||
+    body instanceof URLSearchParams ||
+    body instanceof Blob ||
+    body instanceof ArrayBuffer
+  ) {
+    return { body, contentType: null };
+  }
+  return {
+    body: JSON.stringify(body),
+    contentType: "application/json",
+  };
 }
 
 function combineSignals(

@@ -31,3 +31,5 @@ export interface Track {
   transcript?: string;
   literaryWork?: LiteraryWorkSummary;
 }
+
+export type CatalogTrack = Omit<Track, "audioUrl">;

@@ -42,4 +42,26 @@ describe("API boundary", () => {
       { contentType: "poem", mood: "calm" },
     ]);
   });
+
+  it("normalizes rate-limit retry metadata", async () => {
+    const response = new Response(
+      JSON.stringify({
+        detail: "Request was throttled.",
+        code: "throttled",
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "30",
+        },
+      },
+    );
+
+    await expect(normalizeApiError(undefined, response)).resolves.toMatchObject({
+      status: 429,
+      code: "throttled",
+      retryAfterSeconds: 30,
+    });
+  });
 });

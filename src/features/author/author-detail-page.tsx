@@ -19,7 +19,7 @@ import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/features/library/library-store";
-import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { cn } from "@/lib/utils";
 import {
   getAuthorBySlug,
@@ -28,7 +28,7 @@ import {
   getRelatedAuthors,
   queryKeys,
 } from "@/services";
-import type { Playlist, Track } from "@/types";
+import type { CatalogPlaylist } from "@/types";
 
 interface AuthorDetailPageContentProps {
   slug: string;
@@ -44,12 +44,12 @@ export function AuthorDetailPageContent({
   const author = authorQuery.data;
   const tracksQuery = useQuery({
     queryKey: queryKeys.authors.tracks(author?.id),
-    queryFn: () => getAuthorTracks(author!.id),
+    queryFn: () => getAuthorTracks(author!.slug),
     enabled: Boolean(author),
   });
   const collectionsQuery = useQuery({
     queryKey: queryKeys.authors.collections(author?.id),
-    queryFn: () => getAuthorFeaturedCollections(author!.id),
+    queryFn: () => getAuthorFeaturedCollections(author!.slug),
     enabled: Boolean(author),
   });
   const relatedAuthorsQuery = useQuery({
@@ -57,7 +57,7 @@ export function AuthorDetailPageContent({
     queryFn: () => getRelatedAuthors(author!.id),
     enabled: Boolean(author),
   });
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack, playCollection } = useCatalogPlayback();
   const followedAuthorIds = useLibraryStore(
     (state) => state.followedAuthorIds,
   );
@@ -85,10 +85,10 @@ export function AuthorDetailPageContent({
 
   const isFollowing = followedAuthorIds.includes(author.id);
   const allTracks = tracksQuery.data ?? [];
-  const popularTracks = author.popularTracks;
-  const playTrack = (track: Track) => replaceQueue([track]);
-  const playPlaylist = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
+  const popularTracks =
+    author.popularTracks.length > 0 ? author.popularTracks : allTracks.slice(0, 5);
+  const playPlaylist = (playlist: CatalogPlaylist) =>
+    void playCollection(playlist.tracks);
 
   return (
     <div className="space-y-14 pb-8">
@@ -151,7 +151,7 @@ export function AuthorDetailPageContent({
                 type="button"
                 size="lg"
                 disabled={popularTracks.length === 0}
-                onClick={() => replaceQueue(popularTracks)}
+                onClick={() => void playCollection(popularTracks)}
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
@@ -181,7 +181,7 @@ export function AuthorDetailPageContent({
       <HorizontalSection title="लोकप्रिय रचना" eyebrow="धेरै सुनिएका">
         {popularTracks.map((track) => (
           <CardWidth key={track.id}>
-            <TrackCard track={track} onPlay={playTrack} />
+            <TrackCard track={track} onPlay={(item) => void playTrack(item)} />
           </CardWidth>
         ))}
       </HorizontalSection>
@@ -214,7 +214,7 @@ export function AuthorDetailPageContent({
                 <TrackCard
                   key={track.id}
                   track={track}
-                  onPlay={playTrack}
+                  onPlay={(item) => void playTrack(item)}
                 />
               ))}
         </div>

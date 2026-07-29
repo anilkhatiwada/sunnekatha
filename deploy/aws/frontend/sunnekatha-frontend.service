@@ -1,0 +1,25 @@
+[Unit]
+Description=SunneKatha Next.js frontend
+After=network.target
+
+[Service]
+Type=simple
+User=sunnekatha
+Group=www-data
+WorkingDirectory=/srv/sunnekatha/frontend/current
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/opt/node/bin/node server.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/sunnekatha/frontend
+
+[Install]
+WantedBy=multi-user.target

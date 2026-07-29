@@ -20,10 +20,11 @@ import { PlaylistTrackRow } from "@/components/player/playlist-track-row";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/features/library/library-store";
 import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { formatDuration } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { getPlaylistBySlug, queryKeys } from "@/services";
-import type { Track } from "@/types";
+import type { CatalogTrack } from "@/types";
 
 interface PlaylistDetailPageContentProps {
   slug: string;
@@ -37,7 +38,7 @@ export function PlaylistDetailPageContent({
     queryFn: () => getPlaylistBySlug(slug),
   });
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playCollection } = useCatalogPlayback();
   const savedPlaylistIds = useLibraryStore(
     (state) => state.savedPlaylistIds,
   );
@@ -82,10 +83,11 @@ export function PlaylistDetailPageContent({
   const isSaved = savedPlaylistIds.includes(playlist.id);
   const hasTracks = playlist.tracks.length > 0;
 
-  const playAll = () => replaceQueue(playlist.tracks);
-  const playShuffled = () => replaceQueue(shuffleTracks(playlist.tracks));
+  const playAll = () => void playCollection(playlist.tracks);
+  const playShuffled = () =>
+    void playCollection(shuffleTracks(playlist.tracks));
   const playFromTrack = (index: number) =>
-    replaceQueue(playlist.tracks.slice(index));
+    void playCollection(playlist.tracks, index);
 
   return (
     <div className="space-y-10 pb-8">
@@ -227,7 +229,7 @@ export function PlaylistDetailPageContent({
   );
 }
 
-function shuffleTracks(tracks: Track[]) {
+function shuffleTracks(tracks: CatalogTrack[]) {
   const shuffled = [...tracks];
 
   for (let index = shuffled.length - 1; index > 0; index -= 1) {

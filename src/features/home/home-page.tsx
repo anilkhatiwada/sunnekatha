@@ -2,8 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback } from "react";
 
 import {
+  AlbumCard,
   AuthorCard,
   ContinueListeningCard,
   FeaturedHeroCard,
@@ -12,6 +16,8 @@ import {
   PlaylistCard,
   TrackCard,
 } from "@/components/cards";
+import { ExploreCollectionCard } from "@/components/cards/explore-collection-card";
+import { CardPlayButton } from "@/components/cards/card-primitives";
 import { EmptyState } from "@/components/common/empty-state";
 import { SearchInput } from "@/components/common/search-input";
 import { SectionError } from "@/components/common/section-error";
@@ -19,16 +25,18 @@ import { CardRailSkeleton } from "@/components/sections/card-rail-skeleton";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { usePlayerStore } from "@/features/player/player-store";
 import {
-  getContinueListening,
-  getFeaturedPlaylists,
-  getMoodPlaylists,
-  getPopularAuthors,
-  getPopularNarrators,
+  getHomePage,
+  getTrackStream,
+  mapPlayableTrack,
   queryKeys,
-  getRecentlyAddedTracks,
-  getTrendingTracks,
 } from "@/services";
-import type { Playlist } from "@/types";
+import type {
+  CatalogPlaylist,
+  CatalogTrack,
+  HomeHero,
+  HomeSection,
+  Track,
+} from "@/types";
 
 const cardWidth = "w-[10.5rem] shrink-0 snap-start sm:w-[13rem] lg:w-[14rem]";
 const personCardWidth =
@@ -41,38 +49,41 @@ export function HomePageContent() {
   const playTrack = usePlayerStore((state) => state.play);
   const replaceQueue = usePlayerStore((state) => state.replaceQueue);
   const seek = usePlayerStore((state) => state.seek);
-  const handlePlaylistPlay = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
-  const featuredQuery = useQuery({
-    queryKey: queryKeys.home.featuredPlaylists(),
-    queryFn: getFeaturedPlaylists,
-  });
-  const continueQuery = useQuery({
-    queryKey: queryKeys.home.continueListening(),
-    queryFn: getContinueListening,
-  });
-  const trendingQuery = useQuery({
-    queryKey: queryKeys.home.trendingTracks(),
-    queryFn: getTrendingTracks,
-  });
-  const recentlyAddedQuery = useQuery({
-    queryKey: queryKeys.home.recentlyAdded(),
-    queryFn: getRecentlyAddedTracks,
-  });
-  const authorsQuery = useQuery({
-    queryKey: queryKeys.home.popularAuthors(),
-    queryFn: getPopularAuthors,
-  });
-  const narratorsQuery = useQuery({
-    queryKey: queryKeys.home.popularNarrators(),
-    queryFn: getPopularNarrators,
-  });
-  const moodsQuery = useQuery({
-    queryKey: queryKeys.home.moodPlaylists(),
-    queryFn: getMoodPlaylists,
+  const setLoading = usePlayerStore((state) => state.setLoading);
+  const setPlaybackError = usePlayerStore(
+    (state) => state.setPlaybackError,
+  );
+  const homeQuery = useQuery({
+    queryKey: queryKeys.home.detail(),
+    queryFn: getHomePage,
+    staleTime: 60_000,
   });
 
-  const featuredHero = featuredQuery.data?.[0];
+  const playCatalogTrack = useCallback(
+    async (track: CatalogTrack, resumeAt?: number) => {
+      setLoading(true);
+      setPlaybackError(null);
+      try {
+        const stream = await getTrackStream(track.slug);
+        playTrack(mapPlayableTrack(stream));
+        if (resumeAt && resumeAt > 0) seek(resumeAt);
+      } catch {
+        setLoading(false);
+        setPlaybackError({
+          code: "stream-unavailable",
+          message: "यो रचना अहिले बजाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+        });
+      }
+    },
+    [playTrack, seek, setLoading, setPlaybackError],
+  );
+
+  const handlePlaylistPlay = (playlist: CatalogPlaylist) => {
+    const playableTracks = playlist.tracks.filter(isPlayableTrack);
+    if (playableTracks.length > 0) replaceQueue(playableTracks);
+  };
+
+  const hero = homeQuery.data?.hero;
 
   return (
     <div className="space-y-12 pb-6 sm:space-y-16 lg:space-y-20">
@@ -93,213 +104,223 @@ export function HomePageContent() {
       </motion.header>
 
       <section aria-label="विशेष प्रस्तुति">
-        {featuredQuery.isPending && <FeaturedHeroCardSkeleton />}
-        {featuredQuery.isError && (
+        {homeQuery.isPending && <FeaturedHeroCardSkeleton />}
+        {homeQuery.isError && (
           <SectionError
-            onRetry={() => void featuredQuery.refetch()}
-            isRetrying={featuredQuery.isFetching}
+            onRetry={() => void homeQuery.refetch()}
+            isRetrying={homeQuery.isFetching}
           />
         )}
-        {featuredQuery.isSuccess && !featuredHero && (
+        {homeQuery.isSuccess && !hero && (
           <EmptyState
             compact
             title="विशेष प्रस्तुति आउँदैछ"
             description="नयाँ साहित्यिक सङ्ग्रह तयार भएपछि यहाँ देखिनेछ।"
           />
         )}
-        {featuredHero && (
+        {hero?.kind === "playlist" && (
           <FeaturedHeroCard
-            playlist={featuredHero}
+            playlist={hero.content}
             onPlay={handlePlaylistPlay}
+          />
+        )}
+        {hero && hero.kind !== "playlist" && (
+          <ContentHeroCard
+            hero={hero}
+            onPlayTrack={playCatalogTrack}
           />
         )}
       </section>
 
-      <HorizontalSection title="अहिले सुन्दै हुनुहुन्छ">
-        {continueQuery.isPending && (
-          <CardRailSkeleton variant="continue" count={3} />
-        )}
-        {continueQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void continueQuery.refetch()}
-              isRetrying={continueQuery.isFetching}
-            />
-          </div>
-        )}
-        {continueQuery.data?.map((item) => (
-          <div key={item.track.id} className={continueCardWidth}>
-            <ContinueListeningCard
-              item={item}
-              onPlay={() => {
-                replaceQueue([item.track]);
-                seek(item.progress.progressSeconds);
-              }}
-            />
-          </div>
+      {homeQuery.isPending && <HomepageSectionsSkeleton />}
+      {homeQuery.data?.sections
+        .filter((section) => section.items.length > 0)
+        .map((section) => (
+          <HomeSectionRail
+            key={section.id}
+            section={section}
+            onPlayTrack={playCatalogTrack}
+            onPlayPlaylist={handlePlaylistPlay}
+          />
         ))}
-        {continueQuery.isSuccess && continueQuery.data.length === 0 && (
-          <EmptyRail title="सुन्न बाँकी केही छैन" />
-        )}
-      </HorizontalSection>
-
-      <HorizontalSection
-        title="विशेष प्लेलिस्टहरू"
-        viewAllHref="/playlists"
-      >
-        {featuredQuery.isPending && (
-          <CardRailSkeleton variant="playlist" count={5} />
-        )}
-        {featuredQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void featuredQuery.refetch()}
-              isRetrying={featuredQuery.isFetching}
-            />
-          </div>
-        )}
-        {featuredQuery.data?.map((playlist) => (
-          <div key={playlist.id} className={cardWidth}>
-            <PlaylistCard
-              playlist={playlist}
-              onPlay={handlePlaylistPlay}
-            />
-          </div>
-        ))}
-        {featuredQuery.isSuccess && featuredQuery.data.length === 0 && (
-          <EmptyRail title="प्लेलिस्ट उपलब्ध छैन" />
-        )}
-      </HorizontalSection>
-
-      <HorizontalSection title="यो हप्ता लोकप्रिय">
-        {trendingQuery.isPending && (
-          <CardRailSkeleton variant="track" count={6} />
-        )}
-        {trendingQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void trendingQuery.refetch()}
-              isRetrying={trendingQuery.isFetching}
-            />
-          </div>
-        )}
-        {trendingQuery.data?.map((track) => (
-          <div key={track.id} className={cardWidth}>
-            <TrackCard track={track} onPlay={playTrack} />
-          </div>
-        ))}
-        {trendingQuery.isSuccess && trendingQuery.data.length === 0 && (
-          <EmptyRail title="लोकप्रिय रचना उपलब्ध छैन" />
-        )}
-      </HorizontalSection>
-
-      <HorizontalSection title="भर्खरै थपिएका">
-        {recentlyAddedQuery.isPending && (
-          <CardRailSkeleton variant="track" count={6} />
-        )}
-        {recentlyAddedQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void recentlyAddedQuery.refetch()}
-              isRetrying={recentlyAddedQuery.isFetching}
-            />
-          </div>
-        )}
-        {recentlyAddedQuery.data?.map((track) => (
-          <div key={track.id} className={cardWidth}>
-            <TrackCard track={track} onPlay={playTrack} />
-          </div>
-        ))}
-        {recentlyAddedQuery.isSuccess &&
-          recentlyAddedQuery.data.length === 0 && (
-            <EmptyRail title="नयाँ रचना चाँडै आउँदैछन्" />
-          )}
-      </HorizontalSection>
-
-      <HorizontalSection title="लोकप्रिय लेखकहरू">
-        {authorsQuery.isPending && (
-          <CardRailSkeleton variant="author" count={6} />
-        )}
-        {authorsQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void authorsQuery.refetch()}
-              isRetrying={authorsQuery.isFetching}
-            />
-          </div>
-        )}
-        {authorsQuery.data?.map((author) => (
-          <div key={author.id} className={personCardWidth}>
-            <AuthorCard author={author} onPlay={playTrack} />
-          </div>
-        ))}
-        {authorsQuery.isSuccess && authorsQuery.data.length === 0 && (
-          <EmptyRail title="लेखकहरू उपलब्ध छैनन्" />
-        )}
-      </HorizontalSection>
-
-      <HorizontalSection title="लोकप्रिय वाचकहरू">
-        {narratorsQuery.isPending && (
-          <CardRailSkeleton variant="narrator" count={6} />
-        )}
-        {narratorsQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void narratorsQuery.refetch()}
-              isRetrying={narratorsQuery.isFetching}
-            />
-          </div>
-        )}
-        {narratorsQuery.data?.map((narrator) => (
-          <div key={narrator.id} className={personCardWidth}>
-            <NarratorCard narrator={narrator} onPlay={playTrack} />
-          </div>
-        ))}
-        {narratorsQuery.isSuccess && narratorsQuery.data.length === 0 && (
-          <EmptyRail title="वाचकहरू उपलब्ध छैनन्" />
-        )}
-      </HorizontalSection>
-
-      <HorizontalSection
-        eyebrow="मनको लयअनुसार"
-        title="मूडअनुसार सुन्नुहोस्"
-        viewAllHref="/playlists"
-      >
-        {moodsQuery.isPending && (
-          <CardRailSkeleton variant="playlist" count={3} />
-        )}
-        {moodsQuery.isError && (
-          <div className="w-full shrink-0">
-            <SectionError
-              onRetry={() => void moodsQuery.refetch()}
-              isRetrying={moodsQuery.isFetching}
-            />
-          </div>
-        )}
-        {moodsQuery.data?.map((playlist) => (
-          <div key={playlist.id} className={cardWidth}>
-            <PlaylistCard
-              playlist={playlist}
-              onPlay={handlePlaylistPlay}
-            />
-          </div>
-        ))}
-        {moodsQuery.isSuccess && moodsQuery.data.length === 0 && (
-          <EmptyRail title="मूड सङ्ग्रह उपलब्ध छैन" />
-        )}
-      </HorizontalSection>
     </div>
   );
 }
 
-function EmptyRail({ title }: { title: string }) {
+function ContentHeroCard({
+  hero,
+  onPlayTrack,
+}: {
+  hero: Exclude<HomeHero, { kind: "playlist" }>;
+  onPlayTrack: (track: CatalogTrack) => Promise<void>;
+}) {
+  const subtitle =
+    hero.kind === "track"
+      ? hero.content.author.name
+      : hero.content.authorName;
+  const href =
+    hero.kind === "track" ? `/track/${hero.content.slug}` : null;
+
   return (
-    <div className="w-full min-w-[19rem] shrink-0">
-      <EmptyState
-        compact
-        title={title}
-        description="नयाँ सामग्री थपिएपछि यहाँ देखिनेछ।"
+    <article className="group relative isolate min-h-[24rem] overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_30px_80px_rgb(0_0_0_/_0.35)] sm:min-h-[28rem] lg:min-h-[30rem]">
+      <Image
+        src={hero.content.coverImage}
+        alt=""
+        fill
+        preload
+        sizes="(max-width: 1024px) 100vw, 1200px"
+        className="object-cover transition duration-700 group-hover:scale-[1.02]"
       />
-    </div>
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgb(11_10_9_/_0.98)_0%,rgb(11_10_9_/_0.82)_44%,rgb(11_10_9_/_0.2)_100%)]" />
+      <div className="relative flex min-h-[24rem] max-w-2xl flex-col justify-end p-6 sm:min-h-[28rem] sm:p-9 lg:min-h-[30rem] lg:p-12">
+        <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+          विशेष प्रस्तुति
+        </p>
+        <h2 className="mt-4 font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl lg:text-6xl">
+          {href ? (
+            <Link
+              href={href}
+              className="rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              {hero.content.title}
+            </Link>
+          ) : (
+            hero.content.title
+          )}
+        </h2>
+        <p className="mt-5 font-nepali text-base text-muted-foreground sm:text-lg">
+          {subtitle}
+        </p>
+        {hero.kind === "track" && (
+          <div className="mt-8">
+            <CardPlayButton
+              label={`${hero.content.title} बजाउनुहोस्`}
+              onPlay={() => void onPlayTrack(hero.content)}
+              size="lg"
+            />
+          </div>
+        )}
+      </div>
+    </article>
   );
+}
+
+function HomeSectionRail({
+  section,
+  onPlayTrack,
+  onPlayPlaylist,
+}: {
+  section: HomeSection;
+  onPlayTrack: (track: CatalogTrack, resumeAt?: number) => Promise<void>;
+  onPlayPlaylist: (playlist: CatalogPlaylist) => void;
+}) {
+  if (section.kind === "continue-listening") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((item) => (
+          <div key={item.track.id} className={continueCardWidth}>
+            <ContinueListeningCard
+              item={item}
+              onPlay={(track) =>
+                void onPlayTrack(track, item.progress.progressSeconds)
+              }
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "tracks") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((track) => (
+          <div key={track.id} className={cardWidth}>
+            <TrackCard
+              track={track}
+              onPlay={(selected) => void onPlayTrack(selected)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "playlists") {
+    return (
+      <HorizontalSection title={section.title} viewAllHref="/playlists">
+        {section.items.map((playlist) => (
+          <div key={playlist.id} className={cardWidth}>
+            <PlaylistCard
+              playlist={playlist}
+              onPlay={onPlayPlaylist}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "authors") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((author) => (
+          <div key={author.id} className={personCardWidth}>
+            <AuthorCard author={author} onPlay={() => undefined} />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "narrators") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((narrator) => (
+          <div key={narrator.id} className={personCardWidth}>
+            <NarratorCard narrator={narrator} onPlay={() => undefined} />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "moods" || section.kind === "genres") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((collection) => (
+          <div key={collection.id} className={cardWidth}>
+            <ExploreCollectionCard
+              collection={collection}
+              kind={section.kind === "moods" ? "mood" : "genre"}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  if (section.kind === "albums") {
+    return (
+      <HorizontalSection title={section.title}>
+        {section.items.map((album) => (
+          <div key={album.id} className={cardWidth}>
+            <AlbumCard album={album} />
+          </div>
+        ))}
+      </HorizontalSection>
+    );
+  }
+  return null;
+}
+
+function HomepageSectionsSkeleton() {
+  return (
+    <>
+      <HorizontalSection title="सामग्री लोड हुँदैछ">
+        <CardRailSkeleton variant="track" count={6} />
+      </HorizontalSection>
+      <HorizontalSection title="सङ्ग्रह लोड हुँदैछ">
+        <CardRailSkeleton variant="playlist" count={5} />
+      </HorizontalSection>
+    </>
+  );
+}
+
+function isPlayableTrack(track: CatalogTrack): track is Track {
+  return "audioUrl" in track && typeof track.audioUrl === "string";
 }

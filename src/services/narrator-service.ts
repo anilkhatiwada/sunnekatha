@@ -1,8 +1,35 @@
 import { narrators, playlists, tracks } from "@/data";
+import { environment } from "@/config/environment";
+import { apiClient } from "@/services/api-client";
+import {
+  mapCompactTrack,
+  mapNarrator,
+  mapNarratorSummary,
+} from "@/services/api-mappers";
 import { mockApiResponse } from "@/services/mock-api";
-import type { Narrator, Playlist, Track } from "@/types";
+import { nullOnNotFound, unwrapPage } from "@/services/public-api-utils";
+import type {
+  ApiNarrator,
+  ApiNarratorSummary,
+  ApiTrackPage,
+} from "@/types/backend-api";
+import type { CatalogPlaylist, CatalogTrack, Narrator } from "@/types";
 
 export async function getPopularNarrators(): Promise<Narrator[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<{
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: ApiNarratorSummary[];
+    }>("/narrators/featured/", { query: { pageSize: 8 } });
+    return unwrapPage(payload).map((value) => ({
+      ...mapNarratorSummary(value),
+      biography: "",
+      followerCount: value.followerCount ?? 0,
+      narratedTracks: [],
+    }));
+  }
   const popularNarrators = [...narrators]
     .sort((a, b) => b.followerCount - a.followerCount)
     .slice(0, 8);
@@ -13,13 +40,26 @@ export async function getPopularNarrators(): Promise<Narrator[]> {
 export async function getNarratorBySlug(
   slug: string,
 ): Promise<Narrator | null> {
+  if (environment.apiMode === "remote") {
+    const payload = await nullOnNotFound(
+      apiClient.get<ApiNarrator>(`/narrators/${slug}/`),
+    );
+    return payload ? mapNarrator(payload) : null;
+  }
   const narrator = narrators.find((item) => item.slug === slug) ?? null;
   return mockApiResponse(narrator, undefined, null);
 }
 
 export async function getNarratorTracks(
   narratorId: string,
-): Promise<Track[]> {
+): Promise<CatalogTrack[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTrackPage>(
+      `/tracks/narrator/${narratorId}/`,
+      { query: { ordering: "-play_count_cache", pageSize: 40 } },
+    );
+    return unwrapPage(payload).map(mapCompactTrack);
+  }
   const narratedTracks = tracks
     .filter((track) => track.narrator.id === narratorId)
     .sort((a, b) => b.playCount - a.playCount);
@@ -29,7 +69,8 @@ export async function getNarratorTracks(
 
 export async function getNarratorFeaturedPlaylists(
   narratorId: string,
-): Promise<Playlist[]> {
+): Promise<CatalogPlaylist[]> {
+  if (environment.apiMode === "remote") return [];
   const featuredPlaylists = playlists
     .map((playlist) => ({
       playlist,

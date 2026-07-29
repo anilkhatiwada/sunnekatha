@@ -29,18 +29,24 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The checked-in defaults
-already run in mock mode, so `.env.local` is optional for normal frontend work.
+run in mock mode. Use an ignored `.env.local` to opt into a remote backend.
 
 ## Environment variables
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_MODE` | `mock` | Selects the service adapter mode. Only `mock` is implemented today. |
-| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000/api/v1` | Future Django REST Framework base URL. |
+| `NEXT_PUBLIC_API_MODE` | `mock` | Selects `mock` or explicitly configured `remote` transport. Pages remain mock-backed until their adapters are migrated. |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000/api/v1` | Complete Django API base URL, including `/api/v1`. Required in remote mode. |
 | `NEXT_PUBLIC_API_TIMEOUT_MS` | `15000` | Timeout for the central API client, in milliseconds. |
+| `NEXT_PUBLIC_APP_ENV` | `local` | Public environment label: `local`, `staging`, or `production`. Production remote URLs must use HTTPS. |
 
 Only expose browser-safe values through `NEXT_PUBLIC_*`. Never put secrets,
 refresh tokens, or private service credentials in these variables.
+
+The temporary deployed backend uses
+`http://13.205.30.123/api/v1`. It may be placed only in an ignored local
+environment file and must not be used with real credentials. Replace it with
+the final HTTPS API domain before authentication or production deployment.
 
 ## Development commands
 
@@ -145,11 +151,15 @@ Page components must continue importing typed functions from `src/services`;
 do not fetch directly from a route component.
 
 1. Implement a remote adapter for each service using `apiClient`.
-2. Preserve each exported function's existing parameter and return types.
+2. Use raw types from `src/types/backend-api.ts` and explicit mappers from
+   `src/services/api-mappers.ts`; do not cast backend JSON directly to UI models.
 3. Select mock or remote adapters inside the service layer using
    `NEXT_PUBLIC_API_MODE`.
-4. Configure access-token and refresh callbacks through the authentication
-   placeholder. Prefer secure, same-origin `HttpOnly` refresh cookies.
+4. Establish JWT sessions with `setAuthTokens`. Tokens are currently stored in
+   tab-scoped `sessionStorage` because the backend returns JSON tokens. This is
+   an interim design and requires strong XSS controls and HTTPS. Prefer
+   same-origin HttpOnly refresh cookies if the backend contract later supports
+   them.
 5. Keep errors normalized as `ApiError` and use the existing pagination types.
 6. Add mutation hooks and invalidate entries from the shared query-key factory.
 7. Validate serializer responses at the boundary before enabling remote mode.

@@ -7,19 +7,23 @@ import Link from "next/link";
 import { CardPlayButton } from "@/components/cards/card-primitives";
 import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { formatDuration } from "@/lib/formatters";
-import type { Playlist } from "@/types";
+import type { CatalogPlaylist, Playlist } from "@/types";
 
-interface FeaturedHeroCardProps {
-  playlist: Playlist;
-  onPlay: (playlist: Playlist) => void;
+interface FeaturedHeroCardProps<
+  TPlaylist extends CatalogPlaylist | Playlist,
+> {
+  playlist: TPlaylist;
+  onPlay: (playlist: TPlaylist) => void;
   priority?: boolean;
 }
 
-export function FeaturedHeroCard({
+export function FeaturedHeroCard<
+  TPlaylist extends CatalogPlaylist | Playlist,
+>({
   playlist,
   onPlay,
   priority = true,
-}: FeaturedHeroCardProps) {
+}: FeaturedHeroCardProps<TPlaylist>) {
   return (
     <article className="group relative isolate min-h-[24rem] overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_30px_80px_rgb(0_0_0_/_0.35)] sm:min-h-[28rem] lg:min-h-[30rem]">
       <Image
@@ -65,6 +69,7 @@ export function FeaturedHeroCard({
             label={`${playlist.title} प्लेलिस्ट बजाउनुहोस्`}
             onPlay={() => onPlay(playlist)}
             size="lg"
+            disabled={playlist.tracks.length === 0}
           />
           <Link
             href={`/playlist/${playlist.slug}`}

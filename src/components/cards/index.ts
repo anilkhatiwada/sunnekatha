@@ -1,4 +1,5 @@
 export { AuthorCard, AuthorCardSkeleton } from "@/components/cards/author-card";
+export { AlbumCard } from "@/components/cards/album-card";
 export {
   CompactTrackRow,
   CompactTrackRowSkeleton,

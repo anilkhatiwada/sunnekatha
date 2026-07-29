@@ -16,7 +16,7 @@ import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/features/library/library-store";
-import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { formatCompactNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -25,7 +25,7 @@ import {
   getNarratorTracks,
   queryKeys,
 } from "@/services";
-import type { Playlist, Track } from "@/types";
+import type { CatalogPlaylist } from "@/types";
 
 interface NarratorDetailPageContentProps {
   slug: string;
@@ -41,15 +41,15 @@ export function NarratorDetailPageContent({
   const narrator = narratorQuery.data;
   const tracksQuery = useQuery({
     queryKey: queryKeys.narrators.tracks(narrator?.id),
-    queryFn: () => getNarratorTracks(narrator!.id),
+    queryFn: () => getNarratorTracks(narrator!.slug),
     enabled: Boolean(narrator),
   });
   const playlistsQuery = useQuery({
     queryKey: queryKeys.narrators.playlists(narrator?.id),
-    queryFn: () => getNarratorFeaturedPlaylists(narrator!.id),
+    queryFn: () => getNarratorFeaturedPlaylists(narrator!.slug),
     enabled: Boolean(narrator),
   });
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack, playCollection } = useCatalogPlayback();
   const followedNarratorIds = useLibraryStore(
     (state) => state.followedNarratorIds,
   );
@@ -80,9 +80,8 @@ export function NarratorDetailPageContent({
   const fallbackTracks = narrator.narratedTracks;
   const playAllTracks = allTracks.length > 0 ? allTracks : fallbackTracks;
   const isFollowing = followedNarratorIds.includes(narrator.id);
-  const playTrack = (track: Track) => replaceQueue([track]);
-  const playPlaylist = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
+  const playPlaylist = (playlist: CatalogPlaylist) =>
+    void playCollection(playlist.tracks);
 
   return (
     <div className="space-y-14 pb-8">
@@ -133,7 +132,7 @@ export function NarratorDetailPageContent({
                 type="button"
                 size="lg"
                 disabled={playAllTracks.length === 0}
-                onClick={() => replaceQueue(playAllTracks)}
+                onClick={() => void playCollection(playAllTracks)}
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
@@ -169,7 +168,7 @@ export function NarratorDetailPageContent({
             ))
           : popularTracks.map((track) => (
               <CardWidth key={track.id}>
-                <TrackCard track={track} onPlay={playTrack} />
+                <TrackCard track={track} onPlay={(item) => void playTrack(item)} />
               </CardWidth>
             ))}
       </HorizontalSection>
@@ -202,7 +201,7 @@ export function NarratorDetailPageContent({
                 <TrackCard
                   key={track.id}
                   track={track}
-                  onPlay={playTrack}
+                  onPlay={(item) => void playTrack(item)}
                 />
               ))}
         </div>
