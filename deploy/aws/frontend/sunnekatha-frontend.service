@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=sunnekatha
-Group=www-data
+Group=sunnekatha
 WorkingDirectory=/srv/sunnekatha/frontend/current
 Environment=NODE_ENV=production
 Environment=PORT=3000
