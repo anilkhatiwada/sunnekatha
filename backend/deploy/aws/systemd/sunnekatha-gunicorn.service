@@ -1,0 +1,25 @@
+[Unit]
+Description=SunneKatha Django API
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sunnekatha
+Group=sunnekatha
+WorkingDirectory=/srv/sunnekatha/current
+EnvironmentFile=/etc/sunnekatha/backend.env
+ExecStart=/srv/sunnekatha/venv/bin/gunicorn config.wsgi:application --config config/gunicorn.py
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGTERM
+TimeoutStopSec=45
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/sunnekatha
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

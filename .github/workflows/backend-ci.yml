@@ -1,0 +1,126 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Django checks and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: sunnekatha_test
+          POSTGRES_USER: sunnekatha
+          POSTGRES_PASSWORD: sunnekatha_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sunnekatha -d sunnekatha_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.ci
+      DJANGO_SECRET_KEY: ci-only-secret-key-with-at-least-thirty-two-bytes
+      DATABASE_URL: postgresql://sunnekatha:sunnekatha_ci@127.0.0.1:5432/sunnekatha_test
+      DATABASE_CONN_MAX_AGE: "0"
+      REDIS_URL: redis://127.0.0.1:6379/1
+      REDIS_RAISE_EXCEPTIONS: "true"
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/2
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements/*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements/local.txt
+
+      - name: Run Django system checks
+        run: python manage.py check
+
+      - name: Check migration drift
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Verify migrations apply
+        run: python manage.py migrate --noinput
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Run linting
+        run: ruff check .
+
+      - name: Run type checks when configured
+        shell: bash
+        run: |
+          if [[ -f mypy.ini ]] || grep -q '^\[tool\.mypy\]' pyproject.toml; then
+            python -m mypy .
+          else
+            echo "No backend type checker is configured; skipping."
+          fi
+
+      - name: Run tests with coverage
+        run: |
+          pytest \
+            --ds=config.settings.ci \
+            --cov=apps \
+            --cov=config \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=80
+
+      - name: Generate and validate OpenAPI schema
+        run: |
+          python manage.py spectacular \
+            --file openapi-schema.yml \
+            --validate \
+            --fail-on-warn
+
+      - name: Upload coverage and schema artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-ci-artifacts
+          path: |
+            backend/coverage.xml
+            backend/openapi-schema.yml
+          if-no-files-found: warn
+          retention-days: 14

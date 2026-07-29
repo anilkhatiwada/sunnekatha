@@ -1,0 +1,1 @@
+"""SunneKatha literary catalog application."""

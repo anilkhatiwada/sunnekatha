@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {% if can_import %}
+  <section class="bg-white border border-base-200 rounded-default p-6 dark:bg-base-900 dark:border-base-800">
+    <h2 class="font-semibold text-lg mb-4">Import metadata</h2>
+    <p class="text-sm text-base-500 mb-4">
+      Imports are create-only. Audio and image files cannot be imported here.
+    </p>
+    <form method="post" enctype="multipart/form-data" action="{% url 'admin_metadata_import_preview' %}">
+      {% csrf_token %}
+      {{ import_form.as_p }}
+      <button class="bg-primary-600 text-white px-4 py-2 rounded-default mt-4" type="submit">
+        Validate and preview
+      </button>
+    </form>
+  </section>
+  {% endif %}
+  {% if can_export %}
+  <section class="bg-white border border-base-200 rounded-default p-6 dark:bg-base-900 dark:border-base-800">
+    <h2 class="font-semibold text-lg mb-4">Export metadata</h2>
+    <p class="text-sm text-base-500 mb-4">
+      Exports contain approved metadata fields only. Private files and URLs are excluded.
+    </p>
+    <ul class="space-y-2">
+      {% for kind, fields in export_types.items %}
+      <li>
+        <a class="text-primary-600 hover:underline" href="{% url 'admin_metadata_export' kind=kind %}">
+          Export {{ kind|title }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

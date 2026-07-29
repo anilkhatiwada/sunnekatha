@@ -1,0 +1,106 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/failed-processing.css' %}">
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<main class="sk-failed" aria-labelledby="failed-title">
+  <header class="sk-failed__header">
+    <div>
+      <p class="sk-failed__eyebrow">Audio operations</p>
+      <h2 id="failed-title">Failed audio processing</h2>
+      <p>Review safe failure details and retry eligible jobs.</p>
+    </div>
+  </header>
+
+  <form method="get" class="sk-failed__filters" aria-label="Failed job filters">
+    <label>
+      <span class="sr-only">Track title or filename</span>
+      <input type="search" name="q" value="{{ filters.q }}" placeholder="Track title or filename">
+    </label>
+    <label>
+      <span class="sr-only">Failed processing stage</span>
+      <select name="stage">
+        <option value="">All stages</option>
+        {% for value, label in stages %}
+          <option value="{{ value }}" {% if filters.stage == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span class="sr-only">Created date</span>
+      <input type="date" name="date" value="{{ filters.date }}">
+    </label>
+    <label>
+      <span class="sr-only">Upload creator</span>
+      <select name="creator">
+        <option value="">All creators</option>
+        {% for id, name, email in creators %}
+          <option value="{{ id }}" {% if filters.creator == id|stringformat:"s" %}selected{% endif %}>{{ name|default:email }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Filter</button>
+    <a href="{% url 'admin:catalog_audioprocessingjob_failed' %}">Clear</a>
+  </form>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="sk-failed__toolbar">
+      <span>{{ page.paginator.count }} failed job{{ page.paginator.count|pluralize }}</span>
+      {% if can_retry %}<button type="submit">Retry selected</button>{% endif %}
+    </div>
+    <div class="sk-failed__table-wrap">
+      <table class="sk-failed__table">
+        <thead><tr>
+          {% if can_retry %}<th><span class="sr-only">Select</span></th>{% endif %}
+          <th>Track</th><th>Original filename</th><th>Narrator</th>
+          <th>Upload user</th><th>Failed stage</th><th>Error summary</th>
+          <th>Attempts</th><th>Last attempt</th><th>Created</th><th>Retry</th>
+        </tr></thead>
+        <tbody>
+        {% for job in page.object_list %}
+          <tr>
+            {% if can_retry %}<td><input type="checkbox" name="_selected_action" value="{{ job.pk }}" aria-label="Select {{ job.track }}"></td>{% endif %}
+            <td><a href="{% url 'admin:catalog_audiotrack_change' job.track_id %}">{{ job.track }}</a></td>
+            <td>
+              {% if job.upload_session %}
+                <a href="{% url 'admin:uploads_uploadsession_change' job.upload_session_id %}">{{ job.upload_session.original_filename }}</a>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ job.track.narrator|default:"—" }}</td>
+            <td>{{ job.upload_session.user|default:"—" }}</td>
+            <td>{{ job.get_stage_display }}</td>
+            <td class="sk-failed__error">{{ job.error_summary|default:"No editor-facing error was recorded." }}</td>
+            <td>{{ job.attempts }} / {{ job.max_attempts }}</td>
+            <td>{{ job.last_attempt_at|date:"M j, Y H:i"|default:"—" }}</td>
+            <td>{{ job.created_at|date:"M j, Y H:i" }}</td>
+            <td>
+              {% if can_retry and job.retry_available %}
+                <button type="submit" aria-label="Retry processing for {{ job.track }}"
+                        formaction="{% url 'admin:catalog_audioprocessingjob_retry' job.pk %}">Retry</button>
+              {% else %}Unavailable{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="11" class="sk-failed__empty">No failed processing jobs match these filters.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  {% if page.has_other_pages %}
+    <nav class="sk-failed__pagination" aria-label="Pagination">
+      {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&q={{ filters.q }}&stage={{ filters.stage }}&date={{ filters.date }}&creator={{ filters.creator }}">Previous</a>{% endif %}
+      <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}<a href="?page={{ page.next_page_number }}&q={{ filters.q }}&stage={{ filters.stage }}&date={{ filters.date }}&creator={{ filters.creator }}">Next</a>{% endif %}
+    </nav>
+  {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="max-w-4xl">
+    <p class="mb-6 text-sm text-base-500 dark:text-base-300">
+      This is a manual staff operation. It records an audit event and does not
+      imitate or update an external payment-provider event.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="{{ action_name }}">
+      <input type="hidden" name="apply" value="yes">
+      {% for id in selected_ids %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ id }}">
+      {% endfor %}
+
+      <div class="mb-6 rounded-default border border-base-200 p-4 dark:border-base-700">
+        {{ form.non_field_errors }}
+        <div class="mb-4">
+          {{ form.reason.errors }}
+          {{ form.reason.label_tag }}
+          {{ form.reason }}
+          <p class="mt-1 text-xs text-base-500">{{ form.reason.help_text }}</p>
+        </div>
+        {% if needs_duration %}
+          <div>
+            {{ form.duration_days.errors }}
+            {{ form.duration_days.label_tag }}
+            {{ form.duration_days }}
+          </div>
+        {% endif %}
+      </div>
+
+      <h2 class="mb-3 font-semibold">Selected subscriptions</h2>
+      <ul class="mb-6 list-disc pl-6">
+        {% for subscription in subscriptions %}
+          <li>{{ subscription.user }} — {{ subscription.plan }}</li>
+        {% endfor %}
+      </ul>
+
+      <button type="submit" class="bg-primary-600 rounded-default px-4 py-2 text-white">
+        Confirm manual change
+      </button>
+      <a href="{% url 'admin:subscriptions_usersubscription_changelist' %}" class="ml-3">
+        Cancel
+      </a>
+    </form>
+  </div>
+{% endblock %}

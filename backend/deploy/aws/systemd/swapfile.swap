@@ -1,0 +1,10 @@
+[Unit]
+Description=SunneKatha low-memory instance swap
+Before=local-fs.target
+
+[Swap]
+What=/swapfile
+TimeoutSec=30
+
+[Install]
+WantedBy=swap.target

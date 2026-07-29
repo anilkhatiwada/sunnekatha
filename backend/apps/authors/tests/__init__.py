@@ -1,0 +1,1 @@
+"""Authors application tests."""

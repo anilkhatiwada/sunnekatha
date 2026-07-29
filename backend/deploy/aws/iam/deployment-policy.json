@@ -1,0 +1,124 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadDeploymentInventory",
+      "Effect": "Allow",
+      "Action": [
+        "lightsail:Get*",
+        "lightsail:Is*",
+        "s3:GetAccountPublicAccessBlock",
+        "s3:ListAllMyBuckets",
+        "cloudfront:Get*",
+        "cloudfront:List*",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:GetUser",
+        "iam:ListAccessKeys",
+        "iam:ListAttachedUserPolicies"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ManageApprovedLightsailResources",
+      "Effect": "Allow",
+      "Action": [
+        "lightsail:AllocateStaticIp",
+        "lightsail:AttachStaticIp",
+        "lightsail:CreateInstances",
+        "lightsail:OpenInstancePublicPorts",
+        "lightsail:PutInstancePublicPorts",
+        "lightsail:TagResource"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "CreateApprovedMediaBucket",
+      "Effect": "Allow",
+      "Action": "s3:CreateBucket",
+      "Resource": "arn:aws:s3:::sunnekatha-prod-media-533463644243-ap-south-1"
+    },
+    {
+      "Sid": "ConfigureApprovedMediaBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketVersioning",
+        "s3:ListBucket",
+        "s3:PutBucketCors",
+        "s3:PutEncryptionConfiguration",
+        "s3:PutLifecycleConfiguration",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutBucketTagging",
+        "s3:PutBucketVersioning"
+      ],
+      "Resource": "arn:aws:s3:::sunnekatha-prod-media-533463644243-ap-south-1"
+    },
+    {
+      "Sid": "ValidateApprovedMediaObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::sunnekatha-prod-media-533463644243-ap-south-1/*"
+    },
+    {
+      "Sid": "ManageApprovedCloudFrontConfiguration",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateDistribution",
+        "cloudfront:CreateKeyGroup",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:CreatePublicKey",
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:GetKeyGroup",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:GetPublicKey",
+        "cloudfront:ListDistributions",
+        "cloudfront:TagResource",
+        "cloudfront:UpdateDistribution"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CreateApprovedRuntimeIdentity",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateAccessKey",
+        "iam:CreatePolicy",
+        "iam:CreateUser",
+        "iam:GetPolicy",
+        "iam:GetUser",
+        "iam:ListAccessKeys",
+        "iam:ListAttachedUserPolicies",
+        "iam:TagPolicy",
+        "iam:TagUser"
+      ],
+      "Resource": [
+        "arn:aws:iam::533463644243:user/sunnekatha-prod-app",
+        "arn:aws:iam::533463644243:policy/SunneKathaProductionMediaAccess"
+      ]
+    },
+    {
+      "Sid": "AttachApprovedRuntimePolicy",
+      "Effect": "Allow",
+      "Action": "iam:AttachUserPolicy",
+      "Resource": "arn:aws:iam::533463644243:user/sunnekatha-prod-app",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": "arn:aws:iam::533463644243:policy/SunneKathaProductionMediaAccess"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""Taxonomy application tests."""

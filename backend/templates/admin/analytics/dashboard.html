@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<main class="space-y-6">
+  <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <p class="text-sm text-base-500 dark:text-base-300">Aggregate reporting</p>
+      <h2 class="text-2xl font-semibold">Listening analytics</h2>
+      <p class="mt-2 text-sm text-base-500 dark:text-base-300">
+        No listener-level playback records are shown. Daily aggregates normally
+        finalize the following day.
+      </p>
+    </div>
+    {% if can_export %}
+      <a href="{{ export_url }}?range={{ date_range.identifier }}{% if date_range.identifier == 'custom' %}&start={{ date_range.start|date:'Y-m-d' }}&end={{ date_range.end|date:'Y-m-d' }}{% endif %}"
+         class="bg-primary-600 rounded-default px-4 py-2 text-sm font-medium text-white">
+        Export aggregate CSV
+      </a>
+    {% endif %}
+  </header>
+
+  <form method="get" class="flex flex-wrap items-end gap-3 rounded-default border border-base-200 p-4 dark:border-base-700">
+    <label class="text-sm">
+      <span class="mb-1 block">Date range</span>
+      <select name="range" class="rounded-default border border-base-200 bg-white px-3 py-2 dark:border-base-700 dark:bg-base-900">
+        <option value="today" {% if date_range.identifier == "today" %}selected{% endif %}>Today</option>
+        <option value="7_days" {% if date_range.identifier == "7_days" %}selected{% endif %}>Last 7 days</option>
+        <option value="30_days" {% if date_range.identifier == "30_days" %}selected{% endif %}>Last 30 days</option>
+        <option value="current_month" {% if date_range.identifier == "current_month" %}selected{% endif %}>Current month</option>
+        <option value="custom" {% if date_range.identifier == "custom" %}selected{% endif %}>Custom date range</option>
+      </select>
+    </label>
+    <label class="text-sm">
+      <span class="mb-1 block">Start</span>
+      <input type="date" name="start" value="{{ date_range.start|date:'Y-m-d' }}" class="rounded-default border border-base-200 px-3 py-2 dark:border-base-700 dark:bg-base-900">
+    </label>
+    <label class="text-sm">
+      <span class="mb-1 block">End</span>
+      <input type="date" name="end" value="{{ date_range.end|date:'Y-m-d' }}" class="rounded-default border border-base-200 px-3 py-2 dark:border-base-700 dark:bg-base-900">
+    </label>
+    <button class="bg-primary-600 rounded-default px-4 py-2 text-white" type="submit">Apply</button>
+    {% if date_error %}
+      <p class="w-full text-sm text-red-600 dark:text-red-400">{{ date_error }} Showing the last 30 days.</p>
+    {% endif %}
+  </form>
+
+  {% if analytics.is_delayed %}
+    <div class="rounded-default border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+      Analytics are delayed. Latest completed aggregate:
+      {{ analytics.latest_aggregate_date|default:"none available" }}.
+    </div>
+  {% else %}
+    <div class="rounded-default border border-base-200 p-3 text-sm text-base-500 dark:border-base-700 dark:text-base-300">
+      Latest completed aggregate: {{ analytics.latest_aggregate_date }}. Today’s values may still be incomplete.
+    </div>
+  {% endif %}
+
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% for card in analytics.cards %}
+      <article class="rounded-default border border-base-200 p-4 dark:border-base-700">
+        <p class="text-sm text-base-500 dark:text-base-300">{{ card.label }}</p>
+        <p class="mt-2 text-2xl font-semibold">{{ card.value }}</p>
+        <p class="mt-2 text-xs text-base-500 dark:text-base-400">{{ card.note }}</p>
+      </article>
+    {% endfor %}
+  </section>
+
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    {% for ranking in analytics.rankings %}
+      <section class="overflow-hidden rounded-default border border-base-200 dark:border-base-700">
+        <h2 class="border-b border-base-200 px-4 py-3 font-semibold dark:border-base-700">{{ ranking.title }}</h2>
+        {% if ranking.rows %}
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left"><th class="p-3">Content</th><th class="p-3">Plays</th><th class="p-3">Hours</th></tr></thead>
+              <tbody>
+                {% for row in ranking.rows %}
+                  <tr class="border-t border-base-100 dark:border-base-800">
+                    <td class="p-3"><a class="text-primary-600" href="{{ row.url }}">{{ row.label }}</a></td>
+                    <td class="p-3">{{ row.plays }}</td>
+                    <td class="p-3">{{ row.listening_hours }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="p-4 text-sm text-base-500 dark:text-base-300">No aggregate data is available for this period.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,71 @@
+<div
+  id="{{ widget_id }}"
+  class="sk-audio-preview"
+  data-secure-audio-preview
+  data-sources="{{ sources_json|escape }}"
+  data-duration="{{ duration|default_if_none:'' }}"
+>
+  <div class="sk-audio-preview__header">
+    <div>
+      <strong>{{ title }}</strong>
+      <p>Audio is requested securely only when you press play.</p>
+    </div>
+    <div class="sk-audio-preview__availability" aria-label="Audio quality availability">
+      {% for source in sources %}
+        <span class="sk-audio-preview__badge{% if source.available %} is-available{% endif %}">
+          {{ source.label }}: {% if source.available %}available{% else %}unavailable{% endif %}
+        </span>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if has_available_audio %}
+    <audio data-audio preload="none"></audio>
+    <div class="sk-audio-preview__controls">
+      <button type="button" class="sk-audio-preview__play" data-play aria-label="Play audio">Play</button>
+      <span class="sk-audio-preview__time">
+        <span data-current-time>0:00</span>
+        <span aria-hidden="true">/</span>
+        <span data-duration>{{ duration_display }}</span>
+      </span>
+      <input
+        data-seek
+        class="sk-audio-preview__seek"
+        type="range"
+        min="0"
+        max="{{ duration|default:0 }}"
+        value="0"
+        step="0.1"
+        aria-label="Seek audio"
+      >
+      <label>
+        <span>Volume</span>
+        <input data-volume type="range" min="0" max="1" value="1" step="0.05" aria-label="Volume">
+      </label>
+      <label>
+        <span>Speed</span>
+        <select data-speed aria-label="Playback speed">
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+      </label>
+    </div>
+    <div class="sk-audio-preview__qualities" role="group" aria-label="Audio quality">
+      {% for source in sources %}
+        <button
+          type="button"
+          data-quality="{{ source.quality }}"
+          {% if not source.available %}disabled{% endif %}
+        >{{ source.label }}</button>
+      {% endfor %}
+    </div>
+    <p class="sk-audio-preview__status" data-status aria-live="polite">
+      Ready. Playback will not start automatically.
+    </p>
+  {% else %}
+    <p class="sk-audio-preview__empty">No playable audio is available for this record.</p>
+  {% endif %}
+</div>

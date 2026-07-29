@@ -1,0 +1,102 @@
+.sk-audio-preview {
+  background: color-mix(in srgb, var(--color-base-900) 86%, transparent);
+  border: 1px solid var(--color-base-700);
+  border-radius: 10px;
+  max-width: 920px;
+  padding: 16px;
+}
+
+.sk-audio-preview__header,
+.sk-audio-preview__controls,
+.sk-audio-preview__availability,
+.sk-audio-preview__qualities {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sk-audio-preview__header {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sk-audio-preview__header p,
+.sk-audio-preview__status,
+.sk-audio-preview__empty {
+  color: var(--color-base-400);
+  margin: 4px 0 0;
+}
+
+.sk-audio-preview__badge,
+.sk-audio-preview__qualities button,
+.sk-audio-preview__play {
+  border: 1px solid var(--color-base-600);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.sk-audio-preview__badge.is-available {
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-400);
+}
+
+.sk-audio-preview__play,
+.sk-audio-preview__qualities button.is-selected {
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-500);
+  color: white;
+}
+
+.sk-audio-preview__qualities button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sk-audio-preview__seek {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.sk-audio-preview__controls label {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.sk-audio-preview__qualities {
+  margin-top: 12px;
+}
+
+.sk-audio-preview__status.is-error {
+  color: #ef4444;
+}
+
+@media (prefers-color-scheme: light) {
+  .sk-audio-preview {
+    background: var(--color-base-50);
+    border-color: var(--color-base-200);
+  }
+}
+
+@media (max-width: 64rem) {
+  .sk-audio-preview {
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  .sk-audio-preview__seek {
+    flex-basis: 100%;
+    order: 10;
+    width: 100%;
+  }
+
+  .sk-audio-preview__controls label {
+    flex: 1 1 9rem;
+  }
+
+  .sk-audio-preview button,
+  .sk-audio-preview select {
+    min-height: 2.75rem;
+  }
+}

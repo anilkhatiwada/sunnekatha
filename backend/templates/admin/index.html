@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% load i18n static %}
+
+{% block title %}
+    {{ title }} | {{ site_title|default:_("Django site admin") }}
+{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/sunnekatha-dashboard.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'admin/css/processing-status.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="sk-dashboard" aria-labelledby="dashboard-title">
+    <header class="sk-dashboard__header">
+        <div>
+            <p class="sk-dashboard__eyebrow">Editorial operations</p>
+            <h2 id="dashboard-title">SunneKatha overview</h2>
+            <p>Publishing, audio operations, audience, and listening activity at a glance.</p>
+        </div>
+        <time datetime="{{ dashboard_generated_at|date:'c' }}">
+            Updated {{ dashboard_generated_at|date:"M j, Y · H:i" }}
+        </time>
+    </header>
+
+    {% if dashboard_metrics %}
+        <section class="sk-metrics" aria-label="Key metrics">
+            {% for metric in dashboard_metrics %}
+                <a class="sk-metric" href="{{ metric.url }}">
+                    <span class="material-symbols-outlined" aria-hidden="true">{{ metric.icon }}</span>
+                    <span class="sk-metric__value">{{ metric.value }}</span>
+                    <span class="sk-metric__label">{{ metric.label }}</span>
+                </a>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="sk-empty">You do not have permission to view dashboard metrics.</div>
+    {% endif %}
+
+    <section class="sk-sections" aria-label="Operational lists">
+        {% for section in dashboard_sections %}
+            <article class="sk-panel" id="{{ section.identifier }}">
+                <header class="sk-panel__header">
+                    <h2>{{ section.title }}</h2>
+                    <a href="{{ section.view_all_url }}">View all</a>
+                </header>
+                {% if section.rows %}
+                    <div class="sk-table-wrap">
+                        <table class="sk-table">
+                            <thead>
+                                <tr>
+                                    {% for column in section.columns %}
+                                        <th scope="col">{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in section.rows %}
+                                    <tr>
+                                        {% for cell in row.cells %}
+                                            <td>
+                                                {% if forloop.first %}
+                                                    <a href="{{ row.url }}">{{ cell }}</a>
+                                                {% else %}
+                                                    {{ cell }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="sk-empty">{{ section.empty_state }}</div>
+                {% endif %}
+            </article>
+        {% empty %}
+            <div class="sk-empty">You do not have permission to view operational lists.</div>
+        {% endfor %}
+    </section>
+</main>
+{% endblock %}

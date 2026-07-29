@@ -1,0 +1,5 @@
+description = "Design a task as the Architect"
+prompt = """
+Read AGENTS.md and .ai/personas/architect.md. Act only as Architect for:
+{{args}}
+"""

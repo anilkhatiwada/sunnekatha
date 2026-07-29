@@ -1,0 +1,24 @@
+[Unit]
+Description=SunneKatha Celery worker
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sunnekatha
+Group=sunnekatha
+WorkingDirectory=/srv/sunnekatha/current
+EnvironmentFile=/etc/sunnekatha/backend.env
+ExecStart=/srv/sunnekatha/venv/bin/celery -A config worker --loglevel=INFO --concurrency=1
+KillSignal=SIGTERM
+TimeoutStopSec=45
+Restart=on-failure
+RestartSec=10
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/sunnekatha
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

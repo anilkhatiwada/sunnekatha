@@ -1,0 +1,35 @@
+.sk-processing-badge {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 4px;
+  line-height: 1;
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+
+.sk-processing-badge .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.sk-processing-badge--info {
+  background: color-mix(in srgb, #2563eb 18%, transparent);
+  color: #60a5fa;
+}
+
+.sk-processing-badge--warning {
+  background: color-mix(in srgb, #d97706 18%, transparent);
+  color: #fbbf24;
+}
+
+.sk-processing-badge--success {
+  background: color-mix(in srgb, #15803d 18%, transparent);
+  color: #4ade80;
+}
+
+.sk-processing-badge--danger {
+  background: color-mix(in srgb, #b91c1c 20%, transparent);
+  color: #f87171;
+}

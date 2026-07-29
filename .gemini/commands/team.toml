@@ -1,0 +1,6 @@
+description = "Run the Architect, Engineer, and Reviewer workflow"
+prompt = """
+Read AGENTS.md and every file in .ai/personas/. Run the complete
+Architect -> Engineer -> Reviewer workflow for:
+{{args}}
+"""

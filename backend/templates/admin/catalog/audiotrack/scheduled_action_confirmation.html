@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<main class="max-w-3xl" aria-labelledby="scheduled-confirmation-title">
+  <h2 id="scheduled-confirmation-title" class="text-2xl font-semibold">{{ title }}</h2>
+  <p class="my-4">
+    {% if publication_action == "cancel" %}
+      Cancel the scheduled publication for <strong>{{ track }}</strong>?
+      The track will return to the approved state and will not be public.
+    {% else %}
+      Publish <strong>{{ track }}</strong> immediately instead of waiting for
+      its scheduled time?
+    {% endif %}
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="track_id" value="{{ track.pk }}">
+    <input type="hidden" name="publication_action" value="{{ publication_action }}">
+    <input type="hidden" name="confirmed" value="yes">
+    <button type="submit"
+            class="rounded-default bg-primary-600 px-4 py-2 text-white">
+      Confirm {{ action_label|lower }}
+    </button>
+    <a href="{% url 'admin:catalog_scheduled_publications' %}" class="ml-3">
+      Keep current schedule
+    </a>
+  </form>
+</main>
+{% endblock %}

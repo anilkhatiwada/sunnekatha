@@ -1,0 +1,1 @@
+"""SunneKatha accounts application."""

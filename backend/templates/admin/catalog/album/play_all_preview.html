@@ -1,0 +1,28 @@
+<div
+  class="sk-album-preview"
+  data-album-play-all
+  data-tracks="{{ manifest_json|escape }}"
+>
+  {% if tracks %}
+    <div class="sk-album-preview__header">
+      <div>
+        <strong>{{ album.title_ne }}</strong>
+        <p>{{ tracks|length }} playable track{{ tracks|length|pluralize }} in stable album order.</p>
+      </div>
+      <button type="button" data-play-all>Play all</button>
+    </div>
+    <audio data-audio preload="none"></audio>
+    <div class="sk-album-preview__controls">
+      <button type="button" data-previous aria-label="Previous track">Previous</button>
+      <button type="button" data-play aria-label="Play current track">Play</button>
+      <button type="button" data-next aria-label="Next track">Next</button>
+      <span data-current-title>Ready to play</span>
+    </div>
+    <p data-status aria-live="polite">Media URLs are requested only when playback starts.</p>
+    {% if truncated %}
+      <p>Preview limited to the first {{ limit }} playable tracks. Use the related-track link for the complete album.</p>
+    {% endif %}
+  {% else %}
+    <p>No processed album tracks are available for preview.</p>
+  {% endif %}
+</div>

@@ -1,0 +1,6 @@
+description = "Implement an approved Architect plan"
+prompt = """
+Read AGENTS.md and .ai/personas/engineer.md. Act as Engineer. The task and
+Architect handoff are:
+{{args}}
+"""

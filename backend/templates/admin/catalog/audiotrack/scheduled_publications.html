@@ -1,0 +1,117 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<main class="space-y-6">
+  <header>
+    <p class="text-sm text-base-500 dark:text-base-300">Editorial scheduling</p>
+    <h2 class="text-2xl font-semibold">Scheduled publications</h2>
+    <p class="mt-2 text-sm text-base-500 dark:text-base-300">
+      Times are displayed in {{ configured_timezone }}. Stored timestamps remain
+      timezone-aware.
+    </p>
+  </header>
+
+  {% for group in groups %}
+    <section class="overflow-hidden rounded-default border border-base-200 dark:border-base-700">
+      <h2 class="border-b border-base-200 px-4 py-3 text-lg font-semibold dark:border-base-700">
+        {{ group.title }}
+      </h2>
+      {% if group.items %}
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[1100px] text-sm">
+            <thead>
+              <tr class="text-left">
+                <th class="p-3">Content title</th>
+                <th class="p-3">Content type</th>
+                <th class="p-3">Author</th>
+                <th class="p-3">Narrator</th>
+                <th class="p-3">Scheduled time</th>
+                <th class="p-3">Processing readiness</th>
+                <th class="p-3">Copyright readiness</th>
+                <th class="p-3">Publication status</th>
+                <th class="p-3">Assigned editor</th>
+                <th class="p-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in group.items %}
+                <tr class="border-t border-base-100 align-top dark:border-base-800">
+                  <td class="p-3 font-medium">{{ item.title }}</td>
+                  <td class="p-3">{{ item.content_type }}</td>
+                  <td class="p-3">{{ item.author }}</td>
+                  <td class="p-3">{{ item.narrator }}</td>
+                  <td class="p-3">
+                    <time datetime="{{ item.scheduled_time|date:'c' }}">
+                      {{ item.scheduled_time|date:"M j, Y · H:i T" }}
+                    </time>
+                  </td>
+                  <td class="p-3">
+                    {% if item.processing_ready %}
+                      <span class="text-green-700 dark:text-green-300">Ready</span>
+                    {% else %}
+                      <span class="text-red-700 dark:text-red-300">Blocked</span>
+                    {% endif %}
+                  </td>
+                  <td class="p-3">
+                    {% if item.copyright_ready %}
+                      <span class="text-green-700 dark:text-green-300">Ready</span>
+                    {% else %}
+                      <span class="text-red-700 dark:text-red-300">Blocked</span>
+                      <ul class="mt-1 text-xs">
+                        {% for issue in item.copyright_issues %}<li>{{ issue }}</li>{% endfor %}
+                      </ul>
+                    {% endif %}
+                  </td>
+                  <td class="p-3">{{ item.publication_status }}</td>
+                  <td class="p-3">{{ item.assigned_editor }}</td>
+                  <td class="p-3">
+                    <a class="text-primary-600" href="{% url 'admin:catalog_audiotrack_change' item.id %}">
+                      Open content
+                    </a>
+                    {% if can_publish %}
+                      <form method="post" class="mt-2 space-y-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="track_id" value="{{ item.id }}">
+                        <label>
+                          <span class="sr-only">New publication time for {{ item.title }}</span>
+                          <input type="datetime-local" name="scheduled_for" required
+                                 value="{{ item.scheduled_time|date:'Y-m-d\\TH:i' }}"
+                                 class="rounded-default border border-base-200 px-2 py-1 dark:border-base-700 dark:bg-base-900">
+                        </label>
+                        <button name="publication_action" value="reschedule" type="submit">Reschedule</button>
+                      </form>
+                      <div class="mt-2 flex gap-3">
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="track_id" value="{{ item.id }}">
+                          <button name="publication_action" value="cancel" type="submit"
+                                  aria-label="Cancel schedule for {{ item.title }}">Cancel schedule</button>
+                        </form>
+                        {% if item.processing_ready and item.copyright_ready %}
+                          <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="track_id" value="{{ item.id }}">
+                            <button name="publication_action" value="publish" type="submit"
+                                    aria-label="Publish {{ item.title }} now"
+                                    class="text-primary-600">Publish now</button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="p-4 text-sm text-base-500 dark:text-base-300">
+          No publications are scheduled for this period.
+        </p>
+      {% endif %}
+    </section>
+  {% endfor %}
+</main>
+{% endblock %}

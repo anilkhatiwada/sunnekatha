@@ -1,0 +1,97 @@
+/* Responsive refinements layered over Unfold without changing its core layout. */
+html,
+body {
+  max-width: 100%;
+}
+
+.field-title_ne,
+.field-title_en,
+.field-name_ne,
+.field-name_en,
+.field-original_filename,
+.field-object_repr {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.formset-wrapper,
+.results,
+.results table {
+  max-width: 100%;
+}
+
+.formset-wrapper {
+  overscroll-behavior-inline: contain;
+}
+
+.formset-wrapper input[name$="-position"] {
+  min-width: 4.75rem;
+  width: 4.75rem;
+}
+
+.formset-wrapper [data-ordering-field] {
+  min-width: 2.75rem;
+}
+
+.select2-container {
+  max-width: 100% !important;
+  min-width: 0;
+}
+
+[role="dialog"] > div {
+  max-width: calc(100vw - 2rem);
+}
+
+[role="dialog"] form,
+[role="dialog"] footer,
+.actions,
+.submit-row {
+  max-width: 100%;
+}
+
+@media (max-width: 80rem) {
+  .change-form textarea {
+    max-height: 12rem;
+    min-height: 7rem;
+  }
+
+  .actions,
+  .submit-row,
+  [role="dialog"] footer {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .actions select {
+    max-width: 100%;
+  }
+
+  .formset-wrapper table {
+    min-width: 48rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .change-form form {
+    margin-inline: 0;
+  }
+
+  .change-form textarea {
+    max-height: 10rem;
+    min-height: 6rem;
+  }
+
+  .submit-row input,
+  .submit-row button,
+  .actions button,
+  [role="dialog"] button {
+    min-height: 2.75rem;
+  }
+
+  [role="dialog"] > div {
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+}

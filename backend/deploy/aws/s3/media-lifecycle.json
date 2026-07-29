@@ -1,0 +1,34 @@
+{
+  "Rules": [
+    {
+      "ID": "ExpireTemporaryUploads",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "temporary/"
+      },
+      "Expiration": {
+        "Days": 1
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 1
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    },
+    {
+      "ID": "LimitNoncurrentMediaVersions",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": ""
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7,
+        "NewerNoncurrentVersions": 1
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    }
+  ]
+}

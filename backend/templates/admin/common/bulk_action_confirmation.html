@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="max-w-3xl">
+    <form method="post">
+      {% csrf_token %}
+      <div class="bg-white border border-base-200 rounded-default p-6 shadow-xs dark:bg-base-900 dark:border-base-800">
+        <p class="mb-5">{{ warning }}</p>
+        <h2 class="font-semibold mb-2">{% trans "Selected items" %}</h2>
+        <ul class="list-disc ml-6 mb-6">
+          {% for object in queryset %}
+            <li>{{ object }}</li>
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.pk }}">
+          {% endfor %}
+        </ul>
+        <input type="hidden" name="action" value="{{ action_name }}">
+        <input type="hidden" name="confirm_bulk_action" value="1">
+        <button type="submit" class="bg-primary-600 text-white px-4 py-2 rounded-default">
+          {{ submit_label }}
+        </button>
+        <a href="../" class="ml-3">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

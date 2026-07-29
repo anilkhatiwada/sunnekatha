@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AccountBootstrapAssumeRole",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::533463644243:root"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}

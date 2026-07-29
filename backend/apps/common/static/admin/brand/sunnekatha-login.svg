@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600" role="img" aria-labelledby="title description">
+  <title id="title">SunneKatha Administration</title>
+  <desc id="description">Warm SunneKatha monogram for the administration login.</desc>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="60%">
+      <stop offset="0" stop-color="#6f3f2b"/>
+      <stop offset="1" stop-color="#0b0a09"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#glow)"/>
+  <circle cx="600" cy="680" r="184" fill="#e58a52"/>
+  <path d="M681 585c-30-23-67-35-108-35-70 0-120 39-120 97 0 63 49 81 107 96 49 12 67 23 67 48 0 27-24 43-60 43-43 0-81-15-114-46l-34 49c39 33 89 51 146 51 77 0 130-40 130-102 0-63-46-83-110-99-45-11-63-21-63-44 0-24 21-39 53-39 30 0 59 10 84 30z" fill="#0b0a09"/>
+  <text x="600" y="980" text-anchor="middle" fill="#f5eee7" font-family="Inter, sans-serif" font-size="64" font-weight="600">SunneKatha</text>
+  <text x="600" y="1048" text-anchor="middle" fill="#b7aaa0" font-family="Inter, sans-serif" font-size="28">Audio Literature Management</text>
+</svg>
