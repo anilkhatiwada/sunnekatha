@@ -44,6 +44,10 @@ class TokenPairWithUserSerializer(serializers.Serializer):
     user = UserSerializer(read_only=True)
 
 
+class GoogleLoginSerializer(serializers.Serializer):
+    credential = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
 class RegistrationSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
     displayName = serializers.CharField(source="display_name", min_length=2)
     password = serializers.CharField(write_only=True, trim_whitespace=False)

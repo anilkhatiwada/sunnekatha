@@ -16,6 +16,7 @@ describe("public environment configuration", () => {
       apiBaseUrl: "https://api.sunnekatha.example/api/v1",
       apiTimeoutMs: 20_000,
       appEnvironment: "staging",
+      googleClientId: "",
     });
   });
 

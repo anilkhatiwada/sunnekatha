@@ -6,6 +6,7 @@ interface PublicEnvironmentSource {
   NEXT_PUBLIC_API_BASE_URL?: string;
   NEXT_PUBLIC_API_TIMEOUT_MS?: string;
   NEXT_PUBLIC_APP_ENV?: string;
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string;
 }
 
 const DEFAULT_MOCK_API_BASE_URL = "http://localhost:8000/api/v1";
@@ -36,6 +37,7 @@ export function createEnvironment(source: PublicEnvironmentSource) {
       source.NEXT_PUBLIC_APP_ENV === "production"
         ? source.NEXT_PUBLIC_APP_ENV
         : "local",
+    googleClientId: source.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "",
   };
 
   try {
@@ -77,4 +79,5 @@ export const environment = createEnvironment({
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   NEXT_PUBLIC_API_TIMEOUT_MS: process.env.NEXT_PUBLIC_API_TIMEOUT_MS,
   NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
 });

@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { LogIn, Search } from "lucide-react";
 import Link from "next/link";
 
 import { Logo } from "@/components/layout/logo";
@@ -21,6 +21,13 @@ export function AppHeader() {
 
         <div className="flex shrink-0 items-center gap-2">
           <PwaInstallButton />
+          <Link
+            href="/login"
+            aria-label="साइन इन गर्नुहोस्"
+            className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <LogIn aria-hidden="true" className="size-[1.1rem]" />
+          </Link>
           <Link
             href="/search"
             aria-label="सामग्री खोज्नुहोस्"

@@ -28,7 +28,7 @@ blocked, or materially changed.
 | Frontend deployment | Deployed to production domain | Commit `c9678e7` runs on the existing Lightsail instance |
 | Live API verification | Verified | HTTPS, API routing, CORS, redirects, health, homepage, and Admin routing pass |
 | Search | Completed locally | Grouped, track-only, autocomplete, trending, and pagination use Django in remote mode |
-| Authentication and profile | Pending | JWT client foundation exists, but user-facing authentication is not connected |
+| Authentication and profile | In progress | Google Sign-In and JWT establishment are implemented locally; session-aware profile/logout remain |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
 | Listening state | Pending | Progress, history, and playback sessions remain local |
 | Queue synchronization | Pending | Player queue remains browser-local |
@@ -239,6 +239,11 @@ production content is assigned through Django Admin.
 
 ### Phase 6 — Authentication and account
 
+- [x] Add Google Identity Services sign-in page and button.
+- [x] Verify Google ID credentials in Django and issue the existing JWT pair.
+- [x] Store Google `sub` in a dedicated social identity model.
+- [x] Prevent unsafe automatic linking of non-authoritative existing emails.
+- [x] Preserve email/password authentication.
 - [ ] Add registration and login forms.
 - [ ] Connect login, registration, refresh, logout, and current-user endpoints.
 - [ ] Complete secure token lifecycle behavior.
@@ -346,7 +351,8 @@ which remains blocked by the deployed CORS configuration.
 ## Recommended next action
 
 Begin Phase 6, Authentication and account. The API client already has
-single-flight JWT refresh and per-tab token storage; the next phase should add
-the session provider, login/registration screens, current-user bootstrap,
-logout, profile/preferences updates, password change, and protected-query
-gating before integrating personalized library and listening state.
+single-flight JWT refresh and per-tab token storage. Google Sign-In now
+establishes that JWT session; the next step is current-user bootstrap, logout,
+session-aware navigation, profile/preferences updates, password behavior for
+social-only accounts, and protected-query gating before integrating personalized
+library and listening state.

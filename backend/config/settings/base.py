@@ -5,6 +5,7 @@ from pathlib import Path
 
 import environ
 from celery.schedules import crontab
+from corsheaders.defaults import default_headers
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 
@@ -61,6 +62,7 @@ ANALYTICS_MAX_RANGE_DAYS = env.int("ANALYTICS_MAX_RANGE_DAYS")
 ANALYTICS_PRIVACY_MIN_LISTENERS = env.int("ANALYTICS_PRIVACY_MIN_LISTENERS")
 ADMIN_ENVIRONMENT = env("ADMIN_ENVIRONMENT").strip().upper()
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 
 DJANGO_APPS = [
     "unfold",
@@ -669,6 +671,7 @@ CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=["http://localhost:3000", "http://127.0.0.1:3000"],
 )
+CORS_ALLOW_HEADERS = (*default_headers, "x-sunnekatha-auth")
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

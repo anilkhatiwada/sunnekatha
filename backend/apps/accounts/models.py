@@ -51,3 +51,32 @@ class User(UUIDTimeStampedModel, AbstractUser):
 
     def __str__(self):
         return self.display_name or self.email
+
+
+class SocialIdentity(UUIDTimeStampedModel):
+    class Provider(models.TextChoices):
+        GOOGLE = "google", "Google"
+
+    user = models.ForeignKey(
+        User,
+        related_name="social_identities",
+        on_delete=models.CASCADE,
+    )
+    provider = models.CharField(max_length=20, choices=Provider.choices)
+    subject = models.CharField(max_length=255)
+    email_at_link = models.EmailField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("provider", "subject"),
+                name="accounts_social_provider_subject_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("user", "provider"),
+                name="accounts_social_user_provider_unique",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.provider}:{self.user.email}"

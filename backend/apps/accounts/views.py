@@ -1,5 +1,6 @@
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -9,10 +10,12 @@ from rest_framework_simplejwt.token_blacklist.models import (
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.accounts.google_auth import resolve_google_user, verify_google_credential
 from apps.accounts.permissions import IsAuthenticatedAndActive
 from apps.accounts.serializers import (
     ChangePasswordSerializer,
     EmailTokenObtainPairSerializer,
+    GoogleLoginSerializer,
     LogoutSerializer,
     PreferencesUpdateSerializer,
     ProfileUpdateSerializer,
@@ -89,6 +92,29 @@ class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = EmailTokenObtainPairSerializer
     throttle_scope = "login"
+
+
+class GoogleLoginView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = GoogleLoginSerializer
+    throttle_scope = "login"
+
+    def post(self, request):
+        if request.headers.get("X-SunneKatha-Auth") != "google":
+            raise AuthenticationFailed("Invalid Google login request.")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = resolve_google_user(
+            verify_google_credential(serializer.validated_data["credential"])
+        )
+        token = EmailTokenObtainPairSerializer.get_token(user)
+        return Response(
+            {
+                "access": str(token.access_token),
+                "refresh": str(token),
+                "user": UserSerializer(user, context={"request": request}).data,
+            }
+        )
 
 
 class RefreshView(TokenRefreshView):

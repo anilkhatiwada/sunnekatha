@@ -49,6 +49,7 @@ export {
   getTrendingTracks,
 } from "@/services/track-service";
 export { apiClient } from "@/services/api-client";
+export { loginWithGoogle } from "@/services/auth-service";
 export { ApiError, normalizeApiError } from "@/services/api-error";
 export {
   DEFAULT_ARTWORK_PATH,
