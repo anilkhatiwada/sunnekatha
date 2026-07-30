@@ -28,7 +28,7 @@ blocked, or materially changed.
 | Frontend deployment | Deployed to production domain | Commit `9273f61` runs on the existing Lightsail instance |
 | Live API verification | Verified | HTTPS, API routing, CORS, redirects, health, homepage, and Admin routing pass |
 | Search | Completed locally | Grouped, track-only, autocomplete, trending, and pagination use Django in remote mode |
-| Authentication and profile | In progress | Google Sign-In and JWT establishment are live; session-aware profile/logout remain |
+| Authentication and profile | Integrated | Google Sign-In, current-user bootstrap, protected navigation, profile/preferences, and logout use Django |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
 | Listening state | Pending | Progress, history, and playback sessions remain local |
 | Queue synchronization | Pending | Player queue remains browser-local |
@@ -246,13 +246,19 @@ production content is assigned through Django Admin.
 - [x] Store Google `sub` in a dedicated social identity model.
 - [x] Prevent unsafe automatic linking of non-authoritative existing emails.
 - [x] Preserve email/password authentication.
+- [x] Hide Library and Profile navigation until authentication succeeds.
+- [x] Guard direct access to authenticated routes.
+- [x] Bootstrap the current user from `GET /auth/me/`.
+- [x] Display real backend identity and preference data.
+- [x] Persist profile and preference changes through Django.
+- [x] Blacklist the refresh token and clear the browser session on logout.
+- [x] Connect refresh, logout, and current-user endpoints.
+- [x] Gate authenticated queries until a session is known.
+- [x] Ensure logged-out and expired-session behavior is consistent.
 - [ ] Add registration and login forms.
-- [ ] Connect login, registration, refresh, logout, and current-user endpoints.
-- [ ] Complete secure token lifecycle behavior.
-- [ ] Gate authenticated queries until a session is known.
-- [ ] Connect profile and preference updates.
+- [ ] Connect email/password login and registration forms.
+- [ ] Move browser tokens from session storage to an HttpOnly cookie flow.
 - [ ] Connect password change.
-- [ ] Ensure logged-out and expired-session behavior is consistent.
 
 ### Phase 7 — Library relationships
 

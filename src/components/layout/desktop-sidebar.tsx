@@ -5,8 +5,11 @@ import { BookOpenText } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { NavigationLink } from "@/components/layout/navigation-link";
 import { MAIN_NAVIGATION } from "@/lib/routes";
+import { useAuth } from "@/features/auth/auth-provider";
 
 export function DesktopSidebar() {
+  const { user } = useAuth();
+  const navigation = MAIN_NAVIGATION.filter((item) => !item.requiresAuth || user);
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border/80 bg-surface/94 px-4 py-5 backdrop-blur-xl lg:flex">
       <Logo className="px-2" />
@@ -16,7 +19,7 @@ export function DesktopSidebar() {
           मेनु
         </p>
         <ul className="mt-3 space-y-1">
-          {MAIN_NAVIGATION.map((item) => (
+          {navigation.map((item) => (
             <li key={item.href}>
               <NavigationLink item={item} />
             </li>

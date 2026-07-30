@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AuthRequired } from "@/features/auth/auth-required";
 import { LibraryPageContent } from "@/features/library/library-page";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function LibraryPage() {
-  return <LibraryPageContent />;
+  return (
+    <AuthRequired>
+      <LibraryPageContent />
+    </AuthRequired>
+  );
 }

@@ -1,6 +1,10 @@
 import type { ContentType, SearchResultType } from "@/types";
 
 export const queryKeys = {
+  auth: {
+    all: ["auth"] as const,
+    currentUser: () => [...queryKeys.auth.all, "current-user"] as const,
+  },
   home: {
     all: ["home"] as const,
     detail: () => [...queryKeys.home.all, "detail"] as const,

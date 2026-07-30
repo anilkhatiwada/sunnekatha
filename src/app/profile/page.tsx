@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ProfileSettingsPage } from "@/features/profile/profile-settings-page";
+import { AuthRequired } from "@/features/auth/auth-required";
 
 export const metadata: Metadata = {
   title: "प्रोफाइल र सेटिङ",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function ProfilePage() {
-  return <ProfileSettingsPage />;
+  return (
+    <AuthRequired>
+      <ProfileSettingsPage />
+    </AuthRequired>
+  );
 }

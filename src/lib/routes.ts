@@ -11,6 +11,7 @@ export interface NavigationItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  requiresAuth?: boolean;
 }
 
 export const MAIN_NAVIGATION: NavigationItem[] = [
@@ -28,6 +29,7 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     href: "/library",
     label: "लाइब्रेरी",
     icon: Library,
+    requiresAuth: true,
   },
   {
     href: "/playlists",
@@ -38,6 +40,7 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     href: "/profile",
     label: "प्रोफाइल",
     icon: CircleUserRound,
+    requiresAuth: true,
   },
 ];
 

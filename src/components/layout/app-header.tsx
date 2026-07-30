@@ -1,10 +1,14 @@
-import { LogIn, Search } from "lucide-react";
+"use client";
+
+import { CircleUserRound, LogIn, Search } from "lucide-react";
 import Link from "next/link";
 
 import { Logo } from "@/components/layout/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
+import { useAuth } from "@/features/auth/auth-provider";
 
 export function AppHeader() {
+  const { user } = useAuth();
   return (
     <header className="sticky top-0 z-20 h-16 border-b border-border/70 bg-background/82 backdrop-blur-xl">
       <div className="flex h-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -22,11 +26,17 @@ export function AppHeader() {
         <div className="flex shrink-0 items-center gap-2">
           <PwaInstallButton />
           <Link
-            href="/login"
-            aria-label="साइन इन गर्नुहोस्"
+            href={user ? "/profile" : "/login"}
+            aria-label={
+              user ? `${user.displayName} को प्रोफाइल` : "साइन इन गर्नुहोस्"
+            }
             className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           >
-            <LogIn aria-hidden="true" className="size-[1.1rem]" />
+            {user ? (
+              <CircleUserRound aria-hidden="true" className="size-[1.1rem]" />
+            ) : (
+              <LogIn aria-hidden="true" className="size-[1.1rem]" />
+            )}
           </Link>
           <Link
             href="/search"

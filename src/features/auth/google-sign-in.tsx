@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { environment } from "@/config/environment";
@@ -17,7 +16,7 @@ declare global {
           }): void;
           renderButton(
             element: HTMLElement,
-            options: Record<string, string | number>,
+            options: Record<string, string | number | (() => void)>,
           ): void;
         };
       };
@@ -27,7 +26,7 @@ declare global {
 
 export function GoogleSignIn() {
   const buttonRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const responseTimerRef = useRef<number | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -38,6 +37,9 @@ export function GoogleSignIn() {
       window.google.accounts.id.initialize({
         client_id: environment.googleClientId,
         callback: async ({ credential }) => {
+          if (responseTimerRef.current) {
+            window.clearTimeout(responseTimerRef.current);
+          }
           if (!credential) {
             setError("Google बाट पहिचान प्राप्त भएन।");
             return;
@@ -45,8 +47,7 @@ export function GoogleSignIn() {
           setError("");
           try {
             await loginWithGoogle(credential);
-            router.replace("/profile");
-            router.refresh();
+            window.location.assign("/profile");
           } catch {
             setError("Google साइन इन सफल भएन। कृपया फेरि प्रयास गर्नुहोस्।");
           }
@@ -60,6 +61,17 @@ export function GoogleSignIn() {
         shape: "pill",
         text: "continue_with",
         width: 320,
+        click_listener: () => {
+          setError("");
+          if (responseTimerRef.current) {
+            window.clearTimeout(responseTimerRef.current);
+          }
+          responseTimerRef.current = window.setTimeout(() => {
+            setError(
+              "Google ले जवाफ दिएन। पपअप अनुमति र Google OAuth मा https://sunnekatha.com origin जाँच गर्नुहोस्।",
+            );
+          }, 10_000);
+        },
       });
     };
 
@@ -77,7 +89,12 @@ export function GoogleSignIn() {
     script.defer = true;
     script.addEventListener("load", render, { once: true });
     document.head.appendChild(script);
-  }, [router]);
+    return () => {
+      if (responseTimerRef.current) {
+        window.clearTimeout(responseTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!environment.googleClientId) {
     return (

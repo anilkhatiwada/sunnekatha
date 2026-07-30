@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AudioEngine } from "@/features/player/audio-engine";
 import { PlayerKeyboardShortcuts } from "@/features/player/player-keyboard-shortcuts";
 import { PreferencesController } from "@/features/profile/preferences-controller";
+import { AuthProvider } from "@/features/auth/auth-provider";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -27,10 +28,12 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PreferencesController />
-      <AudioEngine />
-      <PlayerKeyboardShortcuts />
-      {children}
+      <AuthProvider>
+        <PreferencesController />
+        <AudioEngine />
+        <PlayerKeyboardShortcuts />
+        {children}
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

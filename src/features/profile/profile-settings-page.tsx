@@ -1,10 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
-  Gauge,
   Headphones,
   LogOut,
   Mail,
@@ -15,28 +13,25 @@ import {
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/features/auth/auth-provider";
 import {
   type ProfilePreferencesFormValues,
   profilePreferencesSchema,
 } from "@/features/profile/profile-schema";
 import { usePreferencesStore } from "@/features/profile/preferences-store";
 import { cn } from "@/lib/utils";
-import { getListeningStatistics, queryKeys } from "@/services";
+import { updateAccountPreferences, updateProfile } from "@/services";
 
 const inputClassName =
   "mt-2 h-11 w-full rounded-lg border border-border bg-background/55 px-3 text-sm text-foreground transition-colors focus:border-primary focus:outline-2 focus:outline-primary disabled:cursor-not-allowed disabled:opacity-55";
 
 export function ProfileSettingsPage() {
+  const { user, refreshUser, logout } = useAuth();
   const preferences = usePreferencesStore();
   const updatePreferences = usePreferencesStore(
     (state) => state.updatePreferences,
   );
-  const statisticsQuery = useQuery({
-    queryKey: queryKeys.profile.listeningStatistics(),
-    queryFn: getListeningStatistics,
-  });
   const [statusMessage, setStatusMessage] = useState("");
   const hasHydrated = usePreferencesStore((state) => state.hasHydrated);
   const {
@@ -47,12 +42,14 @@ export function ProfileSettingsPage() {
   } = useForm<ProfilePreferencesFormValues>({
     resolver: zodResolver(profilePreferencesSchema),
     defaultValues: {
-      displayName: preferences.displayName,
-      email: preferences.email,
-      preferredLanguage: preferences.preferredLanguage,
-      autoplay: preferences.autoplay,
-      defaultPlaybackSpeed: preferences.defaultPlaybackSpeed,
-      allowExplicitContent: preferences.allowExplicitContent,
+      displayName: user?.displayName ?? "",
+      email: user?.email ?? "",
+      preferredLanguage: user?.preferredLanguage ?? preferences.preferredLanguage,
+      autoplay: user?.autoplayEnabled ?? preferences.autoplay,
+      defaultPlaybackSpeed:
+        user?.defaultPlaybackSpeed ?? preferences.defaultPlaybackSpeed,
+      allowExplicitContent:
+        user?.explicitContentEnabled ?? preferences.allowExplicitContent,
       themePreference: preferences.themePreference,
     },
   });
@@ -63,12 +60,14 @@ export function ProfileSettingsPage() {
     }
 
     reset({
-      displayName: preferences.displayName,
-      email: preferences.email,
-      preferredLanguage: preferences.preferredLanguage,
-      autoplay: preferences.autoplay,
-      defaultPlaybackSpeed: preferences.defaultPlaybackSpeed,
-      allowExplicitContent: preferences.allowExplicitContent,
+      displayName: user?.displayName ?? "",
+      email: user?.email ?? "",
+      preferredLanguage: user?.preferredLanguage ?? preferences.preferredLanguage,
+      autoplay: user?.autoplayEnabled ?? preferences.autoplay,
+      defaultPlaybackSpeed:
+        user?.defaultPlaybackSpeed ?? preferences.defaultPlaybackSpeed,
+      allowExplicitContent:
+        user?.explicitContentEnabled ?? preferences.allowExplicitContent,
       themePreference: preferences.themePreference,
     });
   }, [
@@ -81,12 +80,33 @@ export function ProfileSettingsPage() {
     preferences.preferredLanguage,
     preferences.themePreference,
     reset,
+    user?.displayName,
+    user?.email,
+    user?.preferredLanguage,
+    user?.autoplayEnabled,
+    user?.defaultPlaybackSpeed,
+    user?.explicitContentEnabled,
   ]);
 
-  const savePreferences = (values: ProfilePreferencesFormValues) => {
-    updatePreferences(values);
-    reset(values);
-    setStatusMessage("तपाईंका प्राथमिकताहरू सुरक्षित भए।");
+  const savePreferences = async (values: ProfilePreferencesFormValues) => {
+    setStatusMessage("");
+    try {
+      await Promise.all([
+        updateProfile({ displayName: values.displayName, email: values.email }),
+        updateAccountPreferences({
+          preferredLanguage: values.preferredLanguage,
+          defaultPlaybackSpeed: values.defaultPlaybackSpeed,
+          autoplayEnabled: values.autoplay,
+          explicitContentEnabled: values.allowExplicitContent,
+        }),
+      ]);
+      updatePreferences(values);
+      await refreshUser();
+      reset(values);
+      setStatusMessage("तपाईंका प्राथमिकताहरू सुरक्षित भए।");
+    } catch {
+      setStatusMessage("परिवर्तन सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।");
+    }
   };
 
   return (
@@ -102,45 +122,14 @@ export function ProfileSettingsPage() {
               तपाईंको स्थान
             </p>
             <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-              प्रोफाइल र सेटिङ
+              {user?.displayName}
             </h1>
             <p className="mt-3 font-nepali text-sm text-muted-foreground">
-              व्यक्तिगत जानकारी र श्रवण अनुभव आफ्नै रुचिअनुसार मिलाउनुहोस्।
+              {user?.email}
             </p>
           </div>
         </div>
       </header>
-
-      <section aria-labelledby="statistics-heading">
-        <SectionHeading
-          id="statistics-heading"
-          icon={Gauge}
-          title="श्रवण तथ्याङ्क"
-          description="तपाईंको हालसम्मको श्रवण यात्राको नमुना"
-        />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {statisticsQuery.isPending
-            ? Array.from({ length: 4 }, (_, index) => (
-                <LoadingSkeleton key={index} className="h-36 rounded-xl" />
-              ))
-            : statisticsQuery.data?.map((statistic) => (
-                <article
-                  key={statistic.id}
-                  className="rounded-xl border border-border bg-surface/60 p-5"
-                >
-                  <p className="font-nepali text-xs text-muted-foreground">
-                    {statistic.label}
-                  </p>
-                  <p className="mt-2 font-literary text-3xl font-semibold text-primary">
-                    {statistic.value}
-                  </p>
-                  <p className="mt-3 font-nepali text-xs leading-5 text-muted-foreground">
-                    {statistic.detail}
-                  </p>
-                </article>
-              ))}
-        </div>
-      </section>
 
       <form
         onSubmit={handleSubmit(savePreferences)}
@@ -300,14 +289,14 @@ export function ProfileSettingsPage() {
       <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
         <h2 className="font-literary text-2xl font-semibold">खाता</h2>
         <p className="mt-2 font-nepali text-sm text-muted-foreground">
-          यो frontend-only संस्करणमा वास्तविक प्रमाणीकरण जोडिएको छैन।
+          यो उपकरणबाट सुरक्षित रूपमा साइन आउट गर्नुहोस्।
         </p>
         <Button
           type="button"
           variant="ghost"
-          onClick={() =>
-            setStatusMessage("लगआउट सुविधा backend जडानपछि उपलब्ध हुनेछ।")
-          }
+          onClick={() => {
+            void logout().finally(() => window.location.assign("/login"));
+          }}
           className="mt-4 rounded-full font-nepali text-destructive"
         >
           <LogOut aria-hidden="true" className="size-4" />
