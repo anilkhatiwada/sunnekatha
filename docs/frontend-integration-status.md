@@ -25,10 +25,10 @@ blocked, or materially changed.
 | Homepage | Completed locally | Uses the aggregate `/home/` response and preserves backend section order |
 | Public catalog | Completed locally | Explore, taxonomy, tracks, playlists, authors, and narrators use remote services |
 | Audio stream authorization | Completed locally | Stream URL is requested only after playback intent |
-| Frontend deployment | Deployed to production domain | Commit `c9678e7` runs on the existing Lightsail instance |
+| Frontend deployment | Deployed to production domain | Commit `9273f61` runs on the existing Lightsail instance |
 | Live API verification | Verified | HTTPS, API routing, CORS, redirects, health, homepage, and Admin routing pass |
 | Search | Completed locally | Grouped, track-only, autocomplete, trending, and pagination use Django in remote mode |
-| Authentication and profile | In progress | Google Sign-In and JWT establishment are implemented locally; session-aware profile/logout remain |
+| Authentication and profile | In progress | Google Sign-In and JWT establishment are live; session-aware profile/logout remain |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
 | Listening state | Pending | Progress, history, and playback sessions remain local |
 | Queue synchronization | Pending | Player queue remains browser-local |
@@ -117,7 +117,7 @@ to the apex domain.
 - Frontend URL: `https://sunnekatha.com`
 - API URL: `https://api.sunnekatha.com/api/v1`
 - Admin URL: `https://api.sunnekatha.com/admin/`
-- Commit/release: `c9678e7-production`
+- Commit/release: `9273f61-production`
 - Frontend runtime: Node.js 22.23.1 and Next.js 16.2.10
 - Frontend upstream: `127.0.0.1:3000`
 - Django upstream: `127.0.0.1:8000`
@@ -150,6 +150,8 @@ Verified after deployment:
   active.
 - [x] Nginx configuration validation passes.
 - [x] The production Next.js build uses the HTTPS API base URL.
+- [x] Google Sign-In page and verified JWT endpoint are live.
+- [x] Google social-identity migration is applied.
 
 Cloudflare records were kept DNS-only during certificate issuance and origin
 verification. They may be proxied after setting Cloudflare SSL/TLS mode to
