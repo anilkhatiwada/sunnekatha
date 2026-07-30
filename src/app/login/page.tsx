@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { GoogleSignIn } from "@/features/auth/google-sign-in";
+import { AccountAccessForm } from "@/features/auth/account-access-form";
 
 export const metadata: Metadata = { title: "साइन इन" };
 
@@ -19,6 +20,7 @@ export default function LoginPage() {
           खाता प्रयोग गर्नुहोस्।
         </p>
         <GoogleSignIn />
+        <AccountAccessForm />
       </section>
     </div>
   );

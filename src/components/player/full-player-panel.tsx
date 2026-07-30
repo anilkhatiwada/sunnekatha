@@ -10,7 +10,7 @@ import {
   Timer,
 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { PlayerControls } from "@/components/player/player-controls";
@@ -19,6 +19,7 @@ import { useModalDialog } from "@/components/player/use-modal-dialog";
 import { Button } from "@/components/ui/button";
 import { usePlayerStore } from "@/features/player/player-store";
 import { cn } from "@/lib/utils";
+import { sharePage } from "@/lib/share";
 import type { Track } from "@/types";
 
 interface FullPlayerPanelProps {
@@ -48,6 +49,8 @@ export function FullPlayerPanel({
   const [placeholderNotice, setPlaceholderNotice] = useState<string | null>(
     null,
   );
+  const [sleepMinutes, setSleepMinutes] = useState(0);
+  const pause = usePlayerStore((state) => state.pause);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -68,6 +71,16 @@ export function FullPlayerPanel({
         : currentIndex + 1;
     setPlaybackSpeed(PLAYBACK_SPEEDS[nextIndex]);
   };
+
+  useEffect(() => {
+    if (!sleepMinutes) return;
+    const timeout = window.setTimeout(() => {
+      pause();
+      setSleepMinutes(0);
+      setPlaceholderNotice("निद्रा टाइमर पूरा भयो। प्लेब्याक रोकियो।");
+    }, sleepMinutes * 60_000);
+    return () => window.clearTimeout(timeout);
+  }, [pause, sleepMinutes]);
 
   const showPlaceholderNotice = (label: string) => {
     setPlaceholderNotice(`${label} सुविधा चाँडै उपलब्ध हुनेछ।`);
@@ -199,7 +212,21 @@ export function FullPlayerPanel({
               <UtilityButton
                 icon={Share2}
                 label="साझा"
-                onClick={() => showPlaceholderNotice("साझा गर्ने")}
+                onClick={() => {
+                  void sharePage({
+                    title: track.title,
+                    text: `${track.title} · SunneKatha`,
+                    url: `${window.location.origin}/track/${track.slug}`,
+                  })
+                    .then((result) =>
+                      setPlaceholderNotice(
+                        result === "copied"
+                          ? "रचनाको लिङ्क प्रतिलिपि भयो।"
+                          : "रचना साझा भयो।",
+                      ),
+                    )
+                    .catch(() => undefined);
+                }}
               />
               <UtilityButton
                 icon={ListMusic}
@@ -214,8 +241,23 @@ export function FullPlayerPanel({
               />
               <UtilityButton
                 icon={Timer}
-                label="निद्रा टाइमर"
-                onClick={() => showPlaceholderNotice("निद्रा टाइमर")}
+                label={sleepMinutes ? `${sleepMinutes} मिनेट` : "निद्रा टाइमर"}
+                onClick={() => {
+                  const next =
+                    sleepMinutes === 0
+                      ? 15
+                      : sleepMinutes === 15
+                        ? 30
+                        : sleepMinutes === 30
+                          ? 45
+                          : 0;
+                  setSleepMinutes(next);
+                  setPlaceholderNotice(
+                    next
+                      ? `निद्रा टाइमर ${next} मिनेटमा सेट भयो।`
+                      : "निद्रा टाइमर बन्द भयो।",
+                  );
+                }}
               />
             </div>
 

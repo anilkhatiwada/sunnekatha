@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Heart,
-  ListPlus,
   Play,
   Share2,
   UserRound,
@@ -18,9 +17,11 @@ import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
+import { AddToPlaylistControl } from "@/features/playlist/add-to-playlist-control";
 import { formatDuration } from "@/lib/formatters";
+import { sharePage } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import {
   getAuthorBySlug,
@@ -68,12 +69,7 @@ export function TrackDetailPageContent({
     enabled: Boolean(track),
   });
   const { playTrack } = useCatalogPlayback();
-  const favoriteTrackIds = useLibraryStore(
-    (state) => state.favoriteTrackIds,
-  );
-  const toggleFavoriteTrack = useLibraryStore(
-    (state) => state.toggleFavoriteTrack,
-  );
+  const favorite = useLibraryRelationship("favoriteTrack", track?.id);
   const [statusMessage, setStatusMessage] = useState("");
 
   if (trackQuery.isPending) {
@@ -94,7 +90,7 @@ export function TrackDetailPageContent({
     return <TrackNotFound />;
   }
 
-  const isFavorite = favoriteTrackIds.includes(track.id);
+  const isFavorite = favorite.isActive;
   const author = authorQuery.data;
   const narrator = narratorQuery.data;
 
@@ -182,7 +178,14 @@ export function TrackDetailPageContent({
                 type="button"
                 variant="secondary"
                 aria-pressed={isFavorite}
-                onClick={() => toggleFavoriteTrack(track.id)}
+                disabled={favorite.isPending}
+                onClick={() => {
+                  if (!favorite.toggle()) {
+                    setStatusMessage(
+                      "मनपर्नेमा राख्न पहिले साइन इन गर्नुहोस्।",
+                    );
+                  }
+                }}
                 className={cn(
                   "rounded-full font-nepali",
                   isFavorite && "text-primary",
@@ -194,18 +197,32 @@ export function TrackDetailPageContent({
                 />
                 {isFavorite ? "मनपर्ने" : "मनपर्नेमा"}
               </Button>
-              <PlaceholderButton
-                icon={ListPlus}
-                label="प्लेलिस्टमा थप्नुहोस्"
-                message="प्लेलिस्टमा थप्ने सुविधा चाँडै उपलब्ध हुनेछ।"
+              <AddToPlaylistControl
+                trackId={track.id}
                 onMessage={setStatusMessage}
               />
-              <PlaceholderButton
-                icon={Share2}
-                label="साझा"
-                message="साझा गर्ने सुविधा चाँडै उपलब्ध हुनेछ।"
-                onMessage={setStatusMessage}
-              />
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-full font-nepali"
+                onClick={() => {
+                  void sharePage({
+                    title: track.title,
+                    text: `${track.title} · SunneKatha`,
+                  })
+                    .then((result) =>
+                      setStatusMessage(
+                        result === "copied"
+                          ? "रचनाको लिङ्क प्रतिलिपि भयो।"
+                          : "रचना साझा भयो।",
+                      ),
+                    )
+                    .catch(() => undefined);
+                }}
+              >
+                <Share2 aria-hidden="true" className="size-4" />
+                साझा
+              </Button>
             </div>
             <p
               role="status"
@@ -213,6 +230,9 @@ export function TrackDetailPageContent({
               className="mt-2 min-h-5 font-nepali text-xs text-muted-foreground"
             >
               {statusMessage}
+              {favorite.error
+                ? "मनपर्ने स्थिति सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।"
+                : null}
             </p>
           </div>
         </div>
@@ -293,30 +313,6 @@ export function TrackDetailPageContent({
             ))}
       </HorizontalSection>
     </div>
-  );
-}
-
-function PlaceholderButton({
-  icon: Icon,
-  label,
-  message,
-  onMessage,
-}: {
-  icon: typeof Share2;
-  label: string;
-  message: string;
-  onMessage: (message: string) => void;
-}) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={() => onMessage(message)}
-      className="rounded-full font-nepali"
-    >
-      <Icon aria-hidden="true" className="size-4" />
-      {label}
-    </Button>
   );
 }
 

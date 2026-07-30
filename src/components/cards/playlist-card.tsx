@@ -35,7 +35,6 @@ export function PlaylistCard<TPlaylist extends CatalogPlaylist | Playlist>({
         <CardPlayButton
           label={`${playlist.title} प्लेलिस्ट बजाउनुहोस्`}
           onPlay={() => onPlay(playlist)}
-          disabled={playlist.tracks.length === 0}
           className="absolute right-3 bottom-3 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
         />
       </MediaArtwork>

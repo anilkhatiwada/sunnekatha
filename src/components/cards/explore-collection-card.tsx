@@ -16,8 +16,8 @@ export function ExploreCollectionCard({
   const Icon = kind === "mood" ? Sparkles : BookOpenText;
   const href =
     kind === "genre"
-      ? `/explore?genre=${collection.slug}`
-      : `/explore?mood=${collection.slug}`;
+      ? `/genre/${collection.slug}`
+      : `/mood/${collection.slug}`;
 
   return (
     <Link

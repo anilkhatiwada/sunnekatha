@@ -16,7 +16,7 @@ import { PlayerProgress } from "@/components/player/player-progress";
 import { QueuePanel } from "@/components/player/queue-panel";
 import { VolumeControl } from "@/components/player/volume-control";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import {
   selectCurrentTrack,
   selectPlay,
@@ -32,22 +32,17 @@ export function PlayerSpace() {
   const setPlaybackError = usePlayerStore(
     (state) => state.setPlaybackError,
   );
-  const favoriteTrackIds = useLibraryStore(
-    (state) => state.favoriteTrackIds,
-  );
-  const toggleFavoriteTrack = useLibraryStore(
-    (state) => state.toggleFavoriteTrack,
-  );
+  const favorite = useLibraryRelationship("favoriteTrack", currentTrack?.id);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
 
-  const isFavorite = currentTrack
-    ? favoriteTrackIds.includes(currentTrack.id)
-    : false;
+  const isFavorite = favorite.isActive;
 
   const toggleFavorite = () => {
     if (!currentTrack) return;
-    toggleFavoriteTrack(currentTrack.id);
+    if (!favorite.toggle()) {
+      window.location.assign("/login");
+    }
   };
 
   return (
@@ -99,7 +94,7 @@ export function PlayerSpace() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                disabled={!currentTrack}
+                disabled={!currentTrack || favorite.isPending}
                 onClick={toggleFavorite}
                 aria-label={
                   isFavorite ? "मनपर्नेबाट हटाउनुहोस्" : "मनपर्नेमा राख्नुहोस्"

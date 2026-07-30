@@ -15,7 +15,7 @@ import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { formatCompactNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -49,13 +49,9 @@ export function NarratorDetailPageContent({
     queryFn: () => getNarratorFeaturedPlaylists(narrator!.slug),
     enabled: Boolean(narrator),
   });
-  const { playTrack, playCollection } = useCatalogPlayback();
-  const followedNarratorIds = useLibraryStore(
-    (state) => state.followedNarratorIds,
-  );
-  const toggleFollowedNarrator = useLibraryStore(
-    (state) => state.toggleFollowedNarrator,
-  );
+  const { playTrack, playCollection, playPlaylist: playPlaylistDetail } =
+    useCatalogPlayback();
+  const follow = useLibraryRelationship("followedNarrator", narrator?.id);
 
   if (narratorQuery.isPending) {
     return <NarratorDetailSkeleton />;
@@ -79,9 +75,9 @@ export function NarratorDetailPageContent({
   const popularTracks = allTracks.slice(0, 5);
   const fallbackTracks = narrator.narratedTracks;
   const playAllTracks = allTracks.length > 0 ? allTracks : fallbackTracks;
-  const isFollowing = followedNarratorIds.includes(narrator.id);
+  const isFollowing = follow.isActive;
   const playPlaylist = (playlist: CatalogPlaylist) =>
-    void playCollection(playlist.tracks);
+    void playPlaylistDetail(playlist);
 
   return (
     <div className="space-y-14 pb-8">
@@ -142,7 +138,12 @@ export function NarratorDetailPageContent({
                 type="button"
                 variant="secondary"
                 aria-pressed={isFollowing}
-                onClick={() => toggleFollowedNarrator(narrator.id)}
+                disabled={follow.isPending}
+                onClick={() => {
+                  if (!follow.toggle()) {
+                    window.location.assign("/login");
+                  }
+                }}
                 className={cn(
                   "rounded-full font-nepali",
                   isFollowing && "border-primary/40 text-primary",

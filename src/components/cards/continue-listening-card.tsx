@@ -6,6 +6,7 @@ import {
   MediaArtwork,
 } from "@/components/cards/card-primitives";
 import { LoadingSkeleton } from "@/components/common/loading-skeleton";
+import { X } from "lucide-react";
 import {
   formatPlayerTime,
   getProgressPercentage,
@@ -18,11 +19,13 @@ interface ContinueListeningCardProps<TTrack extends CatalogTrack> {
     progress: ListeningProgress;
   };
   onPlay: (track: TTrack) => void;
+  onRemove?: (track: TTrack) => void;
 }
 
 export function ContinueListeningCard<TTrack extends CatalogTrack>({
   item,
   onPlay,
+  onRemove,
 }: ContinueListeningCardProps<TTrack>) {
   const { track, progress } = item;
   const percentage = getProgressPercentage(
@@ -76,11 +79,23 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
         </div>
       </div>
 
-      <CardPlayButton
-        label={`${track.title} सुन्न जारी राख्नुहोस्`}
-        onPlay={() => onPlay(track)}
-        size="sm"
-      />
+      <div className="flex shrink-0 flex-col items-center gap-1">
+        <CardPlayButton
+          label={`${track.title} सुन्न जारी राख्नुहोस्`}
+          onPlay={() => onPlay(track)}
+          size="sm"
+        />
+        {onRemove ? (
+          <button
+            type="button"
+            onClick={() => onRemove(track)}
+            aria-label={`${track.title} अधुरो सूचीबाट हटाउनुहोस्`}
+            className="rounded-full p-2 text-muted-foreground hover:text-destructive"
+          >
+            <X aria-hidden="true" className="size-4" />
+          </button>
+        ) : null}
+      </div>
     </article>
   );
 }

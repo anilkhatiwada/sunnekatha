@@ -275,6 +275,14 @@ export const usePlayerStore = create<PlayerStore>()(
           playbackError: null,
         });
       },
+      updateTrackSource: (track) =>
+        set((state) => ({
+          queue: state.queue.map((item) =>
+            item.track.id === track.id ? { ...item, track } : item,
+          ),
+          currentTrack:
+            state.currentTrack?.id === track.id ? track : state.currentTrack,
+        })),
 
       setLoading: (isLoading) => set({ isLoading }),
       setPlaybackError: (playbackError) =>

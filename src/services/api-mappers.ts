@@ -137,6 +137,10 @@ export function mapCompactPlaylist(
     tracks: [],
     category: value.playlistType || value.category,
     isFeatured: value.isFeatured,
+    playlistType: value.playlistType,
+    visibility: value.visibility,
+    isPublished: value.isPublished,
+    isOwnedByCurrentUser: value.isOwnedByCurrentUser,
   };
 }
 

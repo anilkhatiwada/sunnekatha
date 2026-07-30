@@ -100,4 +100,22 @@ describe("player store", () => {
     expect(state.currentTrack).toBeNull();
     expect(state.isPlaying).toBe(false);
   });
+
+  it("refreshes an expiring media source in both current track and queue", () => {
+    const original = tracks[0];
+    usePlayerStore.getState().play(original);
+    const refreshed = {
+      ...original,
+      audioUrl: "https://media.example/refreshed.mp3",
+    };
+
+    usePlayerStore.getState().updateTrackSource(refreshed);
+
+    expect(usePlayerStore.getState().currentTrack?.audioUrl).toBe(
+      refreshed.audioUrl,
+    );
+    expect(usePlayerStore.getState().queue[0].track.audioUrl).toBe(
+      refreshed.audioUrl,
+    );
+  });
 });

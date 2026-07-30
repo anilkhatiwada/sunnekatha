@@ -17,6 +17,7 @@ import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { SectionError } from "@/components/common/section-error";
 import { CardRailSkeleton } from "@/components/sections/card-rail-skeleton";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
+import { Button } from "@/components/ui/button";
 import {
   EXPLORE_FILTERS,
   type ExploreFilter,
@@ -31,12 +32,16 @@ import {
   getPopularNarrators,
   queryKeys,
 } from "@/services";
-import type { CatalogPlaylist, ContentType } from "@/types";
+import type { ContentType } from "@/types";
 
 interface ExplorePageContentProps {
   activeFilter: ExploreFilter["value"];
   genre?: string;
   mood?: string;
+  language?: string;
+  premium?: boolean;
+  explicit?: boolean;
+  ordering?: string;
 }
 
 const railCardWidth =
@@ -48,14 +53,35 @@ export function ExplorePageContent({
   activeFilter,
   genre,
   mood,
+  language,
+  premium,
+  explicit,
+  ordering,
 }: ExplorePageContentProps) {
-  const { playTrack, playCollection } = useCatalogPlayback();
+  const { playTrack, playPlaylist } = useCatalogPlayback();
   const contentType =
     activeFilter === "all" ? undefined : (activeFilter as ContentType);
 
   const releasesQuery = useQuery({
-    queryKey: queryKeys.explore.releases({ contentType, genre, mood }),
-    queryFn: () => getExploreTracks({ contentType, genre, mood }),
+    queryKey: queryKeys.explore.releases({
+      contentType,
+      genre,
+      mood,
+      language,
+      premium,
+      explicit,
+      ordering,
+    }),
+    queryFn: () =>
+      getExploreTracks({
+        contentType,
+        genre,
+        mood,
+        language,
+        premium,
+        explicit,
+        ordering,
+      }),
   });
   const moodsQuery = useQuery({
     queryKey: queryKeys.explore.moods(),
@@ -78,8 +104,6 @@ export function ExplorePageContent({
     queryFn: getPopularNarrators,
   });
 
-  const playPlaylist = (playlist: CatalogPlaylist) =>
-    void playCollection(playlist.tracks);
   const activeCollection =
     genresQuery.data?.find((item) => item.slug === genre) ??
     moodsQuery.data?.find((item) => item.slug === mood);
@@ -106,6 +130,59 @@ export function ExplorePageContent({
         filters={EXPLORE_FILTERS}
         activeFilter={activeFilter}
       />
+      <form
+        action="/explore"
+        className="-mt-6 grid gap-3 rounded-xl border border-border bg-surface/50 p-4 sm:grid-cols-4 sm:items-end sm:gap-4 sm:p-5"
+      >
+        {activeFilter !== "all" ? (
+          <input type="hidden" name="type" value={activeFilter} />
+        ) : null}
+        {genre ? <input type="hidden" name="genre" value={genre} /> : null}
+        {mood ? <input type="hidden" name="mood" value={mood} /> : null}
+        <ExploreSelect
+          name="language"
+          label="भाषा"
+          defaultValue={language ?? ""}
+          options={[
+            ["", "सबै भाषा"],
+            ["ne", "नेपाली"],
+            ["en", "English"],
+          ]}
+        />
+        <ExploreSelect
+          name="premium"
+          label="पहुँच"
+          defaultValue={premium === undefined ? "" : String(premium)}
+          options={[
+            ["", "सबै"],
+            ["false", "निःशुल्क"],
+            ["true", "प्रिमियम"],
+          ]}
+        />
+        <ExploreSelect
+          name="ordering"
+          label="क्रम"
+          defaultValue={ordering ?? "-published_at"}
+          options={[
+            ["-published_at", "नयाँ पहिले"],
+            ["-play_count_cache", "लोकप्रिय"],
+            ["title_ne", "शीर्षक"],
+            ["duration_seconds", "छोटो पहिले"],
+          ]}
+        />
+        <Button type="submit" variant="secondary" className="h-11 font-nepali">
+          फिल्टर लागू गर्नुहोस्
+        </Button>
+        <label className="flex items-center gap-2 font-nepali text-xs text-muted-foreground sm:col-span-4">
+          <input
+            type="checkbox"
+            name="explicit"
+            value="false"
+            defaultChecked={explicit === false}
+          />
+          स्पष्ट सामग्री नदेखाउनुहोस्
+        </label>
+      </form>
       {(genre || mood) && (
         <div className="-mt-8 flex min-h-8 items-center gap-2 sm:-mt-12">
           <span className="font-nepali text-xs text-muted-foreground">
@@ -237,7 +314,10 @@ export function ExplorePageContent({
         )}
         {playlistsQuery.data?.map((playlist) => (
           <div key={playlist.id} className={railCardWidth}>
-            <PlaylistCard playlist={playlist} onPlay={playPlaylist} />
+            <PlaylistCard
+              playlist={playlist}
+              onPlay={(selected) => void playPlaylist(selected)}
+            />
           </div>
         ))}
       </HorizontalSection>
@@ -286,6 +366,35 @@ export function ExplorePageContent({
         ))}
       </HorizontalSection>
     </div>
+  );
+}
+
+function ExploreSelect({
+  name,
+  label,
+  defaultValue,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  options: Array<[string, string]>;
+}) {
+  return (
+    <label className="font-nepali text-xs text-muted-foreground">
+      {label}
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="mt-2 h-11 w-full rounded-lg border border-border bg-background/60 px-3 font-nepali text-sm text-foreground"
+      >
+        {options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

@@ -10,6 +10,8 @@ import {
   recordRecentlyPlayed,
   saveListeningProgress,
 } from "@/services/progress-service";
+import { mapPlayableTrack } from "@/services/api-mappers";
+import { getTrackStream } from "@/services/media-service";
 import type { Track } from "@/types";
 
 let audioInstance: HTMLAudioElement | null = null;
@@ -86,6 +88,7 @@ export function AudioEngine() {
   const setPlaybackError = usePlayerStore(
     (state) => state.setPlaybackError,
   );
+  const updateTrackSource = usePlayerStore((state) => state.updateTrackSource);
   const activeTrack = useRef<Track | null>(null);
   const pendingResumeTime = useRef(0);
   const wasPlaying = useRef(false);
@@ -93,6 +96,7 @@ export function AudioEngine() {
     trackId: string;
     second: number;
   } | null>(null);
+  const refreshedTrackId = useRef<string | null>(null);
   const flushProgress = useCallback(
     (
       track = activeTrack.current,
@@ -194,7 +198,35 @@ export function AudioEngine() {
         state.setCurrentTime(track?.duration ?? state.duration);
       }
     };
-    const handleError = () => setPlaybackError(getAudioError(audio));
+    const handleError = async () => {
+      const state = usePlayerStore.getState();
+      const track = state.currentTrack;
+      if (track && refreshedTrackId.current !== track.id) {
+        refreshedTrackId.current = track.id;
+        const resumeAt = audio.currentTime || state.currentTime;
+        try {
+          const refreshed = mapPlayableTrack(await getTrackStream(track.slug));
+          updateTrackSource(refreshed);
+          audio.src = refreshed.audioUrl;
+          audio.load();
+          const restorePosition = () => {
+            audio.currentTime = Math.min(
+              Math.max(0, resumeAt),
+              Number.isFinite(audio.duration) ? audio.duration : resumeAt,
+            );
+            audio.removeEventListener("loadedmetadata", restorePosition);
+          };
+          audio.addEventListener("loadedmetadata", restorePosition);
+          if (state.isPlaying) {
+            await audio.play();
+          }
+          return;
+        } catch {
+          // Fall through to the stable player error below.
+        }
+      }
+      setPlaybackError(getAudioError(audio));
+    };
 
     audio.addEventListener("loadstart", handleLoadStart);
     audio.addEventListener("waiting", handleWaiting);
@@ -223,6 +255,7 @@ export function AudioEngine() {
     setDuration,
     setLoading,
     setPlaybackError,
+    updateTrackSource,
   ]);
 
   useEffect(
@@ -233,6 +266,7 @@ export function AudioEngine() {
           state.currentTrack?.id !== previousState.currentTrack?.id;
 
         if (trackChanged && state.currentTrack) {
+          refreshedTrackId.current = null;
           const previousTrack = activeTrack.current;
 
           if (previousTrack) {

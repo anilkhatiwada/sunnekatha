@@ -23,7 +23,7 @@ from unfold.forms import (
     UserCreationForm,
 )
 
-from apps.accounts.models import User
+from apps.accounts.models import SocialIdentity, User
 from apps.accounts.services import account_status_service
 from apps.common.admin import ImagePreviewAdminMixin, ProtectedDeleteAdminMixin
 from apps.common.admin_actions import confirm_bulk_action
@@ -35,6 +35,32 @@ from apps.subscriptions.models import (
     SubscriptionStatus,
     UserSubscription,
 )
+
+
+@admin.register(SocialIdentity)
+class SocialIdentityAdmin(ModelAdmin):
+    list_display = ("user", "provider", "email_at_link", "created_at")
+    list_filter = ("provider", "created_at")
+    search_fields = ("user__email", "email_at_link")
+    list_select_related = ("user",)
+    readonly_fields = (
+        "id",
+        "user",
+        "provider",
+        "subject",
+        "email_at_link",
+        "created_at",
+        "updated_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
 
 class PremiumSubscriptionFilter(admin.SimpleListFilter):

@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { AudioEngine } from "@/features/player/audio-engine";
 import { PlayerKeyboardShortcuts } from "@/features/player/player-keyboard-shortcuts";
+import { PlaybackSyncController } from "@/features/player/playback-sync-controller";
+import { QueueSyncController } from "@/features/player/queue-sync-controller";
 import { PreferencesController } from "@/features/profile/preferences-controller";
 import { AuthProvider } from "@/features/auth/auth-provider";
 
@@ -31,6 +33,8 @@ export function AppProviders({ children }: AppProvidersProps) {
       <AuthProvider>
         <PreferencesController />
         <AudioEngine />
+      <PlaybackSyncController />
+      <QueueSyncController />
         <PlayerKeyboardShortcuts />
         {children}
       </AuthProvider>

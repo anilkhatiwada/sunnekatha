@@ -12,6 +12,10 @@ export interface Playlist {
   tracks: Track[];
   category: string;
   isFeatured: boolean;
+  playlistType?: string;
+  visibility?: "private" | "unlisted" | "public";
+  isPublished?: boolean;
+  isOwnedByCurrentUser?: boolean;
 }
 
 export type CatalogPlaylist = Omit<Playlist, "tracks"> & {

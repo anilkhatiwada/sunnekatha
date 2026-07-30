@@ -45,6 +45,7 @@ export interface PlayerActions {
   removeFromQueue: (queueItemId: string) => void;
   clearQueue: () => void;
   replaceQueue: (tracks: Track[], startIndex?: number) => void;
+  updateTrackSource: (track: Track) => void;
   setLoading: (isLoading: boolean) => void;
   setPlaybackError: (error: PlayerError | null) => void;
 }

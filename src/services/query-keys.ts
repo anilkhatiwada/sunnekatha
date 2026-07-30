@@ -29,6 +29,10 @@ export const queryKeys = {
       contentType?: ContentType;
       genre?: string;
       mood?: string;
+      language?: string;
+      premium?: boolean;
+      explicit?: boolean;
+      ordering?: string;
     }) => [...queryKeys.explore.all, "releases", filters] as const,
     moods: () => [...queryKeys.explore.all, "moods"] as const,
     genres: () => [...queryKeys.explore.all, "genres"] as const,
@@ -38,6 +42,23 @@ export const queryKeys = {
       [...queryKeys.explore.all, "popular-authors"] as const,
     popularNarrators: () =>
       [...queryKeys.explore.all, "popular-narrators"] as const,
+  },
+  works: {
+    all: ["works"] as const,
+    detail: (slug: string) =>
+      [...queryKeys.works.all, "detail", slug] as const,
+  },
+  albums: {
+    all: ["albums"] as const,
+    detail: (slug: string) =>
+      [...queryKeys.albums.all, "detail", slug] as const,
+  },
+  taxonomy: {
+    all: ["taxonomy"] as const,
+    genre: (slug: string) =>
+      [...queryKeys.taxonomy.all, "genre", slug] as const,
+    mood: (slug: string) =>
+      [...queryKeys.taxonomy.all, "mood", slug] as const,
   },
   search: {
     all: ["search"] as const,
@@ -56,6 +77,8 @@ export const queryKeys = {
   },
   playlists: {
     all: ["playlists"] as const,
+    public: () => [...queryKeys.playlists.all, "public"] as const,
+    mine: () => [...queryKeys.playlists.all, "mine"] as const,
     detail: (slug: string) =>
       [...queryKeys.playlists.all, "detail", slug] as const,
   },
@@ -83,6 +106,32 @@ export const queryKeys = {
     all: ["library"] as const,
     initial: () => [...queryKeys.library.all, "initial"] as const,
     catalog: () => [...queryKeys.library.all, "catalog"] as const,
+    remote: () => [...queryKeys.library.all, "remote"] as const,
+  },
+  progress: {
+    all: ["progress"] as const,
+    track: (trackId: string) =>
+      [...queryKeys.progress.all, "track", trackId] as const,
+    continueListening: () =>
+      [...queryKeys.progress.all, "continue-listening"] as const,
+    recentlyPlayed: () =>
+      [...queryKeys.progress.all, "recently-played"] as const,
+    history: () => [...queryKeys.progress.all, "history"] as const,
+  },
+  queue: {
+    all: ["queue"] as const,
+    current: () => [...queryKeys.queue.all, "current"] as const,
+  },
+  notifications: {
+    all: ["notifications"] as const,
+    list: () => [...queryKeys.notifications.all, "list"] as const,
+    unread: () => [...queryKeys.notifications.all, "unread"] as const,
+  },
+  creator: {
+    all: ["creator"] as const,
+    profile: () => [...queryKeys.creator.all, "profile"] as const,
+    drafts: () => [...queryKeys.creator.all, "drafts"] as const,
+    uploads: () => [...queryKeys.creator.all, "uploads"] as const,
   },
   profile: {
     all: ["profile"] as const,

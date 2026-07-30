@@ -2,6 +2,8 @@
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Clock3, Search, TrendingUp, X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 
 import {
@@ -50,7 +52,7 @@ export function SearchPageContent({
   const searches = useSearchHistoryStore((state) => state.searches);
   const addSearch = useSearchHistoryStore((state) => state.addSearch);
   const clearHistory = useSearchHistoryStore((state) => state.clearHistory);
-  const { playTrack, playCollection } = useCatalogPlayback();
+  const { playTrack, playPlaylist } = useCatalogPlayback();
 
   const resultsQuery = useQuery({
     queryKey: queryKeys.search.results(debouncedQuery, activeFilter),
@@ -121,8 +123,6 @@ export function SearchPageContent({
     addSearch(query);
   };
 
-  const playPlaylist = (playlist: CatalogPlaylist) =>
-    void playCollection(playlist.tracks);
   const hasQuery = debouncedQuery.length > 0;
   const searchResults =
     activeFilter === "tracks"
@@ -131,6 +131,8 @@ export function SearchPageContent({
             trackResultsQuery.data?.pages.flatMap(
               (page) => page.results,
             ) ?? [],
+          works: [],
+          albums: [],
           playlists: [],
           authors: [],
           narrators: [],
@@ -285,7 +287,7 @@ export function SearchPageContent({
                 <GroupedSearchResults
                   results={searchResults}
                   onTrackPlay={playTrack}
-                  onPlaylistPlay={playPlaylist}
+                  onPlaylistPlay={(playlist) => void playPlaylist(playlist)}
                 />
                 {activeFilter === "tracks" &&
                 trackResultsQuery.hasNextPage ? (
@@ -376,6 +378,24 @@ function GroupedSearchResults({
           </div>
         </ResultGroup>
       )}
+      {results.works.length > 0 && (
+        <ResultGroup title="साहित्यिक कृति" count={results.works.length}>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {results.works.map((work) => (
+              <SearchCatalogCard key={work.id} item={work} kind="work" />
+            ))}
+          </div>
+        </ResultGroup>
+      )}
+      {results.albums.length > 0 && (
+        <ResultGroup title="एल्बमहरू" count={results.albums.length}>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {results.albums.map((album) => (
+              <SearchCatalogCard key={album.id} item={album} kind="album" />
+            ))}
+          </div>
+        </ResultGroup>
+      )}
       {results.playlists.length > 0 && (
         <ResultGroup title="प्लेलिस्टहरू" count={results.playlists.length}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
@@ -442,6 +462,36 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
     </div>
+  );
+}
+
+function SearchCatalogCard({
+  item,
+  kind,
+}: {
+  item: SearchResults["works"][number];
+  kind: "work" | "album";
+}) {
+  return (
+    <article className="min-w-0 rounded-xl border border-border/70 bg-surface p-3">
+      <Link href={`/${kind}/${item.slug}`} className="group block">
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-soft">
+          <Image
+            src={item.coverImage}
+            alt={`${item.title} को आवरण`}
+            fill
+            sizes="(max-width: 640px) 45vw, 220px"
+            className="object-cover transition-transform group-hover:scale-[1.025]"
+          />
+        </div>
+        <h3 className="mt-3 line-clamp-2 font-nepali font-semibold group-hover:text-primary">
+          {item.title}
+        </h3>
+      </Link>
+      <p className="mt-1 truncate font-nepali text-xs text-muted-foreground">
+        {item.authorName}
+      </p>
+    </article>
   );
 }
 
@@ -546,6 +596,8 @@ function SearchEmptyState({ query }: { query: string }) {
 function countSearchResults(results: SearchResults) {
   return (
     results.tracks.length +
+    results.works.length +
+    results.albums.length +
     results.playlists.length +
     results.authors.length +
     results.narrators.length +

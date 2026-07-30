@@ -1,310 +1,201 @@
 # SunneKatha frontend–backend integration report
 
-Date: 2026-07-23
+**Updated:** 2026-07-30
 
-## Executive summary
+**Frontend:** Next.js 16 App Router
 
-The Django API covers the core catalog, authentication, playlists, library,
-progress, playback history, queue, homepage, explore, and search capabilities.
-It is not yet a drop-in replacement for the Next.js mock services.
+**Backend:** Django REST Framework under `/api/v1`
 
-The frontend services still read `src/data` through `mockApiResponse`; none of
-the product service methods currently call `apiClient`. Connecting the API
-therefore requires a frontend adapter milestone, which is outside this task.
-No frontend files were changed.
+**Production frontend:** `https://sunnekatha.com`
 
-The main blocking integration issue is audio delivery. The frontend assigns
-`Track.audioUrl` directly to `HTMLAudioElement.src`. Django intentionally does
-not expose an `audioUrl` in track metadata: the client must call
-`GET /api/v1/tracks/{slug}/stream/?quality=auto`, then assign the returned
-short-lived CloudFront `url`. This must remain a two-step flow for premium
-authorization and URL expiry.
+**Production API:** `https://api.sunnekatha.com/api/v1`
 
-Compatibility changes made during this review:
+## Outcome
 
-- search accepts both backend parameters (`q`, `type`, `content_type`) and
-  frontend names (`query`, `resultType`, `contentType`);
-- track list and detail payloads include `subtitle`;
-- `literaryWork.type` now matches the frontend's `novel | collection` union,
-  while `literaryWork.contentType` retains the precise catalog classification;
-- author detail includes `birthYear` and `deathYear` alongside `birthDate` and
-  `deathDate`.
+The public catalog, account, library, playback, playlist, search, notification,
+creator, and direct-upload flows are connected through the frontend service
+boundary. Mock mode remains available for isolated UI development; production
+uses remote mode.
 
-## Contract conventions
+Two small backend compatibility additions were made:
 
-| Concern | Frontend | Django API | Assessment |
-| --- | --- | --- | --- |
-| Base URL | Configured API base URL | `/api/v1/` | Compatible when the environment includes `/api/v1`. |
-| JSON names | camelCase | Public serializers use camelCase aliases | Compatible. |
-| Identity | String IDs and slug detail URLs | UUID IDs and slug detail URLs | Compatible; IDs remain opaque strings. |
-| Dates | ISO 8601 strings | DRF ISO 8601 | Compatible. |
-| Durations | Seconds | Seconds | Compatible. |
-| Authentication | Optional Bearer token with one refresh retry | Simple JWT access/rotated refresh tokens | Compatible after implementing the frontend session adapter. |
-| Pagination | `{count,next,previous,results}` | Same shape; `page`, `pageSize`, maximum 100 | Compatible, but current mock service methods return arrays and must unwrap `results`. |
-| Errors | `{detail?,code?,errors?}` | Standardized `{detail,code,errors?}` | Compatible. |
-| Detail 404 | Service promises `null` | API returns normalized 404 error | Frontend adapter must catch `ApiError.status === 404` and return `null`. |
+- `GET /playlists/?mine=true` lists the authenticated user's public, unlisted,
+  and private user playlists.
+- `GET /tracks/` accepts `work` and `album` slug filters so work and album detail
+  routes can load ordered tracks without client-side catalog downloads.
+- The Google `SocialIdentity` model is registered read-only in Admin so the
+  existing all-domain-model registration invariant remains valid.
 
-## Frontend service method audit
+No private S3 object key is used as a playable URL. Audio playback always starts
+from the media-access endpoint and receives a CloudFront URL.
 
-### Author service
+## Route and service coverage
 
-| Frontend method | Backend mapping | Result |
+| Frontend area | Backend contract | Status |
 | --- | --- | --- |
-| `getPopularAuthors()` | `GET /authors/featured/` or the `popular-authors` homepage/explore section | Partial. Backend results are compact and paginated; frontend `Author` requires `genres` and embedded `popularTracks`. Use a summary type in the future adapter or hydrate tracks separately. |
-| `getAuthorBySlug(slug)` | `GET /authors/{slug}/` | Partial. Identity, names, image, biography, and life years match. Backend does not embed `genres` or `popularTracks`; the frontend already makes a separate track request. Adapter must supply an empty/default genres collection or derive it. |
-| `getAuthorTracks(authorId)` | `GET /tracks/author/{authorSlug}/` | Capability exists, identifier differs. The frontend method receives an ID, while the endpoint filters by slug. The adapter should retain the author slug from the detail response or the backend can later add an ID alias if necessary. Response is paginated. |
-| `getAuthorFeaturedCollections(authorId)` | No dedicated endpoint | Missing. Public playlist list cannot currently filter by author. This should be added only when the frontend switches from mocks and the desired “featured collection” semantics are confirmed. |
-| `getRelatedAuthors(authorId, limit)` | No dedicated endpoint | Missing. No stable backend ranking contract exists yet. |
+| Homepage | `GET /home/` | Integrated, anonymous and personalized |
+| Explore tracks | `GET /explore/tracks/` | Integrated with content type, genre, mood, language, premium, explicit, author, narrator, and ordering service filters |
+| Genres and moods | `GET /genres/`, `GET /moods/` | Integrated |
+| Track detail/related | `GET /tracks/{slug}/`, `GET /tracks/{slug}/related/` | Integrated |
+| Work detail | `GET /works/{slug}/` + `GET /tracks/?work={slug}` | Integrated |
+| Album detail | `GET /albums/{slug}/` + `GET /tracks/?album={slug}` | Integrated |
+| Author detail/tracks | `GET /authors/{slug}/`, `GET /tracks/author/{slug}/` | Integrated |
+| Narrator detail/tracks | `GET /narrators/{slug}/`, `GET /tracks/narrator/{slug}/` | Integrated |
+| Public playlists | `GET /playlists/`, featured and slug detail | Integrated |
+| User playlists | create, patch, delete, add/remove/reorder, visibility, duplicate | Integrated |
+| Grouped search | `GET /search/` | Integrated, including works and albums |
+| Track search | `GET /search/tracks/` | Integrated with pagination |
+| Autocomplete/trending | `/search/autocomplete/`, `/search/trending/` | Integrated |
+| Google login | `POST /auth/google/` | Integrated |
+| Email registration/login | `/auth/register/`, `/auth/login/` | Integrated |
+| Token refresh/logout | `/auth/token/refresh/`, `/auth/logout/` | Integrated |
+| Profile/preferences/password | `/auth/profile/`, `/auth/preferences/`, `/auth/change-password/` | Integrated |
+| Favorites/saves/follows | `/library/...` idempotent relationship endpoints | Integrated with optimistic state and rollback |
+| Library lists | `/library/tracks/`, playlists, authors, narrators | Integrated |
+| Continue listening | `GET /me/continue-listening/` | Integrated, including removal |
+| Recently played/history | `/me/recently-played/`, `/me/listening-history/` | Integrated |
+| Listening progress | `PUT /me/listening-progress/{trackId}/` | Local-first integration |
+| Playback sessions | start, patch, end under `/me/playback-sessions/` | Integrated |
+| Queue sync | `/me/queue/` and state endpoints | Integrated with debounce and restoration |
+| Notifications | list, unread count, read, read-all | Integrated |
+| Creator center | profile, drafts, uploads, submit for review | Integrated |
+| Direct S3 uploads | request, browser-to-S3 POST, confirm/cancel | Integrated |
 
-### Narrator service
+## Authentication behavior
 
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getPopularNarrators()` | `GET /narrators/featured/` or homepage/explore section | Partial. Backend is compact and paginated; frontend `Narrator` requires embedded `narratedTracks`. |
-| `getNarratorBySlug(slug)` | `GET /narrators/{slug}/` | Partial. Profile fields match, but `narratedTracks` is intentionally not nested. |
-| `getNarratorTracks(narratorId)` | `GET /tracks/narrator/{narratorSlug}/` | Capability exists, identifier differs; response is paginated. |
-| `getNarratorFeaturedPlaylists(narratorId)` | No dedicated endpoint | Missing. Playlist list has no narrator filter. |
+- Account-only navigation is hidden until a current user is available.
+- Protected pages use `AuthRequired`.
+- Access and rotated refresh tokens are stored in tab-scoped
+  `sessionStorage`, not persistent local storage.
+- Authenticated requests add a Bearer access token.
+- One shared refresh request prevents refresh storms during concurrent 401s.
+- Failed refresh clears the local session.
+- Logout blacklists the refresh token when the backend is reachable and clears
+  the local session even when it is not.
+- Google login and email/password login establish the same frontend session.
 
-### Catalog and explore service
+The current token storage is safer than persistent local storage but still
+accessible to JavaScript. Moving refresh tokens to secure, HttpOnly,
+same-site cookies would require an intentional backend authentication-contract
+change.
 
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getExploreTracks(filters)` | `GET /explore/tracks/?contentType=&genre=&mood=` | Compatible after unwrapping pagination. The backend additionally supports language, author, narrator, premium, explicit, and ordering filters. |
-| `getGenres()` | `GET /genres/` | Compatible fields; response is paginated rather than a bare array. |
-| `getMoods()` | `GET /moods/` | Compatible fields; response is paginated rather than a bare array. |
+## Pagination and errors
 
-The aggregated `GET /explore/` endpoint can replace several independent
-collection requests, but its section-based response is not the return type of
-any current frontend method.
+- DRF page responses are unwrapped only inside services.
+- Track-only search retains `count` and next-page behavior.
+- Library and creator screens request bounded pages.
+- Expected detail 404 responses map to existing not-found states.
+- Other API errors use `ApiError`, including normalized field errors,
+  throttling metadata, timeout errors, and safe user-facing messages.
+- Protected service failures do not silently turn into mock content.
 
-### Playlist service
+## Player and media flow
 
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getFeaturedPlaylists()` | `GET /playlists/featured/` | Partial. List payloads are intentionally compact and paginated; they do not embed `description` or `tracks`. Cards have the required identity/artwork/count fields. |
-| `getMoodPlaylists()` | Mood collections are returned by `/home/` and `/explore/`; no equivalent hard-coded playlist set | Semantic mismatch. The frontend mock selects three slugs, while the backend models moods and editorial sections explicitly. |
-| `getPlaylistBySlug(slug)` | `GET /playlists/{slug}/` | Compatible. Detail includes ordered compact tracks, descriptions, counts, duration, curator, category, and featured state. A 404 must be converted to `null` by the adapter. |
-
-Playlist detail visibility also matches the intended security model: public
-playlists are listed, unlisted playlists are available by direct slug, and
-private playlists are owner-only.
-
-### Track and homepage service
-
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getTrendingTracks()` | `GET /tracks/trending/` or the homepage section | Compatible after pagination unwrap, except for `audioUrl`; see player flow. |
-| `getRecentlyAddedTracks()` | `GET /tracks/recent/` or the homepage section | Compatible after pagination unwrap, except for `audioUrl`. |
-| `getContinueListening()` | `GET /me/continue-listening/` | Compatible shape and ordering; authentication is required. Backend progress additionally returns `progressPercentage` and `lastListenedAt`. |
-| `getTrackBySlug(slug)` | `GET /tracks/{slug}/` | Compatible metadata after the additive subtitle/work changes, except for `audioUrl`. A 404 must become `null`. |
-| `getSimilarTracks(trackId, limit)` | `GET /tracks/{slug}/related/` | Capability exists, but the route uses the source slug and standard pagination rather than an ID plus `limit`. |
-
-`GET /home/` works anonymously and inserts continue listening for authenticated
-users. Its section-based aggregate can reduce frontend requests, but the current
-home page calls seven independent mock methods and does not consume this shape.
-
-### Search service
-
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `searchContent({query,resultType})` | `GET /search/?query=&resultType=` | Compatible after this review. All groups are always present; non-selected groups are empty. Backend also returns `literaryWorks` and `albums`, which clients may ignore. Entity groups use compact payloads, so author/narrator/playlist results do not satisfy the current overly broad full-detail TypeScript types. |
-| `getTrendingSearches()` | `GET /search/trending/` | Compatible after reading the `searches` property. |
-
-Track-only pagination is available at `GET /search/tracks/`. Autocomplete is
-available at `GET /search/autocomplete/`. Nepali Unicode, English, trigram
-matching, and explicit Romanized aliases are supported.
-
-### Library service
-
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getInitialUserLibrary()` | No single aggregate endpoint | Partial capability. Favorites, saved playlists, followed authors/narrators, recently played, and progress exist as separate authenticated endpoints. The current `UserLibrary` expects ID arrays and up to 50 progress records. |
-| `getLibraryCatalog()` | Public track, playlist, author, and narrator lists | No equivalent aggregate endpoint. A full unpaginated catalog would be unsafe; the future frontend adapter should fetch only the visible saved entities or paginated collections. |
-
-The absence of these two aggregates is intentional rather than an invitation to
-return the complete catalog in one response. A dedicated lightweight library
-bootstrap endpoint may be added later if one round trip is a measured need.
-
-### Profile service
-
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `getListeningStatistics()` | No user-facing endpoint | Missing. Existing analytics endpoints are staff-only aggregate reporting and must not be exposed as personal statistics. |
-
-### Local progress service
-
-| Frontend method | Backend mapping | Result |
-| --- | --- | --- |
-| `saveListeningProgress(input)` | `PUT` or `PATCH /me/listening-progress/{trackId}/` with `{progressSeconds,durationSeconds}` | Payload and 90% completion behavior match. The current method is synchronous/local-first; network sync must be fire-and-forget or queued without delaying player state. |
-| `getSavedProgress(trackId)` | `GET /me/listening-progress/{trackId}/` | Response matches the frontend fields plus harmless additional fields. Local state should remain the immediate source during playback. |
-| `getResumePosition(trackId)` | Derived client-side from the progress response | Compatible. Completed tracks resume at zero. |
-| `recordRecentlyPlayed(trackId)` | Playback session/history endpoints, not a direct ID mutation | Partial. Start/update/end playback sessions produce history without requiring per-second events. |
-
-The frontend sends progress every 15 seconds and on pause, track change, end,
-and exit. That cadence matches the backend design. Negative and materially
-over-duration positions receive validation errors; small overshoots are clamped.
-
-## Authentication integration
-
-Authentication endpoints are:
-
-- `POST /auth/register/`
-- `POST /auth/login/` (also `/auth/token/`)
-- `POST /auth/token/refresh/`
-- `POST /auth/logout/`
-- `GET /auth/me/`
-- `PATCH /auth/profile/`
-- `PATCH /auth/preferences/`
-- `POST /auth/change-password/`
-
-Login accepts `{email,password}` and returns `{access,refresh,user}`. Refresh
-accepts `{refresh}` and returns a new access token and, with rotation enabled, a
-new refresh token. Logout requires both the Bearer access token and
-`{refresh}`.
-
-The frontend `apiClient` retry logic is compatible, but its placeholder
-`refreshAccessToken()` always returns `null`. Authenticated requests must set
-`requiresAuth: true`; otherwise no token is attached and a 401 will not trigger
-refresh. Tokens should be stored by a concrete session adapter before protected
-services are connected.
-
-## Player URL flow
-
-Required integration sequence:
-
-1. Load track metadata from a list/detail endpoint.
-2. Immediately before playback, call
+1. Catalog endpoints return metadata without a private storage URL.
+2. A user playback action requests
    `GET /tracks/{slug}/stream/?quality=auto`.
-3. Set the audio element source to response `url`.
-4. Retain `expiresAt`; request a new URL when it expires or playback receives an
-   authorization-related media failure.
-5. Never persist or share premium signed URLs.
+3. The returned free or signed CloudFront URL is mapped into an in-memory
+   playable track.
+4. Collection playback resolves ordered track access before replacing the
+   immediate player queue.
+5. If a URL expires or fails, the audio engine requests one fresh URL for the
+   current track, preserves the playback position, and updates both the current
+   track and queue source.
+6. Django never proxies audio bytes.
 
-Free published tracks work anonymously. Premium tracks require an active
-entitlement. Unpublished tracks are hidden except from authorized staff or their
-creator. Django returns JSON metadata and never proxies audio bytes.
+Queue state stores track identity and restoration position on the backend. The
+frontend remains the immediate playback source of truth and synchronizes queue
+changes after a short debounce, plus position snapshots every 30 seconds.
 
-`GET /tracks/{slug}/player/` exposes high/low media URL candidates, but the
-stream endpoint is the preferred authorization contract because it returns
-quality, expiry, and authorization state explicitly.
+Progress is sent every 15 seconds by the existing player behavior and at
+important transitions. Playback sessions and history remain separate from the
+single progress row per user/track.
 
-## Playlist actions
+## Playlist behavior
 
-All mutation endpoints require authentication. Only owners may modify user
-playlists; editorial management remains staff-only.
+- Anonymous users can view public and direct unlisted playlists.
+- Private playlists remain owner-only.
+- `mine=true` requires authentication and never exposes another user's
+  playlists.
+- Owners can create, edit, change visibility, add/remove tracks, reorder with
+  stable server positions, duplicate, and delete with confirmation.
+- Compact playlist cards load detail only after playback intent, avoiding large
+  nested list payloads.
+- Editorial playlist permissions remain enforced by Django.
 
-| Action | Request | Response |
-| --- | --- | --- |
-| Create | `POST /playlists/` with `titleNe`, optional `titleEn`, descriptions, cover, visibility | Full playlist detail, 201 |
-| Update | `PATCH /playlists/{slug}/` with editable fields | Full playlist detail |
-| Delete | `DELETE /playlists/{slug}/` | 204 |
-| Add track | `POST /playlists/{slug}/tracks/add/` with `{trackId}` | Full playlist detail |
-| Remove track | `POST /playlists/{slug}/tracks/remove/` with `{trackId}` | Full playlist detail |
-| Reorder | `PATCH /playlists/{slug}/tracks/reorder/` with `{trackIds}` | Full playlist detail |
-| Visibility | `PATCH /playlists/{slug}/visibility/` with `{visibility}` | Full playlist detail |
-| Duplicate | `POST /playlists/{slug}/duplicate/` with optional `{titleNe}` | Full private user playlist, 201 |
+## Direct S3 upload flow
 
-The current frontend has no HTTP playlist mutation service. Its local store
-actions cannot be swapped directly for these asynchronous operations.
+The creator upload screen:
 
-## Library actions
+1. sends filename metadata, MIME type, size, and upload type to Django;
+2. receives a server-controlled key and presigned POST fields;
+3. sends the file directly to S3 using every signed field;
+4. asks Django to confirm the object;
+5. cancels the upload session after a failed direct transfer where possible.
 
-All operations require authentication and are idempotent.
+AWS credentials, presigned fields, and object keys are never displayed in the
+UI. Upload access remains creator/staff-only.
 
-| Relationship | Add | Remove | List |
-| --- | --- | --- | --- |
-| Favorite track | `POST` or `PUT /library/tracks/{id}/favorite/` | `DELETE` same URL | `GET /library/tracks/` |
-| Save playlist | `POST` or `PUT /library/playlists/{id}/save/` | `DELETE` same URL | `GET /library/playlists/` |
-| Follow author | `POST` or `PUT /library/authors/{id}/follow/` | `DELETE` same URL | `GET /library/authors/` |
-| Follow narrator | `POST` or `PUT /library/narrators/{id}/follow/` | `DELETE` same URL | `GET /library/narrators/` |
+## Design review
 
-Mutation responses contain the target `id` and relationship flag. List
-responses are paginated compact entities. The frontend currently toggles local
-state synchronously; a future adapter should use optimistic updates with
-rollback on API failure.
+The visual system remains consistent with the existing warm, literary
+direction:
 
-## Queue synchronization
+- dark charcoal background and warm surface hierarchy;
+- orange primary actions and restrained gold accents;
+- Noto Devanagari typography with comfortable Nepali line height;
+- compact list tables and responsive card grids;
+- protected navigation removed rather than disabled before login;
+- full-page empty, loading, error, and retry states;
+- keyboard-labelled player, queue, search, playlist, notification, and upload
+  controls.
 
-All queue endpoints are under `/me/queue/` and require authentication:
+The login and public layouts were visually inspected in the local application
+at the available laptop viewport. Breakpoint rules use stacked forms/grids below
+`sm`, hide the fixed desktop sidebar below `lg`, and retain bottom spacing for
+the mini-player/mobile navigation.
 
-| Action | Method and payload |
-| --- | --- |
-| Get | `GET /me/queue/` |
-| Replace | `PUT /me/queue/` with `{trackIds,currentIndex,positionSeconds}` |
-| Clear | `DELETE /me/queue/` |
-| Append | `POST /me/queue/items/` with `{trackId}` |
-| Play next | `POST /me/queue/play-next/` with `{trackId}` |
-| Remove | `DELETE /me/queue/items/{queueItemId}/` |
-| Reorder | `PATCH /me/queue/reorder/` with every `{itemIds}` in desired order |
-| Position | `PATCH /me/queue/position/` with `{currentIndex,positionSeconds}` |
-| Shuffle | `PATCH /me/queue/shuffle/` with `{isShuffleEnabled}` |
-| Repeat | `PATCH /me/queue/repeat/` with `{repeatMode}` |
+## Validation
 
-The response embeds ordered compact tracks and stable server queue-item IDs.
-Duplicate tracks are allowed. The frontend remains immediate source of truth;
-sync should be debounced and used for restoration, not performed on every
-playback tick.
+The final change was validated with:
 
-The frontend `QueueItem` optionally contains `source`; the backend does not
-persist this field. The frontend also persists playback speed and volume, while
-the server queue intentionally stores neither. Account preferences separately
-store default playback speed.
+- `npm run typecheck`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `python manage.py check --settings=config.settings.test`
+- `python manage.py makemigrations --check --dry-run --settings=config.settings.test`
+- focused Django playlist and track API tests
+- full Django suite: 608 tests
 
-## Error handling
+Exact final totals are recorded in `docs/frontend-integration-status.md`.
 
-The global exception handler returns:
+## Remaining limitations
 
-```json
-{
-  "detail": "Validation failed.",
-  "code": "validation_error",
-  "errors": {
-    "fieldName": ["Explanation"]
-  }
-}
-```
+These are deliberate product or backend limitations, not disconnected existing
+APIs:
 
-This matches `normalizeApiError`. Authentication, permission, not-found,
-throttling, and server errors use the same envelope. Field names follow the
-request contract, generally camelCase.
+1. Offline downloads are not exposed because no secure public download endpoint
+   exists yet.
+2. Payment checkout is not implemented; the backend intentionally has no payment
+   provider integration.
+3. Email and push notification delivery are placeholders by backend design.
+4. Creator upload confirmation does not automatically create a catalog track;
+   editorial staff must associate and review uploaded media.
+5. Personal listening statistics do not have a privacy-scoped user API; staff
+   analytics remain in Django Admin.
+6. Author-related playlists, narrator-related playlists, and related-author
+   ranking have no dedicated public endpoint.
+7. Mock mode does not synthesize full work and album detail records; those new
+   detail routes are production-API features.
 
-The frontend client correctly handles 204 responses and avoids parsing an empty
-body. It also combines caller abort signals with request timeout. Remaining
-frontend requirements are to convert expected detail 404s to `null`, configure
-refresh storage, and mark protected calls with `requiresAuth`.
+## Recommended follow-up
 
-## Remaining integration risks
-
-1. **Blocking: player adapter.** Direct `Track.audioUrl` playback cannot consume
-   the secure stream authorization response.
-2. **Blocking: services remain mock-backed.** No product service currently calls
-   `apiClient`.
-3. **High: broad frontend entity types.** List/search cards expect full
-   `Author`, `Narrator`, and `Playlist` objects, while production list APIs
-   correctly return compact representations. Introduce frontend summary types
-   during the integration milestone rather than reintroducing large nested
-   payloads.
-4. **High: ID/slug method mismatch.** Author, narrator, and related-track mock
-   methods receive IDs while public relation routes use slugs.
-5. **Medium: missing editorial relationships.** Author collections, related
-   authors, and narrator playlists have no dedicated APIs.
-6. **Medium: library bootstrap.** The frontend expects a single ID aggregate;
-   Django exposes normalized paginated resources.
-7. **Medium: personal statistics.** The profile mock has no privacy-safe
-   user-facing equivalent.
-8. **Low: taxonomy image fields.** Backend taxonomy payloads include additional
-   image and metadata fields; clients may ignore them.
-
-## Recommended frontend integration order
-
-No frontend work was performed, but the safest future sequence is:
-
-1. implement JWT session storage and refresh;
-2. add response adapters for pagination and expected 404s;
-3. split compact and detail TypeScript types;
-4. implement the stream-URL handshake in the audio engine;
-5. connect read-only catalog/search/home routes;
-6. add local-first progress and queue synchronization;
-7. add optimistic playlist and library mutations;
-8. decide whether the missing aggregate/editorial endpoints are still needed
-   after measuring real frontend request patterns.
+- Add end-to-end browser tests using a seeded test API for registration,
+  playlist management, playback resume, queue restoration, and direct S3 upload.
+- Add a secure user download contract only after entitlement, expiry, and
+  offline-storage rules are agreed.
+- Consider HttpOnly refresh cookies in a future authentication hardening
+  milestone.
+- Add a creator endpoint that explicitly associates a confirmed upload with a
+  draft track if self-service draft creation becomes a product requirement.

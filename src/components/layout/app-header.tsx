@@ -1,14 +1,22 @@
 "use client";
 
-import { CircleUserRound, LogIn, Search } from "lucide-react";
+import { Bell, CircleUserRound, LogIn, Search } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 
 import { Logo } from "@/components/layout/logo";
 import { PwaInstallButton } from "@/components/pwa/pwa-install-button";
 import { useAuth } from "@/features/auth/auth-provider";
+import { getUnreadNotificationCount, queryKeys } from "@/services";
 
 export function AppHeader() {
   const { user } = useAuth();
+  const unreadQuery = useQuery({
+    queryKey: queryKeys.notifications.unread(),
+    queryFn: getUnreadNotificationCount,
+    enabled: Boolean(user),
+    staleTime: 30_000,
+  });
   return (
     <header className="sticky top-0 z-20 h-16 border-b border-border/70 bg-background/82 backdrop-blur-xl">
       <div className="flex h-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -25,6 +33,20 @@ export function AppHeader() {
 
         <div className="flex shrink-0 items-center gap-2">
           <PwaInstallButton />
+          {user ? (
+            <Link
+              href="/notifications"
+              aria-label={`सूचनाहरू${unreadQuery.data?.unreadCount ? `, ${unreadQuery.data.unreadCount} नपढिएका` : ""}`}
+              className="relative inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <Bell aria-hidden="true" className="size-[1.1rem]" />
+              {unreadQuery.data?.unreadCount ? (
+                <span className="absolute top-1.5 right-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[0.6rem] font-bold leading-4 text-background">
+                  {Math.min(unreadQuery.data.unreadCount, 99)}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           <Link
             href={user ? "/profile" : "/login"}
             aria-label={

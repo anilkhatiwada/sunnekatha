@@ -18,7 +18,7 @@ import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { cn } from "@/lib/utils";
 import {
@@ -57,13 +57,9 @@ export function AuthorDetailPageContent({
     queryFn: () => getRelatedAuthors(author!.id),
     enabled: Boolean(author),
   });
-  const { playTrack, playCollection } = useCatalogPlayback();
-  const followedAuthorIds = useLibraryStore(
-    (state) => state.followedAuthorIds,
-  );
-  const toggleFollowedAuthor = useLibraryStore(
-    (state) => state.toggleFollowedAuthor,
-  );
+  const { playTrack, playCollection, playPlaylist: playPlaylistDetail } =
+    useCatalogPlayback();
+  const follow = useLibraryRelationship("followedAuthor", author?.id);
 
   if (authorQuery.isPending) {
     return <AuthorDetailSkeleton />;
@@ -83,12 +79,12 @@ export function AuthorDetailPageContent({
     return <AuthorNotFound />;
   }
 
-  const isFollowing = followedAuthorIds.includes(author.id);
+  const isFollowing = follow.isActive;
   const allTracks = tracksQuery.data ?? [];
   const popularTracks =
     author.popularTracks.length > 0 ? author.popularTracks : allTracks.slice(0, 5);
   const playPlaylist = (playlist: CatalogPlaylist) =>
-    void playCollection(playlist.tracks);
+    void playPlaylistDetail(playlist);
 
   return (
     <div className="space-y-14 pb-8">
@@ -161,7 +157,12 @@ export function AuthorDetailPageContent({
                 type="button"
                 variant="secondary"
                 aria-pressed={isFollowing}
-                onClick={() => toggleFollowedAuthor(author.id)}
+                disabled={follow.isPending}
+                onClick={() => {
+                  if (!follow.toggle()) {
+                    window.location.assign("/login");
+                  }
+                }}
                 className={cn(
                   "rounded-full font-nepali",
                   isFollowing && "border-primary/40 text-primary",

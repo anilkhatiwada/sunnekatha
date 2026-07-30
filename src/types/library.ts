@@ -1,4 +1,7 @@
-import type { Track } from "@/types/track";
+import type { Author } from "@/types/author";
+import type { Narrator } from "@/types/narrator";
+import type { CatalogPlaylist } from "@/types/playlist";
+import type { CatalogTrack, Track } from "@/types/track";
 
 export interface Genre {
   id: string;
@@ -41,6 +44,27 @@ export interface UserLibrary {
 }
 
 export interface ContinueListeningItem {
-  track: Track;
+  track: CatalogTrack;
   progress: ListeningProgress;
+}
+
+export interface RecentlyPlayedItem {
+  track: CatalogTrack;
+  lastListenedAt: string;
+}
+
+export interface ListeningHistoryItem extends RecentlyPlayedItem {
+  firstListenedAt: string;
+  totalListenedSeconds: number;
+  playCount: number;
+  completionCount: number;
+}
+
+export interface RemoteUserLibrary {
+  favoriteTracks: CatalogTrack[];
+  savedPlaylists: CatalogPlaylist[];
+  followedAuthors: Author[];
+  followedNarrators: Narrator[];
+  recentlyPlayed: RecentlyPlayedItem[];
+  continueListening: ContinueListeningItem[];
 }

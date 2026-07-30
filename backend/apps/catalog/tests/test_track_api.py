@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.catalog.models import TrackProcessingStatus
-from apps.catalog.tests.factories import AudioTrackFactory
+from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
 from apps.taxonomy.tests.factories import GenreFactory, MoodFactory
 
 pytestmark = pytest.mark.django_db
@@ -47,6 +47,7 @@ def test_track_filters_and_ordering():
     genre = GenreFactory(slug="poetry")
     mood = MoodFactory(slug="calm")
     expected = AudioTrackFactory(
+        album=AlbumFactory(),
         work__content_type="poem",
         work__genres=[genre],
         work__moods=[mood],
@@ -60,6 +61,8 @@ def test_track_filters_and_ordering():
         {
             "contentType": "poem",
             "author": expected.work.author.slug,
+            "work": expected.work.slug,
+            "album": expected.album.slug,
             "narrator": expected.narrator.slug,
             "genre": genre.slug,
             "mood": mood.slug,

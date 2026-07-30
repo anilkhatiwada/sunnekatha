@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, LibraryBig } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 
 import { AuthorCard } from "@/components/cards/author-card";
 import { CompactTrackRow } from "@/components/cards/compact-track-row";
@@ -16,134 +15,62 @@ import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import { usePlayerStore } from "@/features/player/player-store";
 import {
-  getInitialUserLibrary,
-  getLibraryCatalog,
+  getRemoteUserLibrary,
   queryKeys,
+  removeFromContinueListening,
 } from "@/services";
 import type {
   Author,
   ContinueListeningItem,
   Narrator,
-  Playlist,
-  Track,
 } from "@/types";
 
 export function LibraryPageContent() {
-  const initialLibraryQuery = useQuery({
-    queryKey: queryKeys.library.initial(),
-    queryFn: getInitialUserLibrary,
-    staleTime: Infinity,
+  const queryClient = useQueryClient();
+  const libraryQuery = useQuery({
+    queryKey: queryKeys.library.remote(),
+    queryFn: getRemoteUserLibrary,
+    staleTime: 30_000,
   });
-  const catalogQuery = useQuery({
-    queryKey: queryKeys.library.catalog(),
-    queryFn: getLibraryCatalog,
-    staleTime: Infinity,
-  });
-  const hasHydrated = useLibraryStore((state) => state.hasHydrated);
-  const hasInitialized = useLibraryStore((state) => state.hasInitialized);
-  const initializeLibrary = useLibraryStore(
-    (state) => state.initializeLibrary,
-  );
-  const favoriteTrackIds = useLibraryStore(
-    (state) => state.favoriteTrackIds,
-  );
-  const savedPlaylistIds = useLibraryStore(
-    (state) => state.savedPlaylistIds,
-  );
-  const followedAuthorIds = useLibraryStore(
-    (state) => state.followedAuthorIds,
-  );
-  const followedNarratorIds = useLibraryStore(
-    (state) => state.followedNarratorIds,
-  );
-  const recentlyPlayedTrackIds = useLibraryStore(
-    (state) => state.recentlyPlayedTrackIds,
-  );
-  const listeningProgress = useLibraryStore(
-    (state) => state.listeningProgress,
-  );
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack, playCollection, playPlaylist } = useCatalogPlayback();
   const seek = usePlayerStore((state) => state.seek);
+  const removeProgress = useMutation({
+    mutationFn: removeFromContinueListening,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.library.remote() }),
+  });
 
-  useEffect(() => {
-    if (hasHydrated && !hasInitialized && initialLibraryQuery.data) {
-      initializeLibrary(initialLibraryQuery.data);
-    }
-  }, [
-    hasHydrated,
-    hasInitialized,
-    initialLibraryQuery.data,
-    initializeLibrary,
-  ]);
-
-  if (catalogQuery.isError || initialLibraryQuery.isError) {
+  if (libraryQuery.isError) {
     return (
       <SectionError
         message="लाइब्रेरी लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
-        onRetry={() => {
-          void catalogQuery.refetch();
-          void initialLibraryQuery.refetch();
-        }}
-        isRetrying={
-          catalogQuery.isFetching || initialLibraryQuery.isFetching
-        }
+        onRetry={() => void libraryQuery.refetch()}
+        isRetrying={libraryQuery.isFetching}
       />
     );
   }
 
-  if (
-    catalogQuery.isPending ||
-    initialLibraryQuery.isPending ||
-    !hasHydrated ||
-    !hasInitialized
-  ) {
+  if (libraryQuery.isPending) {
     return <LibraryPageSkeleton />;
   }
 
-  const catalog = catalogQuery.data;
-  const trackById = new Map(
-    catalog.tracks.map((track) => [track.id, track]),
-  );
-  const favorites = resolveIds(favoriteTrackIds, trackById);
-  const recentTracks = resolveIds(recentlyPlayedTrackIds, trackById).slice(
-    0,
-    8,
-  );
-  const savedPlaylists = resolveIds(
-    savedPlaylistIds,
-    new Map(
-      catalog.playlists.map((playlist) => [playlist.id, playlist]),
-    ),
-  );
-  const followedAuthors = resolveIds(
-    followedAuthorIds,
-    new Map(catalog.authors.map((author) => [author.id, author])),
-  );
-  const followedNarrators = resolveIds(
-    followedNarratorIds,
-    new Map(
-      catalog.narrators.map((narrator) => [narrator.id, narrator]),
-    ),
-  );
-  const continueListening = listeningProgress
-    .filter((progress) => !progress.isCompleted)
-    .flatMap((progress): ContinueListeningItem[] => {
-      const track = trackById.get(progress.trackId);
-      return track ? [{ track, progress }] : [];
-    });
-
-  const playTrack = (track: Track) => replaceQueue([track]);
-  const playPlaylist = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
-  const playAuthor = (author: Author) =>
-    replaceQueue(author.popularTracks);
+  const {
+    favoriteTracks,
+    savedPlaylists,
+    followedAuthors,
+    followedNarrators,
+    recentlyPlayed,
+    continueListening,
+  } = libraryQuery.data;
+  const recentTracks = recentlyPlayed.slice(0, 8).map((item) => item.track);
+  const playAuthor = (author: Author) => playCollection(author.popularTracks);
   const playNarrator = (narrator: Narrator) =>
-    replaceQueue(narrator.narratedTracks);
-  const continueTrack = (item: ContinueListeningItem) => {
-    replaceQueue([item.track]);
+    playCollection(narrator.narratedTracks);
+  const continueTrack = async (item: ContinueListeningItem) => {
+    await playTrack(item.track);
     seek(item.progress.progressSeconds);
   };
 
@@ -167,11 +94,14 @@ export function LibraryPageContent() {
       <LibraryRail
         title="मनपर्ने"
         eyebrow="तपाईंले रोजेका"
-        isEmpty={favorites.length === 0}
+        isEmpty={favoriteTracks.length === 0}
       >
-        {favorites.map((track) => (
+        {favoriteTracks.map((track) => (
           <CardWidth key={track.id}>
-            <TrackCard track={track} onPlay={playTrack} />
+            <TrackCard
+              track={track}
+              onPlay={(selected) => void playTrack(selected)}
+            />
           </CardWidth>
         ))}
       </LibraryRail>
@@ -189,7 +119,7 @@ export function LibraryPageContent() {
                 key={track.id}
                 track={track}
                 index={index}
-                onPlay={playTrack}
+                onPlay={(selected) => void playTrack(selected)}
               />
             ))}
           </div>
@@ -207,7 +137,7 @@ export function LibraryPageContent() {
           <CardWidth key={playlist.id}>
             <PlaylistCard
               playlist={playlist}
-              onPlay={playPlaylist}
+              onPlay={(selected) => void playPlaylist(selected)}
             />
           </CardWidth>
         ))}
@@ -255,7 +185,8 @@ export function LibraryPageContent() {
               <ContinueListeningCard
                 key={item.track.id}
                 item={item}
-                onPlay={() => continueTrack(item)}
+                onPlay={() => void continueTrack(item)}
+                onRemove={() => removeProgress.mutate(item.track.id)}
               />
             ))}
           </div>
@@ -359,16 +290,6 @@ function CardWidth({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
-}
-
-function resolveIds<T>(
-  ids: string[],
-  itemsById: ReadonlyMap<string, T>,
-) {
-  return ids.flatMap((id) => {
-    const item = itemsById.get(id);
-    return item ? [item] : [];
-  });
 }
 
 function LibraryPageSkeleton() {

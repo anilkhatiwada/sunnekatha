@@ -25,6 +25,7 @@ class CompactPlaylistSerializer(serializers.ModelSerializer):
     isPublished = serializers.BooleanField(source="is_published", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
+    isOwnedByCurrentUser = serializers.SerializerMethodField()
 
     class Meta:
         model = Playlist
@@ -44,6 +45,7 @@ class CompactPlaylistSerializer(serializers.ModelSerializer):
             "isPublished",
             "createdAt",
             "updatedAt",
+            "isOwnedByCurrentUser",
         )
         read_only_fields = fields
 
@@ -51,6 +53,14 @@ class CompactPlaylistSerializer(serializers.ModelSerializer):
         if obj.owner_id:
             return obj.owner.display_name or obj.owner.username
         return "SunneKatha"
+
+    def get_isOwnedByCurrentUser(self, obj: Playlist) -> bool:
+        request = self.context.get("request")
+        return bool(
+            request
+            and request.user.is_authenticated
+            and obj.owner_id == request.user.id
+        )
 
 
 class PlaylistSerializer(CompactPlaylistSerializer):

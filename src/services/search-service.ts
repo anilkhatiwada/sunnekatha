@@ -34,6 +34,8 @@ import type {
 
 const EMPTY_RESULTS: SearchResults = {
   tracks: [],
+  works: [],
+  albums: [],
   playlists: [],
   authors: [],
   narrators: [],
@@ -93,6 +95,8 @@ export async function searchContent({
         query,
       ),
     ),
+    works: [],
+    albums: [],
     playlists: playlists.filter((playlist) =>
       searchValuesMatch(
         [
@@ -232,6 +236,22 @@ function mapGroupedSearchResponse(
 ): SearchResults {
   return {
     tracks: response.tracks.map(mapCompactTrack),
+    works: response.literaryWorks.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      titleEnglish: item.titleEnglish || undefined,
+      coverImage: item.coverImage || "/images/default-artwork.svg",
+      authorName: item.author.name,
+    })),
+    albums: response.albums.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      titleEnglish: item.titleEnglish || undefined,
+      coverImage: item.coverImage || "/images/default-artwork.svg",
+      authorName: item.author.name,
+    })),
     playlists: response.playlists.map(mapCompactPlaylist),
     authors: response.authors.map(mapSearchAuthor),
     narrators: response.narrators.map(mapSearchNarrator),

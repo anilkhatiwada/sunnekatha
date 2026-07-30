@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Bell,
+  KeyRound,
   Headphones,
   LogOut,
   Mail,
@@ -10,6 +11,7 @@ import {
   Settings2,
   UserRound,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -21,7 +23,12 @@ import {
 } from "@/features/profile/profile-schema";
 import { usePreferencesStore } from "@/features/profile/preferences-store";
 import { cn } from "@/lib/utils";
-import { updateAccountPreferences, updateProfile } from "@/services";
+import {
+  ApiError,
+  changePassword,
+  updateAccountPreferences,
+  updateProfile,
+} from "@/services";
 
 const inputClassName =
   "mt-2 h-11 w-full rounded-lg border border-border bg-background/55 px-3 text-sm text-foreground transition-colors focus:border-primary focus:outline-2 focus:outline-primary disabled:cursor-not-allowed disabled:opacity-55";
@@ -33,6 +40,8 @@ export function ProfileSettingsPage() {
     (state) => state.updatePreferences,
   );
   const [statusMessage, setStatusMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const hasHydrated = usePreferencesStore((state) => state.hasHydrated);
   const {
     register,
@@ -286,6 +295,97 @@ export function ProfileSettingsPage() {
         </div>
       </form>
 
+      <SettingsSection
+        icon={KeyRound}
+        title="पासवर्ड सुरक्षा"
+        description="इमेलबाट साइन इन गर्ने खाताको पासवर्ड परिवर्तन गर्नुहोस्।"
+      >
+        <form
+          className="grid gap-4 sm:grid-cols-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const values = new FormData(form);
+            setPasswordMessage("");
+            setIsChangingPassword(true);
+            void changePassword({
+              currentPassword: String(values.get("currentPassword") ?? ""),
+              newPassword: String(values.get("newPassword") ?? ""),
+              newPasswordConfirm: String(
+                values.get("newPasswordConfirm") ?? "",
+              ),
+            })
+              .then(() => {
+                form.reset();
+                setPasswordMessage(
+                  "पासवर्ड परिवर्तन भयो। अन्य सत्रहरू सुरक्षित रूपमा बन्द गरिएका छन्।",
+                );
+              })
+              .catch((error: unknown) => {
+                setPasswordMessage(
+                  error instanceof ApiError
+                    ? error.message
+                    : "पासवर्ड परिवर्तन गर्न सकिएन।",
+                );
+              })
+              .finally(() => setIsChangingPassword(false));
+          }}
+        >
+          <PasswordField name="currentPassword" label="हालको पासवर्ड" />
+          <PasswordField name="newPassword" label="नयाँ पासवर्ड" />
+          <PasswordField
+            name="newPasswordConfirm"
+            label="नयाँ पासवर्ड पुनः"
+          />
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={isChangingPassword}
+              className="rounded-full font-nepali"
+            >
+              <KeyRound aria-hidden="true" className="size-4" />
+              {isChangingPassword ? "परिवर्तन हुँदैछ…" : "पासवर्ड परिवर्तन"}
+            </Button>
+            <p
+              role="status"
+              aria-live="polite"
+              className="font-nepali text-sm text-muted-foreground"
+            >
+              {passwordMessage}
+            </p>
+          </div>
+        </form>
+      </SettingsSection>
+
+      {user?.isCreator ? (
+        <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+          <h2 className="font-literary text-2xl font-semibold">सर्जक केन्द्र</h2>
+          <p className="mt-2 font-nepali text-sm text-muted-foreground">
+            मूल अडियो र सम्पादकीय तस्बिर सिधै सुरक्षित भण्डारणमा पठाउनुहोस्।
+          </p>
+          <Link
+            href="/creator"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 font-nepali text-sm font-semibold text-background"
+          >
+            सर्जक केन्द्र खोल्नुहोस्
+          </Link>
+        </section>
+      ) : null}
+
+      <section className="rounded-2xl border border-border bg-surface/55 p-6">
+        <h2 className="font-literary text-2xl font-semibold">श्रवण गतिविधि</h2>
+        <p className="mt-2 font-nepali text-sm text-muted-foreground">
+          हालै सुनेका रचना, पटक र जम्मा सुनेको समय हेर्नुहोस्।
+        </p>
+        <Link
+          href="/history"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 font-nepali text-sm font-semibold hover:border-primary/50"
+        >
+          सुन्ने इतिहास खोल्नुहोस्
+        </Link>
+      </section>
+
       <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
         <h2 className="font-literary text-2xl font-semibold">खाता</h2>
         <p className="mt-2 font-nepali text-sm text-muted-foreground">
@@ -304,6 +404,22 @@ export function ProfileSettingsPage() {
         </Button>
       </section>
     </div>
+  );
+}
+
+function PasswordField({ name, label }: { name: string; label: string }) {
+  return (
+    <label className="font-nepali text-sm">
+      {label}
+      <input
+        name={name}
+        type="password"
+        required
+        minLength={8}
+        autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
+        className={inputClassName}
+      />
+    </label>
   );
 }
 

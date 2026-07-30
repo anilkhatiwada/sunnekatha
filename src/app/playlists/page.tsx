@@ -1,11 +1,12 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import type { Metadata } from "next";
+
+import { PlaylistsPageContent } from "@/features/playlist/playlists-page";
+
+export const metadata: Metadata = {
+  title: "प्लेलिस्ट",
+  description: "सम्पादकीय र आफ्नै साहित्यिक श्रव्य सङ्ग्रहहरू।",
+};
 
 export default function PlaylistsPage() {
-  return (
-    <PagePlaceholder
-      eyebrow="सम्पादकीय सङ्ग्रह"
-      title="प्लेलिस्ट"
-      description="मूड, विधा र अवसरअनुसार छानिएका साहित्यिक श्रव्य सङ्ग्रहहरू यहाँ देखिनेछन्।"
-    />
-  );
+  return <PlaylistsPageContent />;
 }

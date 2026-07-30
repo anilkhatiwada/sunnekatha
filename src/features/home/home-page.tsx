@@ -24,6 +24,7 @@ import { SectionError } from "@/components/common/section-error";
 import { CardRailSkeleton } from "@/components/sections/card-rail-skeleton";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { usePlayerStore } from "@/features/player/player-store";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import {
   getHomePage,
   getTrackStream,
@@ -35,7 +36,6 @@ import type {
   CatalogTrack,
   HomeHero,
   HomeSection,
-  Track,
 } from "@/types";
 
 const cardWidth = "w-[10.5rem] shrink-0 snap-start sm:w-[13rem] lg:w-[14rem]";
@@ -47,7 +47,7 @@ const continueCardWidth =
 export function HomePageContent() {
   const shouldReduceMotion = useReducedMotion();
   const playTrack = usePlayerStore((state) => state.play);
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playPlaylist } = useCatalogPlayback();
   const seek = usePlayerStore((state) => state.seek);
   const setLoading = usePlayerStore((state) => state.setLoading);
   const setPlaybackError = usePlayerStore(
@@ -79,8 +79,7 @@ export function HomePageContent() {
   );
 
   const handlePlaylistPlay = (playlist: CatalogPlaylist) => {
-    const playableTracks = playlist.tracks.filter(isPlayableTrack);
-    if (playableTracks.length > 0) replaceQueue(playableTracks);
+    void playPlaylist(playlist);
   };
 
   const hero = homeQuery.data?.hero;
@@ -319,8 +318,4 @@ function HomepageSectionsSkeleton() {
       </HorizontalSection>
     </>
   );
-}
-
-function isPlayableTrack(track: CatalogTrack): track is Track {
-  return "audioUrl" in track && typeof track.audioUrl === "string";
 }

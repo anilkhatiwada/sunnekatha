@@ -36,6 +36,30 @@ def test_public_listing_only_contains_published_public_playlists():
     assert "tracks" not in response.data["results"][0]
 
 
+def test_owner_can_list_only_their_user_playlists_with_mine_filter():
+    owner = UserFactory()
+    private = PlaylistFactory(owner=owner, visibility=PlaylistVisibility.PRIVATE)
+    public = PlaylistFactory(owner=owner, visibility=PlaylistVisibility.PUBLIC)
+    PlaylistFactory(visibility=PlaylistVisibility.PRIVATE)
+
+    response = authenticated_client(owner).get(
+        reverse("playlists:list-create"),
+        {"mine": "true"},
+    )
+    anonymous = APIClient().get(
+        reverse("playlists:list-create"),
+        {"mine": "true"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert {item["id"] for item in response.data["results"]} == {
+        str(private.id),
+        str(public.id),
+    }
+    assert all(item["isOwnedByCurrentUser"] for item in response.data["results"])
+    assert anonymous.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 def test_unlisted_is_available_by_direct_url_but_private_is_not():
     unlisted = PlaylistFactory(visibility=PlaylistVisibility.UNLISTED)
     private = PlaylistFactory(visibility=PlaylistVisibility.PRIVATE)

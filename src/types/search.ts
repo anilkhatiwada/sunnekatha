@@ -4,8 +4,19 @@ import type { Narrator } from "@/types/narrator";
 import type { CatalogPlaylist } from "@/types/playlist";
 import type { CatalogTrack } from "@/types/track";
 
+export interface SearchCatalogResult {
+  id: string;
+  slug: string;
+  title: string;
+  titleEnglish?: string;
+  coverImage: string;
+  authorName: string;
+}
+
 export interface SearchResults {
   tracks: CatalogTrack[];
+  works: SearchCatalogResult[];
+  albums: SearchCatalogResult[];
   playlists: CatalogPlaylist[];
   authors: Author[];
   narrators: Narrator[];
@@ -16,6 +27,8 @@ export interface SearchResults {
 export type SearchResultType =
   | "all"
   | "tracks"
+  | "works"
+  | "albums"
   | "playlists"
   | "authors"
   | "narrators"

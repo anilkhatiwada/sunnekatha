@@ -27,6 +27,39 @@ export async function loginWithGoogle(
   return response.user;
 }
 
+export async function loginWithPassword(input: {
+  email: string;
+  password: string;
+}) {
+  const response = await apiClient.post<LoginResponse, typeof input>(
+    "/auth/login/",
+    { body: input },
+  );
+  setAuthTokens({
+    access: response.access,
+    refresh: response.refresh,
+  });
+  return response.user;
+}
+
+export async function registerAccount(input: {
+  email: string;
+  username: string;
+  displayName: string;
+  password: string;
+  passwordConfirm: string;
+}) {
+  const response = await apiClient.post<LoginResponse, typeof input>(
+    "/auth/register/",
+    { body: input },
+  );
+  setAuthTokens({
+    access: response.access,
+    refresh: response.refresh,
+  });
+  return response.user;
+}
+
 export function hasStoredSession() {
   return Boolean(getAuthSessionAdapter().getRefreshToken());
 }
@@ -77,4 +110,15 @@ export async function logoutCurrentUser() {
   } finally {
     clearAuthSession();
   }
+}
+
+export function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+}) {
+  return apiClient.post<void, typeof input>("/auth/change-password/", {
+    body: input,
+    requiresAuth: true,
+  });
 }

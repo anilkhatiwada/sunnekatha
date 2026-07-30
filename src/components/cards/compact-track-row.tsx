@@ -7,21 +7,21 @@ import { CardPlayButton } from "@/components/cards/card-primitives";
 import { LoadingSkeleton } from "@/components/common/loading-skeleton";
 import { formatDuration } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { Track } from "@/types";
+import type { CatalogTrack } from "@/types";
 
-interface CompactTrackRowProps {
-  track: Track;
-  onPlay: (track: Track) => void;
+interface CompactTrackRowProps<TTrack extends CatalogTrack> {
+  track: TTrack;
+  onPlay: (track: TTrack) => void;
   index?: number;
   className?: string;
 }
 
-export function CompactTrackRow({
+export function CompactTrackRow<TTrack extends CatalogTrack>({
   track,
   onPlay,
   index,
   className,
-}: CompactTrackRowProps) {
+}: CompactTrackRowProps<TTrack>) {
   return (
     <article
       className={cn(

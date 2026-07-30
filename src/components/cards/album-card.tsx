@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { DEFAULT_ARTWORK_PATH } from "@/services/api-mappers";
 import type { HomeAlbum } from "@/types";
@@ -16,7 +17,12 @@ export function AlbumCard({ album }: { album: HomeAlbum }) {
         />
       </div>
       <h3 className="mt-4 line-clamp-2 min-h-12 font-nepali text-base leading-6 font-semibold text-foreground">
-        {album.title}
+        <Link
+          href={`/album/${album.slug}`}
+          className="rounded-sm transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          {album.title}
+        </Link>
       </h3>
       <p className="mt-1 truncate font-nepali text-sm text-muted-foreground">
         {album.authorName}

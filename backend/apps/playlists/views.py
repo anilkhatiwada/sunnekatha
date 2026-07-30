@@ -10,6 +10,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.response import Response
 
 from apps.catalog.models import TrackProcessingStatus
@@ -84,7 +85,19 @@ class PlaylistListCreateView(ListCreateAPIView):
         return PlaylistWriteSerializer
 
     def get_queryset(self):
-        return playlist_queryset(include_tracks=False).filter(
+        queryset = playlist_queryset(include_tracks=False)
+        if self.request.query_params.get("mine", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }:
+            if not self.request.user.is_authenticated:
+                raise NotAuthenticated("Authentication is required.")
+            return queryset.filter(
+                owner=self.request.user,
+                playlist_type=PlaylistType.USER,
+            )
+        return queryset.filter(
             visibility=PlaylistVisibility.PUBLIC,
             is_published=True,
         )

@@ -18,10 +18,12 @@ import { ErrorState } from "@/components/common/error-state";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { PlaylistTrackRow } from "@/components/player/playlist-track-row";
 import { Button } from "@/components/ui/button";
-import { useLibraryStore } from "@/features/library/library-store";
+import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import { usePlayerStore } from "@/features/player/player-store";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
+import { PlaylistOwnerControls } from "@/features/playlist/playlist-owner-controls";
 import { formatDuration } from "@/lib/formatters";
+import { sharePage } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { getPlaylistBySlug, queryKeys } from "@/services";
 import type { CatalogTrack } from "@/types";
@@ -39,12 +41,7 @@ export function PlaylistDetailPageContent({
   });
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const { playCollection } = useCatalogPlayback();
-  const savedPlaylistIds = useLibraryStore(
-    (state) => state.savedPlaylistIds,
-  );
-  const toggleSavedPlaylist = useLibraryStore(
-    (state) => state.toggleSavedPlaylist,
-  );
+  const saved = useLibraryRelationship("savedPlaylist", playlistQuery.data?.id);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   if (playlistQuery.isPending) {
@@ -80,7 +77,7 @@ export function PlaylistDetailPageContent({
     );
   }
 
-  const isSaved = savedPlaylistIds.includes(playlist.id);
+  const isSaved = saved.isActive;
   const hasTracks = playlist.tracks.length > 0;
 
   const playAll = () => void playCollection(playlist.tracks);
@@ -145,7 +142,14 @@ export function PlaylistDetailPageContent({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => toggleSavedPlaylist(playlist.id)}
+                disabled={saved.isPending}
+                onClick={() => {
+                  if (!saved.toggle()) {
+                    setStatusMessage(
+                      "प्लेलिस्ट सुरक्षित गर्न पहिले साइन इन गर्नुहोस्।",
+                    );
+                  }
+                }}
                 aria-pressed={isSaved}
                 className={cn(
                   "rounded-full font-nepali",
@@ -161,9 +165,20 @@ export function PlaylistDetailPageContent({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() =>
-                  setStatusMessage("साझा गर्ने सुविधा चाँडै उपलब्ध हुनेछ।")
-                }
+                onClick={() => {
+                  void sharePage({
+                    title: playlist.title,
+                    text: `${playlist.title} · SunneKatha`,
+                  })
+                    .then((result) =>
+                      setStatusMessage(
+                        result === "copied"
+                          ? "प्लेलिस्टको लिङ्क प्रतिलिपि भयो।"
+                          : "प्लेलिस्ट साझा भयो।",
+                      ),
+                    )
+                    .catch(() => undefined);
+                }}
                 className="rounded-full font-nepali"
               >
                 <Share2 aria-hidden="true" className="size-4" />
@@ -175,11 +190,17 @@ export function PlaylistDetailPageContent({
               aria-live="polite"
               className="mt-2 min-h-5 font-nepali text-xs text-muted-foreground"
             >
-              {statusMessage}
+              {saved.error
+                ? "प्लेलिस्ट सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।"
+                : statusMessage}
             </p>
           </div>
         </div>
       </section>
+
+      {playlist.isOwnedByCurrentUser ? (
+        <PlaylistOwnerControls playlist={playlist} />
+      ) : null}
 
       <section aria-labelledby="playlist-tracks-heading">
         <div className="mb-4 flex items-end justify-between gap-4 px-2">
