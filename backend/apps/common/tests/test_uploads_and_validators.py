@@ -4,7 +4,9 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models.fields.files import ImageFieldFile
 
+from apps.authors.models import Author
 from apps.common.storage import (
     CoverImageStorage,
     LocalCoverImageStorage,
@@ -123,6 +125,20 @@ def test_image_validator_accepts_jpeg_content_type_aliases(content_type):
     )
 
     validate_image_upload(upload)
+
+
+def test_image_validator_reads_content_type_from_model_field_wrapper():
+    upload = SimpleUploadedFile(
+        "cover.jpg",
+        b"image-data",
+        content_type="image/jpeg",
+    )
+    author = Author(name_ne="लेखक", name_en="Author")
+    field = author._meta.get_field("image")
+    wrapped = ImageFieldFile(author, field, upload.name)
+    wrapped.file = upload
+
+    validate_image_upload(wrapped)
 
 
 def test_audio_validator_rejects_mismatched_content_type():

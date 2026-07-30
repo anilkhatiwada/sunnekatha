@@ -5,6 +5,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+from django.db.models.fields.files import FieldFile
 
 IMAGE_EXTENSIONS = ("jpg", "jpeg", "png", "webp", "avif")
 AUDIO_EXTENSIONS = ("mp3", "m4a", "aac", "ogg", "wav", "flac")
@@ -103,19 +104,27 @@ def validate_slug_segment(value: str) -> None:
 
 
 def _validate_file(value, *, max_bytes, allowed_content_types, label) -> None:
-    if value.size <= 0:
+    uploaded_file = getattr(value, "_file", None)
+    if isinstance(value, FieldFile) and uploaded_file is None:
+        # Existing model files no longer carry request MIME metadata. They were
+        # validated when first uploaded, so avoid reopening private storage
+        # during unrelated model validation.
+        return
+    candidate = uploaded_file or value
+
+    if candidate.size <= 0:
         raise ValidationError(
             f"The {label} must not be empty.",
             code="empty_file",
         )
-    if value.size > max_bytes:
+    if candidate.size > max_bytes:
         max_megabytes = max_bytes // (1024 * 1024)
         raise ValidationError(
             f"The {label} must not exceed {max_megabytes} MB.",
             code="file_too_large",
         )
 
-    content_type = normalize_content_type(getattr(value, "content_type", None))
+    content_type = normalize_content_type(getattr(candidate, "content_type", None))
     if not content_type or content_type not in allowed_content_types:
         raise ValidationError(
             f"Unsupported {label} content type.",
