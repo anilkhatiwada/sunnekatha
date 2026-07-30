@@ -8,7 +8,16 @@ from django.core.validators import FileExtensionValidator
 
 IMAGE_EXTENSIONS = ("jpg", "jpeg", "png", "webp", "avif")
 AUDIO_EXTENSIONS = ("mp3", "m4a", "aac", "ogg", "wav", "flac")
-IMAGE_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp", "image/avif"})
+IMAGE_CONTENT_TYPES = frozenset(
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/pjpeg",
+        "image/png",
+        "image/webp",
+        "image/avif",
+    }
+)
 AUDIO_CONTENT_TYPES = frozenset(
     {
         "audio/mpeg",
@@ -25,6 +34,15 @@ PERMISSION_DOCUMENT_EXTENSIONS = ("pdf", "jpg", "jpeg", "png")
 PERMISSION_DOCUMENT_CONTENT_TYPES = frozenset(
     {"application/pdf", "image/jpeg", "image/png"}
 )
+CONTENT_TYPE_ALIASES = {
+    "image/jpg": "image/jpeg",
+    "image/pjpeg": "image/jpeg",
+}
+
+
+def normalize_content_type(value: str | None) -> str:
+    content_type = (value or "").split(";", 1)[0].strip().lower()
+    return CONTENT_TYPE_ALIASES.get(content_type, content_type)
 
 
 def validate_image_upload(value) -> None:
@@ -97,8 +115,8 @@ def _validate_file(value, *, max_bytes, allowed_content_types, label) -> None:
             code="file_too_large",
         )
 
-    content_type = getattr(value, "content_type", None)
-    if not content_type or content_type.lower() not in allowed_content_types:
+    content_type = normalize_content_type(getattr(value, "content_type", None))
+    if not content_type or content_type not in allowed_content_types:
         raise ValidationError(
             f"Unsupported {label} content type.",
             code="invalid_content_type",

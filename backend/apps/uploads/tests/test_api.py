@@ -90,6 +90,38 @@ def test_creator_requests_exact_size_constrained_presigned_upload(
     assert call["Fields"]["x-amz-server-side-encryption"] == "AES256"
 
 
+@pytest.mark.parametrize("content_type", ["image/jpg", "image/pjpeg"])
+@patch("apps.uploads.services.get_s3_client")
+def test_creator_request_normalizes_jpeg_content_type_alias(
+    get_client,
+    content_type,
+    client,
+    creator,
+):
+    s3 = Mock()
+    s3.generate_presigned_post.return_value = {
+        "url": "https://private-covers.s3.amazonaws.com/",
+        "fields": {},
+    }
+    get_client.return_value = s3
+
+    response = client.post(
+        reverse("uploads:request"),
+        {
+            "uploadType": "cover_image",
+            "originalFilename": "cover.jpg",
+            "contentType": content_type,
+            "expectedSize": 1024,
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["contentType"] == "image/jpeg"
+    call = s3.generate_presigned_post.call_args.kwargs
+    assert call["Fields"]["Content-Type"] == "image/jpeg"
+
+
 @pytest.mark.parametrize(
     ("upload_type", "filename", "content_type", "bucket", "prefix"),
     [

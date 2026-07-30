@@ -111,6 +111,20 @@ def test_image_validator_accepts_supported_upload():
     validate_image_upload(upload)
 
 
+@pytest.mark.parametrize(
+    "content_type",
+    ["image/jpeg", "image/jpg", "image/pjpeg", "image/jpeg; charset=binary"],
+)
+def test_image_validator_accepts_jpeg_content_type_aliases(content_type):
+    upload = SimpleUploadedFile(
+        "cover.jpg",
+        b"image-data",
+        content_type=content_type,
+    )
+
+    validate_image_upload(upload)
+
+
 def test_audio_validator_rejects_mismatched_content_type():
     upload = SimpleUploadedFile(
         "story.mp3",

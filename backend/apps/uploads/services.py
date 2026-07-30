@@ -16,6 +16,7 @@ from apps.common.validators import (
     AUDIO_EXTENSIONS,
     IMAGE_CONTENT_TYPES,
     IMAGE_EXTENSIONS,
+    normalize_content_type,
 )
 from apps.uploads.models import UploadSession, UploadStatus, UploadType
 
@@ -90,6 +91,7 @@ class UploadSessionService:
     def request(self, *, user, upload_type, original_filename, content_type, size):
         self._authorize_request(user)
         self._require_s3()
+        content_type = normalize_content_type(content_type)
         rule, extension = self._validate(
             upload_type=upload_type,
             original_filename=original_filename,
@@ -389,7 +391,7 @@ class UploadSessionService:
         extension = Path(original_filename).suffix.lower()
         if extension.removeprefix(".") not in rule["extensions"]:
             raise ValidationError({"originalFilename": "Unsupported file extension."})
-        normalized_type = content_type.lower()
+        normalized_type = normalize_content_type(content_type)
         if normalized_type not in rule["content_types"]:
             raise ValidationError({"contentType": "Unsupported content type."})
         if normalized_type not in EXTENSION_CONTENT_TYPES.get(extension, set()):
