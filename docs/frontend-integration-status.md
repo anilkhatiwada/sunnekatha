@@ -1,6 +1,6 @@
 # SunneKatha Frontend Integration Status
 
-**Last updated:** 2026-07-29
+**Last updated:** 2026-07-30
 **Frontend:** Next.js application at the repository root
 **Backend:** Django REST Framework application in `backend/`
 **API prefix:** `/api/v1`
@@ -25,8 +25,8 @@ blocked, or materially changed.
 | Homepage | Completed locally | Uses the aggregate `/home/` response and preserves backend section order |
 | Public catalog | Completed locally | Explore, taxonomy, tracks, playlists, authors, and narrators use remote services |
 | Audio stream authorization | Completed locally | Stream URL is requested only after playback intent |
-| Frontend deployment | Deployed to staging IP | Commit `9536ce9` runs on the existing Lightsail instance |
-| Live API verification | Partially verified | HTTP smoke tests pass; normal-browser data verification remains pending |
+| Frontend deployment | Deployed to production domain | Commit `c9678e7` runs on the existing Lightsail instance |
+| Live API verification | Verified | HTTPS, API routing, CORS, redirects, health, homepage, and Admin routing pass |
 | Search | Pending | Still uses local mock search |
 | Authentication and profile | Pending | JWT client foundation exists, but user-facing authentication is not connected |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
@@ -108,70 +108,82 @@ blocked, or materially changed.
 - [x] Preserve direct mock audio playback in mock mode.
 - [x] Display a player error when stream authorization fails.
 
-## Blocked work
+## Production deployment
 
-### Production domain and browser verification
+The frontend is available at `https://sunnekatha.com`. Nginx routes
+`api.sunnekatha.com` to Django and the apex domain to Next.js. `www` redirects
+to the apex domain.
 
-The frontend is available from `http://13.205.30.123/`, with Nginx serving the
-Next.js application and preserving Django under `/api/`, `/admin/`, `/static/`,
-and `/media/`. The frontend and API are same-origin for this staging-IP build,
-so CORS is not required for that temporary route.
-
-Production domain verification remains incomplete. The final frontend will use
-`https://sunnekatha.com`, while the API will use
-`https://api.sunnekatha.com/api/v1`; those origins require restricted CORS and
-CSRF configuration.
-
-Current infrastructure blockers:
-
-- Cloudflare resolves the root, `www`, and `api` hostnames, but HTTPS returns
-  `521` because the Lightsail Nginx origin does not yet listen on port 443.
-- ACM issued the `media.sunnekatha.com` certificate and the CloudFront OAC,
-  signing key group, and path-rewrite function exist.
-- AWS rejected CloudFront distribution creation with an account-verification
-  requirement. AWS Support must verify the account before distribution creation
-  can be retried.
-
-Required actions:
-
-- [ ] Decide the exact local, staging, and production frontend origins.
-- [ ] Add only those origins to the backend CORS allowlist.
-- [ ] Add corresponding trusted HTTPS origins where Django CSRF protection
-  applies.
-- [ ] Avoid wildcard CORS or wildcard trusted origins in production.
-- [ ] Restart or redeploy the backend after changing environment configuration.
-- [ ] Verify homepage, Explore, detail pages, and stream authorization from the
-  actual browser origin.
-- [ ] Replace the temporary HTTP/IP API URL with an HTTPS API domain before
-  production.
-- [ ] Complete AWS account verification for new CloudFront distributions.
-- [ ] Install an origin TLS certificate and HTTPS Nginx configuration on
-  Lightsail.
-
-### Current deployment
-
-- Commit: `9536ce9`
-- Frontend service: `sunnekatha-frontend.service`
+- Frontend URL: `https://sunnekatha.com`
+- API URL: `https://api.sunnekatha.com/api/v1`
+- Admin URL: `https://api.sunnekatha.com/admin/`
+- Commit/release: `c9678e7-production`
 - Frontend runtime: Node.js 22.23.1 and Next.js 16.2.10
 - Frontend upstream: `127.0.0.1:3000`
-- Public staging URL: `http://13.205.30.123/`
-- API staging URL: `http://13.205.30.123/api/v1`
-- Fixed monthly cost added: `$0`
+- Django upstream: `127.0.0.1:8000`
+- TLS: Let's Encrypt ECDSA certificate for the apex, `www`, and `api`
+- Certificate expiry: 2026-10-28
+- Fixed monthly cost added by HTTPS: `$0`
+
+Production environment:
+
+```text
+NEXT_PUBLIC_API_MODE=remote
+NEXT_PUBLIC_API_BASE_URL=https://api.sunnekatha.com/api/v1
+NEXT_PUBLIC_APP_ENV=production
+```
+
+Django allows only the production hosts and explicitly trusts the production
+HTTPS frontend/API origins for CORS and CSRF. SSL redirects and secure cookies
+are enabled.
 
 Verified after deployment:
 
-- [x] Frontend root returns HTTP 200.
-- [x] Web app manifest returns HTTP 200.
-- [x] Django health endpoint returns HTTP 200.
-- [x] Django Admin remains reachable and redirects to its login page.
-- [x] Aggregated homepage API returns HTTP 200 and valid JSON.
+- [x] Frontend root returns HTTPS 200.
+- [x] HTTP redirects to HTTPS.
+- [x] `www` redirects to the apex domain while preserving the request path.
+- [x] Django health endpoint returns HTTPS 200.
+- [x] Django Admin redirects to its login page.
+- [x] Aggregated homepage API returns HTTPS 200 and valid JSON.
+- [x] CORS returns the requested production frontend origin.
 - [x] Frontend, Gunicorn, Celery worker, Celery Beat, and Nginx services are
   active.
 - [x] Nginx configuration validation passes.
-- [x] The rendered application shell, navigation, and player are present.
-- [ ] Complete homepage data verification in a normal browser. The automated
-  in-app browser used during deployment does not expose `window.fetch`, so it
-  cannot validate client-side API requests.
+- [x] The production Next.js build uses the HTTPS API base URL.
+
+Cloudflare records were kept DNS-only during certificate issuance and origin
+verification. They may be proxied after setting Cloudflare SSL/TLS mode to
+**Full (strict)**.
+
+HSTS remains intentionally disabled until every intended subdomain, including
+`media.sunnekatha.com`, is HTTPS-ready. The production settings include
+`includeSubDomains` and preload behavior, so enabling HSTS prematurely would be
+difficult to reverse.
+
+## Blocked infrastructure
+
+The private media CloudFront distribution is not yet created. AWS rejected the
+creation request because the account must be verified before it can add new
+CloudFront resources. No distribution charges are being incurred.
+
+Already prepared:
+
+- ACM certificate for `media.sunnekatha.com`
+- CloudFront Origin Access Control
+- CloudFront public key and trusted key group
+- Published `SunneKathaMediaPathRewrite` CloudFront Function
+- Version-controlled distribution configuration
+
+Remaining actions:
+
+- [ ] Complete AWS account verification for new CloudFront distributions.
+- [ ] Create the previously approved distribution.
+- [ ] Add the generated CloudFront hostname as the DNS-only
+  `media.sunnekatha.com` CNAME.
+- [ ] Apply the least-privilege S3 bucket policy for the distribution.
+- [ ] Install the CloudFront signing key in the backend secret environment.
+- [ ] Verify free, premium, unauthorized, and expired media access.
+- [ ] Enable HSTS only after all required subdomains are confirmed HTTPS-ready.
 
 ## Known limitations
 
