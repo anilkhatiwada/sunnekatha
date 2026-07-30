@@ -191,6 +191,9 @@ APIs:
 
 ## Recommended follow-up
 
+- Review the 11 high-severity findings reported by the production `npm ci`
+  audit and upgrade affected dependencies in a tested dependency-hardening
+  change; do not use an unreviewed force upgrade in production.
 - Add end-to-end browser tests using a seeded test API for registration,
   playlist management, playback resume, queue restoration, and direct S3 upload.
 - Add a secure user download contract only after entitlement, expiry, and

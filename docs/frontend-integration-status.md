@@ -25,7 +25,30 @@
 | Notifications | Complete |
 | Creator center and direct S3 uploads | Complete |
 | Responsive and interaction review | Complete locally |
-| Production deployment of this change | Pending user authorization/SSH access |
+| Production deployment of this change | Deployed |
+
+## Production release
+
+- Application commit: `bef742f4fe78aef2dd0d5b433068a6c71498820f`
+- Frontend release: `/srv/sunnekatha/frontend/releases/bef742f-production`
+- Backend release: `/srv/sunnekatha/releases/bef742f-backend-integration`
+- Deployed: 2026-07-30
+- New AWS resources: none
+- Added monthly cost: `$0`
+
+Post-deployment verification:
+
+- `https://sunnekatha.com/`: HTTP 200
+- `/login`, `/playlists`, and `/notifications`: HTTP 200
+- API health: HTTP 200
+- Anonymous `playlists/?mine=true`: HTTP 401 as required
+- Work track filter: HTTP 200
+- Frontend, Gunicorn, Celery worker, and Celery Beat: active
+
+The production `npm ci` audit reported 11 high-severity dependency findings.
+No automatic force-upgrade was applied during deployment because it could make
+breaking dependency changes. Review with `npm audit` in a dedicated dependency
+hardening change.
 
 ## Added frontend routes
 
