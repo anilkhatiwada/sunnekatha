@@ -122,6 +122,16 @@ Production domain verification remains incomplete. The final frontend will use
 `https://api.sunnekatha.com/api/v1`; those origins require restricted CORS and
 CSRF configuration.
 
+Current infrastructure blockers:
+
+- Cloudflare resolves the root, `www`, and `api` hostnames, but HTTPS returns
+  `521` because the Lightsail Nginx origin does not yet listen on port 443.
+- ACM issued the `media.sunnekatha.com` certificate and the CloudFront OAC,
+  signing key group, and path-rewrite function exist.
+- AWS rejected CloudFront distribution creation with an account-verification
+  requirement. AWS Support must verify the account before distribution creation
+  can be retried.
+
 Required actions:
 
 - [ ] Decide the exact local, staging, and production frontend origins.
@@ -134,6 +144,9 @@ Required actions:
   actual browser origin.
 - [ ] Replace the temporary HTTP/IP API URL with an HTTPS API domain before
   production.
+- [ ] Complete AWS account verification for new CloudFront distributions.
+- [ ] Install an origin TLS certificate and HTTPS Nginx configuration on
+  Lightsail.
 
 ### Current deployment
 
