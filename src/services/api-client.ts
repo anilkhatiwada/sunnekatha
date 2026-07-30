@@ -26,6 +26,8 @@ interface ApiClientDependencies {
   getAuthSession: () => AuthSessionAdapter;
 }
 
+const browserFetch: typeof fetch = (...args) => globalThis.fetch(...args);
+
 export class ApiClient {
   private refreshPromise: Promise<boolean> | null = null;
 
@@ -33,7 +35,7 @@ export class ApiClient {
     private readonly baseUrl: string,
     private readonly timeoutMs: number,
     private readonly dependencies: ApiClientDependencies = {
-      fetch: globalThis.fetch,
+      fetch: browserFetch,
       getAuthSession: getAuthSessionAdapter,
     },
   ) {}

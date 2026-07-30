@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiClient } from "@/services/api-client";
 import type { AuthSessionAdapter } from "@/services/auth-session";
@@ -21,6 +21,27 @@ function asFetch(mock: ReturnType<typeof vi.fn>) {
 }
 
 describe("ApiClient", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("calls the browser fetch function without an invalid receiver", async () => {
+    const fetchMock = vi.fn(function (this: typeof globalThis) {
+      if (this !== globalThis) throw new TypeError("Illegal invocation");
+      return Promise.resolve(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new ApiClient("https://api.example.com/api/v1", 1000);
+
+    await expect(client.get("/health/")).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it("serializes JSON, query parameters, and bearer authentication", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {
