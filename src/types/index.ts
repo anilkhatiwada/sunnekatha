@@ -16,6 +16,7 @@ export type {
 export type { ContentType, Language } from "@/types/common";
 export type {
   ApiAuthenticatedUser,
+  ApiAutocompleteItem,
   ApiAuthor,
   ApiAuthorSummary,
   ApiCompactPlaylist,
@@ -34,6 +35,7 @@ export type {
   ApiStreamResponse,
   ApiTaxonomy,
   ApiTrackPage,
+  ApiTrendingSearchResponse,
   ApiUploadInstructions,
   ApiUploadSession,
   ApiUploadURLResponse,
@@ -63,6 +65,8 @@ export type {
   SearchRequest,
   SearchResults,
   SearchResultType,
+  SearchSuggestion,
+  SearchTrackPage,
 } from "@/types/search";
 export type {
   CatalogTrack,

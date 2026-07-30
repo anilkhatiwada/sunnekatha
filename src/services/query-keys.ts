@@ -39,6 +39,8 @@ export const queryKeys = {
     all: ["search"] as const,
     results: (query: string, resultType: SearchResultType) =>
       [...queryKeys.search.all, "results", { query, resultType }] as const,
+    autocomplete: (query: string) =>
+      [...queryKeys.search.all, "autocomplete", query] as const,
     trending: () => [...queryKeys.search.all, "trending"] as const,
   },
   tracks: {

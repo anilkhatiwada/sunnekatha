@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Clock3, Search, TrendingUp, X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 
@@ -18,10 +18,17 @@ import { Button } from "@/components/ui/button";
 import { SEARCH_FILTERS } from "@/features/search/search-config";
 import { useSearchHistoryStore } from "@/features/search/search-history-store";
 import { useDebouncedValue } from "@/features/search/use-debounced-value";
-import { usePlayerStore } from "@/features/player/player-store";
-import { getTrendingSearches, queryKeys, searchContent } from "@/services";
+import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
+import {
+  getSearchSuggestions,
+  getTrendingSearches,
+  queryKeys,
+  searchContent,
+  searchTracks,
+} from "@/services";
 import type {
-  Playlist,
+  CatalogPlaylist,
+  CatalogTrack,
   SearchResults,
   SearchResultType,
 } from "@/types";
@@ -38,25 +45,40 @@ export function SearchPageContent({
   const [query, setQuery] = useState(initialQuery);
   const [activeFilter, setActiveFilter] =
     useState<SearchResultType>("all");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const debouncedQuery = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
   const searches = useSearchHistoryStore((state) => state.searches);
   const addSearch = useSearchHistoryStore((state) => state.addSearch);
   const clearHistory = useSearchHistoryStore((state) => state.clearHistory);
-  const playTrack = usePlayerStore((state) => state.play);
-  const replaceQueue = usePlayerStore((state) => state.replaceQueue);
+  const { playTrack, playCollection } = useCatalogPlayback();
 
   const resultsQuery = useQuery({
     queryKey: queryKeys.search.results(debouncedQuery, activeFilter),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       searchContent({
         query: debouncedQuery,
         resultType: activeFilter,
-      }),
-    enabled: debouncedQuery.length > 0,
+      }, signal),
+    enabled: debouncedQuery.length > 0 && activeFilter !== "tracks",
+  });
+  const trackResultsQuery = useInfiniteQuery({
+    queryKey: queryKeys.search.results(debouncedQuery, "tracks"),
+    queryFn: ({ pageParam, signal }) =>
+      searchTracks(debouncedQuery, pageParam, signal),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
+    enabled: debouncedQuery.length > 0 && activeFilter === "tracks",
+  });
+  const autocompleteQuery = useQuery({
+    queryKey: queryKeys.search.autocomplete(debouncedQuery),
+    queryFn: ({ signal }) =>
+      getSearchSuggestions(debouncedQuery, signal),
+    enabled: isSearchFocused && debouncedQuery.length >= 2,
+    staleTime: 30_000,
   });
   const trendingQuery = useQuery({
     queryKey: queryKeys.search.trending(),
-    queryFn: getTrendingSearches,
+    queryFn: ({ signal }) => getTrendingSearches(signal),
   });
 
   useEffect(() => {
@@ -75,13 +97,22 @@ export function SearchPageContent({
   }, [debouncedQuery]);
 
   useEffect(() => {
-    if (debouncedQuery && resultsQuery.isSuccess) {
+    if (
+      debouncedQuery &&
+      (resultsQuery.isSuccess || trackResultsQuery.isSuccess)
+    ) {
       addSearch(debouncedQuery);
     }
-  }, [addSearch, debouncedQuery, resultsQuery.isSuccess]);
+  }, [
+    addSearch,
+    debouncedQuery,
+    resultsQuery.isSuccess,
+    trackResultsQuery.isSuccess,
+  ]);
 
   const chooseSearch = (value: string) => {
     setQuery(value);
+    setIsSearchFocused(false);
     addSearch(value);
   };
 
@@ -90,11 +121,33 @@ export function SearchPageContent({
     addSearch(query);
   };
 
-  const playPlaylist = (playlist: Playlist) =>
-    replaceQueue(playlist.tracks);
+  const playPlaylist = (playlist: CatalogPlaylist) =>
+    void playCollection(playlist.tracks);
   const hasQuery = debouncedQuery.length > 0;
-  const resultCount = resultsQuery.data
-    ? countSearchResults(resultsQuery.data)
+  const searchResults =
+    activeFilter === "tracks"
+      ? {
+          tracks:
+            trackResultsQuery.data?.pages.flatMap(
+              (page) => page.results,
+            ) ?? [],
+          playlists: [],
+          authors: [],
+          narrators: [],
+          genres: [],
+          moods: [],
+        }
+      : resultsQuery.data;
+  const isResultsPending =
+    activeFilter === "tracks"
+      ? trackResultsQuery.isPending
+      : resultsQuery.isPending;
+  const isResultsError =
+    activeFilter === "tracks"
+      ? trackResultsQuery.isError
+      : resultsQuery.isError;
+  const resultCount = searchResults
+    ? countSearchResults(searchResults)
     : 0;
 
   return (
@@ -127,6 +180,15 @@ export function SearchPageContent({
           value={query}
           autoComplete="off"
           onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={
+            isSearchFocused &&
+            Boolean(autocompleteQuery.data?.length)
+          }
+          aria-controls="catalog-search-suggestions"
           placeholder="उदाहरण: वर्षाको साँझ वा barshako saanjh"
           className="h-14 w-full rounded-xl border border-border bg-surface/90 pr-12 pl-12 font-nepali text-base text-foreground shadow-lg shadow-black/10 transition-colors placeholder:text-muted-foreground/70 hover:border-primary/30 focus:border-primary/60 focus:outline-2 focus:outline-primary sm:h-16"
         />
@@ -141,6 +203,38 @@ export function SearchPageContent({
           >
             <X aria-hidden="true" className="size-4" />
           </Button>
+        ) : null}
+        {isSearchFocused && autocompleteQuery.data?.length ? (
+          <ul
+            id="catalog-search-suggestions"
+            role="listbox"
+            aria-label="खोज सुझावहरू"
+            className="absolute top-full z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-border bg-surface p-2 shadow-2xl shadow-black/30"
+          >
+            {autocompleteQuery.data.map((suggestion) => (
+              <li
+                key={`${suggestion.type}-${suggestion.id}`}
+                role="option"
+                aria-selected="false"
+              >
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => chooseSearch(suggestion.label)}
+                  className="flex w-full items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface-soft focus-visible:outline-2 focus-visible:outline-primary"
+                >
+                  <span className="font-nepali text-sm">
+                    {suggestion.label}
+                  </span>
+                  {suggestion.labelEnglish ? (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {suggestion.labelEnglish}
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
         ) : null}
       </form>
 
@@ -167,23 +261,50 @@ export function SearchPageContent({
             </ul>
           </nav>
 
-          <section aria-live="polite" aria-busy={resultsQuery.isPending}>
-            {resultsQuery.isPending ? (
+          <section aria-live="polite" aria-busy={isResultsPending}>
+            {isResultsPending ? (
               <SearchResultsSkeleton />
-            ) : resultsQuery.isError ? (
+            ) : isResultsError ? (
               <SectionError
                 message="खोज परिणाम ल्याउन सकिएन।"
-                onRetry={() => void resultsQuery.refetch()}
-                isRetrying={resultsQuery.isFetching}
+                onRetry={() =>
+                  void (activeFilter === "tracks"
+                    ? trackResultsQuery.refetch()
+                    : resultsQuery.refetch())
+                }
+                isRetrying={
+                  activeFilter === "tracks"
+                    ? trackResultsQuery.isFetching
+                    : resultsQuery.isFetching
+                }
               />
             ) : resultCount === 0 ? (
               <SearchEmptyState query={debouncedQuery} />
-            ) : resultsQuery.data ? (
-              <GroupedSearchResults
-                results={resultsQuery.data}
-                onTrackPlay={playTrack}
-                onPlaylistPlay={playPlaylist}
-              />
+            ) : searchResults ? (
+              <>
+                <GroupedSearchResults
+                  results={searchResults}
+                  onTrackPlay={playTrack}
+                  onPlaylistPlay={playPlaylist}
+                />
+                {activeFilter === "tracks" &&
+                trackResultsQuery.hasNextPage ? (
+                  <div className="mt-8 flex justify-center">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={trackResultsQuery.isFetchingNextPage}
+                      onClick={() =>
+                        void trackResultsQuery.fetchNextPage()
+                      }
+                    >
+                      {trackResultsQuery.isFetchingNextPage
+                        ? "थप परिणाम लोड हुँदैछ…"
+                        : "थप परिणाम देखाउनुहोस्"}
+                    </Button>
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </section>
         </>
@@ -231,8 +352,8 @@ export function SearchPageContent({
 
 interface GroupedSearchResultsProps {
   results: SearchResults;
-  onTrackPlay: ReturnType<typeof usePlayerStore.getState>["play"];
-  onPlaylistPlay: (playlist: Playlist) => void;
+  onTrackPlay: (track: CatalogTrack) => void;
+  onPlaylistPlay: (playlist: CatalogPlaylist) => void;
 }
 
 function GroupedSearchResults({

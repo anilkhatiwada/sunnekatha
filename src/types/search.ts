@@ -1,12 +1,12 @@
 import type { Author } from "@/types/author";
 import type { Genre, Mood } from "@/types/library";
 import type { Narrator } from "@/types/narrator";
-import type { Playlist } from "@/types/playlist";
-import type { Track } from "@/types/track";
+import type { CatalogPlaylist } from "@/types/playlist";
+import type { CatalogTrack } from "@/types/track";
 
 export interface SearchResults {
-  tracks: Track[];
-  playlists: Playlist[];
+  tracks: CatalogTrack[];
+  playlists: CatalogPlaylist[];
   authors: Author[];
   narrators: Narrator[];
   genres: Genre[];
@@ -25,4 +25,18 @@ export type SearchResultType =
 export interface SearchRequest {
   query: string;
   resultType?: SearchResultType;
+}
+
+export interface SearchSuggestion {
+  id: string;
+  type: string;
+  slug: string;
+  label: string;
+  labelEnglish?: string;
+}
+
+export interface SearchTrackPage {
+  results: CatalogTrack[];
+  count: number;
+  nextPage: number | null;
 }

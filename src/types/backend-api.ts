@@ -222,6 +222,26 @@ export interface ApiGroupedSearchResponse {
   moods: ApiTaxonomy[];
 }
 
+export interface ApiAutocompleteItem {
+  type:
+    | "track"
+    | "work"
+    | "playlist"
+    | "album"
+    | "author"
+    | "narrator"
+    | "genre"
+    | "mood";
+  id: string;
+  slug: string;
+  label: string;
+  labelEnglish: string;
+}
+
+export interface ApiTrendingSearchResponse {
+  searches: string[];
+}
+
 export interface ApiHomeSection {
   id: string;
   title: string;

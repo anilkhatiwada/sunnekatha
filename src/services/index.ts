@@ -36,8 +36,10 @@ export {
   saveListeningProgress,
 } from "@/services/progress-service";
 export {
+  getSearchSuggestions,
   getTrendingSearches,
   searchContent,
+  searchTracks,
 } from "@/services/search-service";
 export {
   getContinueListening,

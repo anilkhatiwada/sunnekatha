@@ -27,7 +27,7 @@ blocked, or materially changed.
 | Audio stream authorization | Completed locally | Stream URL is requested only after playback intent |
 | Frontend deployment | Deployed to production domain | Commit `c9678e7` runs on the existing Lightsail instance |
 | Live API verification | Verified | HTTPS, API routing, CORS, redirects, health, homepage, and Admin routing pass |
-| Search | Pending | Still uses local mock search |
+| Search | Completed locally | Grouped, track-only, autocomplete, trending, and pagination use Django in remote mode |
 | Authentication and profile | Pending | JWT client foundation exists, but user-facing authentication is not connected |
 | Library and relationships | Pending | Favorites, saved playlists, and follows remain local |
 | Listening state | Pending | Progress, history, and playback sessions remain local |
@@ -226,12 +226,16 @@ production content is assigned through Django Admin.
 
 ### Phase 5 — Search
 
-- [ ] Connect grouped search to `GET /search/`.
-- [ ] Connect track-only search to `GET /search/tracks/`.
-- [ ] Connect autocomplete to `GET /search/autocomplete/`.
-- [ ] Connect trending terms to `GET /search/trending/`.
-- [ ] Preserve Nepali Unicode and Romanized search behavior.
-- [ ] Add debounce, cancellation, pagination, empty, and error tests.
+- [x] Connect grouped search to `GET /search/`.
+- [x] Connect track-only search to `GET /search/tracks/`.
+- [x] Connect autocomplete to `GET /search/autocomplete/`.
+- [x] Connect trending terms to `GET /search/trending/`.
+- [x] Preserve Nepali Unicode and Romanized search behavior.
+- [x] Add debounce, request cancellation, track pagination, empty, and error
+  behavior.
+- [x] Route compact search tracks through lazy stream authorization rather than
+  treating catalog metadata as a playable URL.
+- [x] Preserve deterministic mock search for local development.
 
 ### Phase 6 — Authentication and account
 
@@ -318,7 +322,7 @@ production content is assigned through Django Admin.
 
 ## Latest validation evidence
 
-The following checks passed after the homepage and public-catalog integration:
+The following checks passed after the Search integration:
 
 ```text
 npm run typecheck
@@ -332,7 +336,7 @@ Results:
 
 - TypeScript: passed
 - ESLint: passed with no warnings
-- Tests: 45 passed across 14 files
+- Tests: 48 passed across 15 files
 - Next.js production build: passed
 - Diff whitespace validation: passed
 
@@ -341,7 +345,8 @@ which remains blocked by the deployed CORS configuration.
 
 ## Recommended next action
 
-Resolve the backend CORS and HTTPS origin configuration first. Then perform a
-browser smoke test of the completed homepage and public catalog before beginning
-the Search phase. This separates deployment connectivity failures from search
-implementation failures and gives the remaining phases a verified API baseline.
+Begin Phase 6, Authentication and account. The API client already has
+single-flight JWT refresh and per-tab token storage; the next phase should add
+the session provider, login/registration screens, current-user bootstrap,
+logout, profile/preferences updates, password change, and protected-query
+gating before integrating personalized library and listening state.
