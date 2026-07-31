@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
         hostname: "placehold.co",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "media.sunnekatha.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "sunnekatha-prod-media-533463644243-ap-south-1.s3.amazonaws.com",
+        pathname: "/**",
+      },
     ],
   },
 };
