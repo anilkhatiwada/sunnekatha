@@ -77,6 +77,7 @@ Required values include:
 ```dotenv
 DJANGO_SETTINGS_MODULE=config.settings.production
 APP_VERSION=2026.07.23+commitsha
+STATIC_ROOT=/var/www/sunnekatha/static
 DJANGO_SECRET_KEY=<at-least-50-random-characters>
 DJANGO_ALLOWED_HOSTS=api.example.com
 CORS_ALLOWED_ORIGINS=https://app.example.com

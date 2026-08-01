@@ -32,6 +32,7 @@ fi
 install -d -m 0750 -o sunnekatha -g sunnekatha /srv/sunnekatha/app
 install -d -m 0750 -o sunnekatha -g sunnekatha /var/log/sunnekatha
 install -d -m 0750 -o root -g sunnekatha /etc/sunnekatha
+install -d -m 0755 -o sunnekatha -g sunnekatha /var/www/sunnekatha/static
 
 if ! swapon --show=NAME --noheadings | grep -qx "/swapfile"; then
   if [ ! -f /swapfile ]; then

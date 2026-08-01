@@ -571,7 +571,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BACKEND_DIR / "staticfiles"
+STATIC_ROOT = Path(env("STATIC_ROOT", default=str(BACKEND_DIR / "staticfiles")))
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BACKEND_DIR / "media"
 USE_S3_STORAGE = env.bool("USE_S3_STORAGE", default=False)

@@ -53,6 +53,7 @@ def run_settings(environment):
                 "'conn_max_age': settings.DATABASES['default']['CONN_MAX_AGE'], "
                 "'cache': settings.CACHES['default']['BACKEND'], "
                 "'static': settings.STORAGES['staticfiles']['BACKEND'], "
+                "'static_root': str(settings.STATIC_ROOT), "
                 "'num_proxies': settings.REST_FRAMEWORK['NUM_PROXIES'], "
                 "'middleware': settings.MIDDLEWARE[1]"
                 "}))"
@@ -77,9 +78,34 @@ def test_production_settings_use_postgres_redis_whitenoise_and_connection_reuse(
         "conn_max_age": 60,
         "cache": "django_redis.cache.RedisCache",
         "static": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "static_root": str(BACKEND_DIR / "staticfiles"),
         "num_proxies": 1,
         "middleware": "whitenoise.middleware.WhiteNoiseMiddleware",
     }
+
+
+def test_static_root_can_target_an_isolated_nginx_directory():
+    result = run_settings(
+        production_environment(STATIC_ROOT="/var/www/sunnekatha/static")
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["static_root"] == "/var/www/sunnekatha/static"
+
+
+def test_nginx_serves_static_assets_without_proxying_to_gunicorn():
+    nginx_config = (BACKEND_DIR / "deploy/aws/nginx/sunnekatha-backend.conf").read_text(
+        encoding="utf-8"
+    )
+    static_location = nginx_config.split("location ^~ /static/ {", 1)[1].split("}", 1)[
+        0
+    ]
+
+    assert "root /var/www/sunnekatha;" in static_location
+    assert "gzip_static on;" in static_location
+    assert 'add_header Cache-Control "public, immutable" always;' in static_location
+    assert "try_files $uri =404;" in static_location
+    assert "proxy_pass" not in static_location
 
 
 def test_production_settings_allow_loopback_postgres_without_tls():
