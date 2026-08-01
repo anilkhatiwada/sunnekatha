@@ -35,8 +35,10 @@ Next.js / mobile clients
   scale.
 - S3 stores private originals, processed streams, covers, and temporary direct
   uploads. CloudFront serves media; Django never proxies audio bytes.
-- Celery Beat schedules daily analytics aggregation. Audio transcoding is not
-  implemented yet; see **Known limitations**.
+- Celery Beat schedules daily analytics aggregation. The Celery worker also
+  processes uploaded audio masters into private high- and low-quality MP3
+  renditions, extracts duration, and generates a compact waveform. FFmpeg and
+  FFprobe must be installed on every audio-processing worker.
 - Public serializers use compact list representations and detailed object
   representations. API JSON uses frontend-compatible camelCase names.
 
@@ -45,7 +47,7 @@ Next.js / mobile clients
 - Python 3.12+
 - PostgreSQL 16+ (PostgreSQL 17 is used by Compose)
 - Redis 7+
-- FFmpeg for media inspection/transcoding tooling and future audio processing
+- FFmpeg and FFprobe for audio inspection, transcoding, and waveform generation
 - Docker with Compose, optional
 
 ## Installation
@@ -127,9 +129,11 @@ ffmpeg -version
 ffprobe -version
 ```
 
-FFmpeg is present for operational media tooling and the future processing
-pipeline. Confirming an upload currently validates its signature but does not
-transcode or promote it automatically.
+Saving an audio master on an AudioTrack in Django Admin queues a Celery job.
+The worker uses FFprobe for duration, FFmpeg for private 128 kbps and 64 kbps
+MP3 renditions, and a bounded mono sample for waveform data. Successful jobs
+set the track to `ready`; failures remain unpublished and appear in the failed
+processing workflow.
 
 The API is available at:
 
@@ -291,8 +295,8 @@ split into lifecycle-ready prefixes:
 Object names discard the client filename and use a UUID under the model and
 record UUID. Extensions are normalized and allow-listed. Image and audio
 validators enforce extensions, declared MIME types, and configurable maximum
-sizes before storage. Processing-time signature inspection remains part of the
-future media-processing pipeline; it is not implemented here.
+sizes before storage. FFmpeg decoding provides an additional processing-time
+validity check for audio masters attached to tracks.
 
 The lifecycle prefix is part of each new object key rather than the storage
 root. This lets legacy `images/...` and `audio/...` database names continue to
@@ -970,11 +974,9 @@ are in [`docs/production-deployment.md`](docs/production-deployment.md).
 
 ## Known limitations
 
-- Audio transcoding, waveform generation, loudness normalization, and promotion
-  from confirmed temporary uploads are not implemented. The admin recovery
-  action truthfully resets failed tracks to `pending`; it does not enqueue an
-  unavailable processor. Publication remains blocked until a track is marked
-  ready by an authorized operational workflow.
+- Audio transcoding and waveform generation run for masters saved through the
+  AudioTrack admin. Loudness normalization and automatic promotion from a
+  confirmed direct-to-S3 UploadSession into a track remain future work.
 - Upload confirmation verifies extension/MIME agreement, exact stored object
   size, AES-256 metadata, and common file signatures. It is not a malware
   scanner or full media decoder.

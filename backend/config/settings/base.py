@@ -664,6 +664,12 @@ MAX_AUDIO_UPLOAD_BYTES = env.int(
     "MAX_AUDIO_UPLOAD_BYTES",
     default=500 * 1024 * 1024,
 )
+FFMPEG_BINARY = env("FFMPEG_BINARY", default="ffmpeg")
+FFPROBE_BINARY = env("FFPROBE_BINARY", default="ffprobe")
+AUDIO_PROCESSING_COMMAND_TIMEOUT_SECONDS = env.int(
+    "AUDIO_PROCESSING_COMMAND_TIMEOUT_SECONDS",
+    default=300,
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"

@@ -59,6 +59,7 @@ from apps.catalog.scheduled_publications import (
     scheduled_publication_admin_service,
 )
 from apps.catalog.services import EditorialService
+from apps.catalog.tasks import queue_audio_processing
 from apps.common.admin import CoverPreviewAdminMixin, ProtectedDeleteAdminMixin
 from apps.common.admin_actions import (
     confirm_bulk_action,
@@ -1849,6 +1850,14 @@ class AudioTrackAdmin(
                 "processing_job__technical_error",
             )
         return queryset
+
+    def save_model(self, request, obj, form, change):
+        master_changed = bool(obj.audio_master_file) and (
+            not change or "audio_master_file" in form.changed_data
+        )
+        super().save_model(request, obj, form, change)
+        if master_changed:
+            queue_audio_processing(obj)
 
     def get_urls(self):
         return [
