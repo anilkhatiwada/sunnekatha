@@ -189,6 +189,41 @@ def test_anonymous_free_track_receives_stable_cloudfront_url():
     assert PRIVATE_FIELDS.isdisjoint(first.data["track"])
 
 
+@patch("apps.media_access.services.boto3.client")
+def test_disabled_cloudfront_uses_short_lived_private_s3_url(s3_client, settings):
+    settings.CLOUDFRONT_MEDIA_ENABLED = False
+    settings.CLOUDFRONT_MEDIA_DOMAIN = ""
+    settings.USE_S3_STORAGE = True
+    settings.AWS_S3_AUDIO_BUCKET_NAME = "private-audio"
+    settings.AWS_S3_REGION_NAME = "ap-south-1"
+    settings.AWS_S3_ENDPOINT_URL = None
+    s3_client.return_value.generate_presigned_url.return_value = (
+        "https://private-audio.s3.amazonaws.com/processed/audio/track/high.mp3"
+        "?X-Amz-Signature=signed"
+    )
+    track = AudioTrackFactory(
+        is_premium=False,
+        stream_file_high="processed/audio/track/high.mp3",
+    )
+
+    response = APIClient().get(
+        reverse("catalog:track-stream", kwargs={"slug": track.slug}),
+        {"quality": "high"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert "X-Amz-Signature=signed" in response.data["url"]
+    assert response.data["expiresAt"] is not None
+    s3_client.return_value.generate_presigned_url.assert_called_once_with(
+        "get_object",
+        Params={
+            "Bucket": "private-audio",
+            "Key": "processed/audio/track/high.mp3",
+        },
+        ExpiresIn=300,
+    )
+
+
 def test_anonymous_cannot_stream_premium_track():
     track = AudioTrackFactory(
         is_premium=True,

@@ -4,6 +4,9 @@ from functools import lru_cache
 from pathlib import PurePosixPath
 from urllib.parse import quote
 
+import boto3
+from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
 from botocore.signers import CloudFrontSigner
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -46,6 +49,19 @@ class CloudFrontMediaService:
             is_public=is_public,
         )
         selected_quality, file_field = self._select_file(track, quality)
+        if not self._cloudfront_enabled():
+            expires_at = self._signed_expiration()
+            return {
+                "quality": selected_quality,
+                "url": self._s3_signed_url(file_field.name),
+                "expiresAt": expires_at,
+                "authorization": {
+                    "status": "authorized",
+                    "accessType": authorization.access_type,
+                    "isEntitled": authorization.is_entitled,
+                    "isPrivileged": authorization.is_privileged,
+                },
+            }
         access_class = (
             "premium" if track.is_premium else "restricted" if not is_public else "free"
         )
@@ -171,6 +187,35 @@ class CloudFrontMediaService:
             )
         object_path = quote(object_name.lstrip("/"), safe="/")
         return f"https://{domain}/{access_class}/{object_path}"
+
+    @staticmethod
+    def _cloudfront_enabled():
+        configured = bool(settings.CLOUDFRONT_MEDIA_DOMAIN.strip())
+        return getattr(settings, "CLOUDFRONT_MEDIA_ENABLED", configured)
+
+    @staticmethod
+    def _s3_signed_url(object_name):
+        if not settings.USE_S3_STORAGE or not settings.AWS_S3_AUDIO_BUCKET_NAME:
+            raise MediaDeliveryUnavailable("Private S3 media delivery is unavailable.")
+        try:
+            client = boto3.client(
+                "s3",
+                region_name=settings.AWS_S3_REGION_NAME,
+                endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                config=Config(signature_version="s3v4"),
+            )
+            return client.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": settings.AWS_S3_AUDIO_BUCKET_NAME,
+                    "Key": object_name,
+                },
+                ExpiresIn=settings.CLOUDFRONT_SIGNED_URL_EXPIRE_SECONDS,
+            )
+        except (BotoCoreError, ClientError):
+            raise MediaDeliveryUnavailable(
+                "Private S3 media delivery is temporarily unavailable."
+            ) from None
 
     @staticmethod
     def _signed_expiration():
