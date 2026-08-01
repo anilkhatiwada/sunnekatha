@@ -5,7 +5,11 @@ import pytest
 from django.contrib.admin.sites import AdminSite
 
 from apps.catalog.admin import AudioTrackAdmin
-from apps.catalog.audio_processing import AudioProcessingError, ProcessedAudio
+from apps.catalog.audio_processing import (
+    AudioProcessingError,
+    AudioProcessingService,
+    ProcessedAudio,
+)
 from apps.catalog.models import (
     AudioProcessingJobStatus,
     AudioProcessingStage,
@@ -27,6 +31,17 @@ def anonymous_admin_request():
         ),
         request_identifier="",
     )
+
+
+def test_processed_audio_object_keys_fit_track_file_fields():
+    track = AudioTrackFactory.build()
+    names = [
+        AudioProcessingService._output_name(track.pk, "a" * 32, quality)
+        for quality in ("high", "low")
+    ]
+
+    max_length = AudioTrack._meta.get_field("stream_file_high").max_length
+    assert all(len(name) <= max_length for name in names)
 
 
 def test_processing_task_creates_renditions_and_is_idempotent(monkeypatch):

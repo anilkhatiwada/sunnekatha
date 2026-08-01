@@ -52,12 +52,12 @@ class AudioProcessingService:
                 self._transcode(source_path, low_path, bitrate="64k")
                 waveform = self._waveform(source_path)
                 token = uuid.uuid4().hex
-                prefix = f"processed/audio/audiotrack/{track.pk}"
                 for quality, path in (("high", high_path), ("low", low_path)):
                     with path.open("rb") as handle:
                         saved_names.append(
                             storage.save(
-                                f"{prefix}/{token}-{quality}.mp3", File(handle)
+                                self._output_name(track.pk, token, quality),
+                                File(handle),
                             )
                         )
                 return ProcessedAudio(
@@ -76,6 +76,11 @@ class AudioProcessingService:
             raise AudioProcessingError(
                 "finalizing", "Audio processing could not be completed.", str(exc)
             ) from exc
+
+    @staticmethod
+    def _output_name(track_id, token, quality):
+        quality_code = {"high": "h", "low": "l"}[quality]
+        return f"processed/audio/{track_id}/{token}-{quality_code}.mp3"
 
     def _duration(self, source_path):
         result = self._run(
