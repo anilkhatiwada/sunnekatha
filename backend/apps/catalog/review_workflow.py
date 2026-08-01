@@ -158,7 +158,11 @@ class TrackReviewWorkflow:
             raise ValidationError("Unsupported editorial review transition.")
         track = (
             AudioTrack.objects.select_for_update()
-            .select_related("narrator__user", "work")
+            # Keep nullable relationships out of the locking join. PostgreSQL
+            # rejects FOR UPDATE when it targets the nullable side of an outer
+            # join; narrator.user is loaded separately only when authorization
+            # needs it.
+            .select_related("work")
             .prefetch_related(
                 "contributors__creator",
                 "work__copyright_licenses__documents",

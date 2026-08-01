@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 from django.contrib import admin
+from django.contrib.admin import helpers
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Permission
 from django.test import RequestFactory
@@ -115,6 +116,30 @@ def test_review_actions_are_hidden_without_explicit_role_permissions(rf):
     assert "schedule_selected" not in actions
     assert "publish_selected" not in actions
     assert "archive_selected" not in actions
+
+
+def test_submit_for_review_admin_action_confirms_and_transitions(client):
+    user = UserFactory(is_staff=True, is_superuser=True)
+    track = AudioTrackFactory(
+        is_published=False,
+        published_at=None,
+        processing_status=TrackProcessingStatus.READY,
+        review_status=TrackReviewStatus.DRAFT,
+    )
+    client.force_login(user)
+    url = reverse("admin:catalog_audiotrack_changelist")
+    selection = {
+        "action": "submit_for_review",
+        helpers.ACTION_CHECKBOX_NAME: str(track.pk),
+    }
+
+    confirmation = client.post(url, selection)
+    response = client.post(url, {**selection, "confirm_bulk_action": "1"})
+
+    track.refresh_from_db()
+    assert confirmation.status_code == 200
+    assert response.status_code == 302
+    assert track.review_status == TrackReviewStatus.SUBMITTED
 
 
 def test_track_admin_searches_all_requested_relationships():
