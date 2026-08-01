@@ -100,6 +100,13 @@ class CloudFrontMediaService:
             or normalized_key.parts[:3] != ("temporary", "uploads", "audio-master")
         ):
             raise ValidationError({"objectKey": "Audio preview object key is invalid."})
+        if not self._cloudfront_enabled():
+            expires_at = self._signed_expiration()
+            return {
+                "quality": quality,
+                "url": self._s3_signed_url(object_key),
+                "expiresAt": expires_at,
+            }
         resource_url = self._resource_url(object_key, "restricted")
         expires_at = self._signed_expiration()
         return {
@@ -129,6 +136,12 @@ class CloudFrontMediaService:
             or normalized_key.parts[:2] != ("originals", "permission-documents")
         ):
             raise ValidationError({"objectKey": "Permission document key is invalid."})
+        if not self._cloudfront_enabled():
+            expires_at = self._signed_expiration()
+            return {
+                "url": self._s3_signed_url(object_key),
+                "expiresAt": expires_at,
+            }
         resource_url = self._resource_url(object_key, "restricted")
         expires_at = self._signed_expiration()
         return {

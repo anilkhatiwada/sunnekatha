@@ -77,6 +77,30 @@ def test_admin_object_preview_rejects_nonstaff():
         )
 
 
+@patch("apps.media_access.services.boto3.client")
+def test_admin_object_preview_uses_private_s3_when_cloudfront_is_disabled(
+    s3_client,
+    settings,
+):
+    settings.CLOUDFRONT_MEDIA_ENABLED = False
+    settings.CLOUDFRONT_MEDIA_DOMAIN = ""
+    settings.USE_S3_STORAGE = True
+    settings.AWS_S3_AUDIO_BUCKET_NAME = "private-audio"
+    s3_client.return_value.generate_presigned_url.return_value = (
+        "https://private-audio.s3.amazonaws.com/temporary/upload.mp3"
+        "?X-Amz-Signature=signed"
+    )
+
+    delivery = cloudfront_media_service.deliver_admin_object(
+        object_key="temporary/uploads/audio-master/user/session/object.mp3",
+        quality="original",
+        user=UserFactory(is_staff=True),
+    )
+
+    assert "X-Amz-Signature=signed" in delivery["url"]
+    assert delivery["expiresAt"] is not None
+
+
 def test_signed_media_lifetime_is_enforced_inside_delivery_service(settings):
     settings.CLOUDFRONT_SIGNED_URL_EXPIRE_SECONDS = 3600
 
