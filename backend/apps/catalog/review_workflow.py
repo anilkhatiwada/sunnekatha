@@ -551,7 +551,7 @@ class PendingReviewService:
         tracks = (
             queryset.select_related("work__author", "language", "narrator")
             .filter(review_status=TrackReviewStatus.SUBMITTED)
-            .iterator()
+            .iterator(chunk_size=100)
         )
         for track in tracks:
             if review_readiness_issues(track):

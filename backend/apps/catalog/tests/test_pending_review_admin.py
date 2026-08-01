@@ -162,7 +162,9 @@ def test_safe_approval_skips_missing_requirements_and_never_publishes():
     make_ready_for_approval(ready)
 
     result = pending_review_service.approve_safe(
-        queryset=PendingReviewTrack.objects.filter(pk__in=(ready.pk, blocked.pk)),
+        queryset=PendingReviewTrack.objects.filter(
+            pk__in=(ready.pk, blocked.pk)
+        ).prefetch_related("contributors"),
         actor=actor,
     )
 
