@@ -55,7 +55,7 @@ def process_audio_job(job_id):
     with transaction.atomic():
         job = (
             AudioProcessingJob.objects.select_for_update()
-            .select_related("track", "upload_session")
+            .select_related("track")
             .filter(pk=job_id)
             .first()
         )
@@ -82,7 +82,7 @@ def process_audio_job(job_id):
         with transaction.atomic():
             job = (
                 AudioProcessingJob.objects.select_for_update()
-                .select_related("track", "upload_session")
+                .select_related("track")
                 .get(pk=job_id)
             )
             if job.status != AudioProcessingJobStatus.PROCESSING:
@@ -148,7 +148,7 @@ def _mark_processing_failed(job_id, error):
     with transaction.atomic():
         job = (
             AudioProcessingJob.objects.select_for_update()
-            .select_related("track", "upload_session")
+            .select_related("track")
             .get(pk=job_id)
         )
         job.status = AudioProcessingJobStatus.FAILED
