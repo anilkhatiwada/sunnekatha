@@ -34,6 +34,13 @@ def test_sensitive_endpoints_have_dedicated_throttle_scopes(settings):
     assert rates["stream"] == "120/hour"
 
 
+def test_general_api_throttles_support_normal_frontend_browsing(settings):
+    rates = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
+
+    assert rates["anon"] == "1000/hour"
+    assert rates["user"] == "5000/hour"
+
+
 def test_registration_and_profile_reject_privileged_mass_assignment():
     registration = APIClient().post(
         reverse("accounts:register"),

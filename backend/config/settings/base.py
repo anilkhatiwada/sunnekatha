@@ -716,8 +716,8 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": env("DRF_ANON_THROTTLE_RATE", default="100/hour"),
-        "user": env("DRF_USER_THROTTLE_RATE", default="1000/hour"),
+        "anon": env("DRF_ANON_THROTTLE_RATE", default="1000/hour"),
+        "user": env("DRF_USER_THROTTLE_RATE", default="5000/hour"),
         "registration": env("DRF_REGISTRATION_THROTTLE_RATE", default="3/hour"),
         "login": env("DRF_LOGIN_THROTTLE_RATE", default="5/minute"),
         "token_refresh": env("DRF_TOKEN_REFRESH_THROTTLE_RATE", default="30/minute"),

@@ -82,6 +82,8 @@ DJANGO_SECRET_KEY=<at-least-50-random-characters>
 DJANGO_ALLOWED_HOSTS=api.example.com
 CORS_ALLOWED_ORIGINS=https://app.example.com
 CSRF_TRUSTED_ORIGINS=https://app.example.com
+DRF_ANON_THROTTLE_RATE=1000/hour
+DRF_USER_THROTTLE_RATE=5000/hour
 
 DATABASE_URL=postgresql://user:password@database:5432/sunnekatha
 DATABASE_CONN_MAX_AGE=60
