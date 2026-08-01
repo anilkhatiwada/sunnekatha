@@ -11,7 +11,14 @@ The production deployment is built with:
 NEXT_PUBLIC_API_MODE=remote
 NEXT_PUBLIC_API_BASE_URL=https://api.sunnekatha.com/api/v1
 NEXT_PUBLIC_APP_ENV=production
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-oauth-web-client-id>
 ```
+
+`NEXT_PUBLIC_GOOGLE_CLIENT_ID` is a public browser identifier, not a client
+secret. It must be present when `next build` runs; adding it only to the runtime
+service environment will not enable Google Identity Services in an already-built
+bundle. Keep the matching `GOOGLE_OAUTH_CLIENT_ID` configured in the Django
+backend environment.
 
 The Nginx configuration in this directory provides:
 
