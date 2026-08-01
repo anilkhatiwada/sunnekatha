@@ -1,5 +1,6 @@
 import pytest
 from django.db import connection
+from django.db.models import CharField
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
@@ -14,6 +15,10 @@ from apps.search.models import SearchAlias, SearchEntityType
 from apps.taxonomy.tests.factories import GenreFactory, MoodFactory
 
 pytestmark = pytest.mark.django_db
+
+
+def test_postgresql_unaccent_lookup_is_registered():
+    assert CharField().get_transform("unaccent") is not None
 
 
 def test_grouped_search_matches_nepali_across_supported_entities():
