@@ -2,7 +2,12 @@ from types import SimpleNamespace
 
 from django.core.exceptions import PermissionDenied, ValidationError
 
-from apps.common.admin_actions import run_object_action
+from apps.common.admin_actions import (
+    BulkActionFailure,
+    BulkActionReport,
+    report_bulk_action,
+    run_object_action,
+)
 
 
 class FakeAdmin:
@@ -51,3 +56,20 @@ def test_run_object_action_reports_service_permission_failure():
 
     assert report.succeeded == 0
     assert report.failures[0].reason == "Publisher role required."
+
+
+def test_bulk_failure_message_never_reports_negative_remainder():
+    messages = []
+    model_admin = SimpleNamespace(
+        message_user=lambda request, message, level: messages.append(message)
+    )
+    report = BulkActionReport(failures=[BulkActionFailure("1", "Track", "Not ready")])
+
+    report_bulk_action(
+        model_admin,
+        SimpleNamespace(),
+        verb="Approved",
+        report=report,
+    )
+
+    assert messages == ["1 item(s) were not changed. Track: Not ready"]

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -196,7 +197,7 @@ class TrackReviewWorkflow:
                 )
             if scheduled_for <= timezone.now():
                 raise ValidationError("Scheduled publication must be in the future.")
-        if target in {
+        if settings.ENFORCE_EDITORIAL_RIGHTS_READINESS and target in {
             TrackReviewStatus.SCHEDULED,
             TrackReviewStatus.PUBLISHED,
         }:
@@ -322,12 +323,13 @@ class TrackReviewWorkflow:
             raise ValidationError("Only scheduled content can be rescheduled.")
         if track.processing_status != TrackProcessingStatus.READY:
             raise ValidationError("Audio processing must be ready.")
-        issues = copyright_readiness_issues(
-            track.work,
-            on_date=timezone.localtime(scheduled_for).date(),
-        )
-        if issues:
-            raise ValidationError("; ".join(issues))
+        if settings.ENFORCE_EDITORIAL_RIGHTS_READINESS:
+            issues = copyright_readiness_issues(
+                track.work,
+                on_date=timezone.localtime(scheduled_for).date(),
+            )
+            if issues:
+                raise ValidationError("; ".join(issues))
         previous_time = track.published_at
         track.published_at = scheduled_for
         track.save(update_fields=("published_at", "updated_at"))
@@ -441,11 +443,17 @@ def copyright_readiness_issues(work, *, on_date=None) -> tuple[str, ...]:
 
 
 def review_readiness_issues(track) -> tuple[str, ...]:
-    """Return editor-facing reasons a submitted track cannot be safely approved."""
+    """Return the minimal technical blockers for editorial approval."""
+    if track.processing_status != TrackProcessingStatus.READY:
+        return ("Audio processing is not ready",)
+    return ()
+
+
+def review_attention_issues(track) -> tuple[str, ...]:
+    """Return non-blocking editorial warnings shown to staff."""
     issues = []
     work = track.work
-    if track.processing_status != TrackProcessingStatus.READY:
-        issues.append("Audio processing is not ready")
+    issues.extend(review_readiness_issues(track))
     if work.copyright_status == CopyrightStatus.UNKNOWN:
         issues.append("Copyright status is unknown")
     if (

@@ -89,7 +89,7 @@ def report_bulk_action(model_admin, request, *, verb, report):
         details = "; ".join(
             f"{failure.label}: {failure.reason}" for failure in report.failures[:10]
         )
-        remainder = report.failed - 10
+        remainder = max(0, report.failed - 10)
         if remainder:
             details += f"; and {remainder} more failure(s)"
         model_admin.message_user(

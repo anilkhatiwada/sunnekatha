@@ -4,6 +4,7 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import connection
+from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -189,6 +190,7 @@ def test_cancel_and_publish_now_use_review_workflow(client):
     assert published.published_at <= timezone.now()
 
 
+@override_settings(ENFORCE_EDITORIAL_RIGHTS_READINESS=True)
 def test_scheduling_rejects_processing_and_unresolved_rights():
     publisher = track_staff("publish_audiotrack")
     future = timezone.now() + timedelta(days=2)
@@ -222,6 +224,7 @@ def test_scheduling_rejects_processing_and_unresolved_rights():
         )
 
 
+@override_settings(ENFORCE_EDITORIAL_RIGHTS_READINESS=True)
 def test_protected_work_requires_verified_effective_audio_permission():
     publisher = track_staff("publish_audiotrack")
     track = AudioTrackFactory(
@@ -240,6 +243,26 @@ def test_protected_work_requires_verified_effective_audio_permission():
             actor=publisher,
             scheduled_for=timezone.now() + timedelta(days=1),
         )
+
+
+def test_rights_warnings_do_not_block_scheduling_by_default():
+    publisher = track_staff("publish_audiotrack")
+    track = AudioTrackFactory(
+        review_status=TrackReviewStatus.APPROVED,
+        is_published=False,
+        published_at=None,
+    )
+    track.work.copyright_status = CopyrightStatus.PERMISSION_PENDING
+    track.work.save(update_fields=("copyright_status", "updated_at"))
+
+    scheduled = track_review_workflow.transition(
+        track_id=track.pk,
+        target=TrackReviewStatus.SCHEDULED,
+        actor=publisher,
+        scheduled_for=timezone.now() + timedelta(days=1),
+    )
+
+    assert scheduled.review_status == TrackReviewStatus.SCHEDULED
 
 
 def test_schedule_page_service_has_fixed_prefetch_query_count():

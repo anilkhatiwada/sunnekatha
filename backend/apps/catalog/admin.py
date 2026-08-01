@@ -51,7 +51,7 @@ from apps.catalog.models import (
 )
 from apps.catalog.review_workflow import (
     pending_review_service,
-    review_readiness_issues,
+    review_attention_issues,
     track_review_workflow,
 )
 from apps.catalog.rights_services import permission_document_service
@@ -2594,7 +2594,7 @@ class PendingReviewTrackAdmin(ProcessingStatusMediaMixin, ModelAdmin):
 
     @admin.display(description="Attention")
     def attention_flags(self, obj):
-        issues = review_readiness_issues(obj)
+        issues = review_attention_issues(obj)
         if not issues:
             return format_html(
                 '<span style="color:#15803d;font-weight:600">Ready for review</span>'
@@ -2650,7 +2650,7 @@ class PendingReviewTrackAdmin(ProcessingStatusMediaMixin, ModelAdmin):
         self.message_user(
             request,
             f"Approved {result.updated}; skipped {result.skipped} item(s) with "
-            "missing mandatory requirements.",
+            "audio that is not processing-ready.",
         )
 
     @admin.action(description="Request changes")

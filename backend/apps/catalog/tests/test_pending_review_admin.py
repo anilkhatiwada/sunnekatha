@@ -14,6 +14,7 @@ from apps.catalog.models import (
 )
 from apps.catalog.review_workflow import (
     pending_review_service,
+    review_attention_issues,
     review_readiness_issues,
 )
 from apps.catalog.tests.factories import AudioTrackFactory
@@ -39,12 +40,6 @@ def pending_track(**kwargs):
         review_status=TrackReviewStatus.SUBMITTED,
         **kwargs,
     )
-
-
-def make_ready_for_approval(track):
-    track.work.copyright_status = CopyrightStatus.PUBLIC_DOMAIN
-    track.work.cover_image = "covers/review-ready.jpg"
-    track.work.save(update_fields=("copyright_status", "cover_image", "updated_at"))
 
 
 def test_pending_review_proxy_is_registered_with_safe_actions_only():
@@ -122,17 +117,18 @@ def test_pending_page_filters_by_creator_or_uploader(client):
     assert list(response.context["cl"].queryset) == [matching]
 
 
-def test_attention_flags_cover_mandatory_review_requirements():
+def test_attention_flags_show_non_blocking_editorial_warnings():
     track = pending_track(processing_status=TrackProcessingStatus.FAILED)
     track.work.copyright_status = CopyrightStatus.UNKNOWN
     track.work.cover_image = ""
     track.work.save(update_fields=("copyright_status", "cover_image", "updated_at"))
 
-    issues = review_readiness_issues(track)
+    issues = review_attention_issues(track)
 
     assert "Audio processing is not ready" in issues
     assert "Copyright status is unknown" in issues
     assert "Cover image is missing" in issues
+    assert review_readiness_issues(track) == ("Audio processing is not ready",)
 
 
 def test_assign_reviewer_records_assignment_and_audit_event():
@@ -155,11 +151,13 @@ def test_assign_reviewer_records_assignment_and_audit_event():
     assert "Reviewer assigned" in event.comment
 
 
-def test_safe_approval_skips_missing_requirements_and_never_publishes():
+def test_safe_approval_blocks_only_unready_audio_and_never_publishes():
     actor = editor()
     ready = pending_track()
     blocked = pending_track(processing_status=TrackProcessingStatus.FAILED)
-    make_ready_for_approval(ready)
+    ready.work.copyright_status = CopyrightStatus.UNKNOWN
+    ready.work.cover_image = ""
+    ready.work.save(update_fields=("copyright_status", "cover_image", "updated_at"))
 
     result = pending_review_service.approve_safe(
         queryset=PendingReviewTrack.objects.filter(
