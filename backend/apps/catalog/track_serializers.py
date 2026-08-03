@@ -4,6 +4,7 @@ from apps.catalog.models import AudioTrack
 from apps.catalog.serializers import CatalogAuthorSummarySerializer
 from apps.media_access.services import track_media_url_service
 from apps.narrators.models import Narrator
+from apps.taxonomy.serializers import ContentCategorySerializer
 
 
 class TrackNarratorSummarySerializer(serializers.ModelSerializer):
@@ -19,7 +20,8 @@ class CompactTrackSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source="title_ne")
     titleEnglish = serializers.CharField(source="title_en")
     subtitle = serializers.CharField(source="work.subtitle_ne")
-    contentType = serializers.CharField(source="content_type")
+    category = ContentCategorySerializer(source="work.category")
+    contentType = serializers.CharField(source="work.category.slug")
     author = CatalogAuthorSummarySerializer(source="work.author")
     narrator = TrackNarratorSummarySerializer()
     coverImage = serializers.SerializerMethodField()
@@ -42,6 +44,7 @@ class CompactTrackSerializer(serializers.ModelSerializer):
             "titleEnglish",
             "subtitle",
             "contentType",
+            "category",
             "author",
             "narrator",
             "coverImage",
@@ -114,9 +117,15 @@ class DetailedTrackSerializer(CompactTrackSerializer):
             "title": obj.work.title_ne,
             "titleEnglish": obj.work.title_en,
             "type": (
-                "novel" if obj.work.content_type == "novel_chapter" else "collection"
+                "novel" if obj.work.category.slug == "novel_chapter" else "collection"
             ),
-            "contentType": obj.work.content_type,
+            "category": {
+                "id": str(obj.work.category_id),
+                "slug": obj.work.category.slug,
+                "name": obj.work.category.name_ne,
+                "nameEnglish": obj.work.category.name_en,
+            },
+            "contentType": obj.work.category.slug,
             "chapterNumber": obj.chapter_number,
         }
 

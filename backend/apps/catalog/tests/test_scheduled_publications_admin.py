@@ -54,7 +54,7 @@ def test_page_is_staff_permission_aware_and_displays_required_columns(client):
     assert track.title_ne in content
     for heading in (
         "Content title",
-        "Content type",
+        "Category",
         "Author",
         "Narrator",
         "Scheduled time",

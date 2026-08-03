@@ -13,7 +13,26 @@ from apps.catalog.models import (
     TrackProcessingStatus,
 )
 from apps.narrators.tests.factories import NarratorFactory
+from apps.taxonomy.models import ContentCategory
 from apps.taxonomy.tests.factories import LanguageFactory
+
+CATEGORY_NAMES = {
+    "poem": ("कविता", "Poetry"),
+    "story": ("कथा", "Story"),
+    "essay": ("निबन्ध", "Essay"),
+    "novel_chapter": ("उपन्यास", "Novel"),
+    "folk_tale": ("लोककथा", "Folk tale"),
+    "drama": ("नाटक", "Drama"),
+}
+
+
+def category_for_slug(slug):
+    name_ne, name_en = CATEGORY_NAMES.get(slug, (slug, slug))
+    category, _ = ContentCategory.objects.get_or_create(
+        slug=slug,
+        defaults={"name_ne": name_ne, "name_en": name_en},
+    )
+    return category
 
 
 class LiteraryWorkFactory(DjangoModelFactory):
@@ -23,12 +42,19 @@ class LiteraryWorkFactory(DjangoModelFactory):
 
     title_ne = factory.Sequence(lambda number: f"साहित्यिक रचना {number}")
     title_en = factory.Sequence(lambda number: f"Literary Work {number}")
-    content_type = "story"
+    category = factory.LazyFunction(lambda: category_for_slug("story"))
     author = factory.SubFactory(AuthorFactory)
     language = factory.SubFactory(LanguageFactory, slug="ne")
     is_published = True
     published_at = factory.LazyFunction(timezone.now)
     copyright_status = CopyrightStatus.PUBLIC_DOMAIN
+
+    @classmethod
+    def _adjust_kwargs(cls, **kwargs):
+        legacy_slug = kwargs.pop("content_type", None)
+        if legacy_slug:
+            kwargs["category"] = category_for_slug(legacy_slug)
+        return super()._adjust_kwargs(**kwargs)
 
     @factory.post_generation
     def genres(self, create, extracted, **kwargs):

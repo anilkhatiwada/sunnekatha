@@ -38,7 +38,7 @@ def test_literary_work_admin_has_requested_columns_filters_search_and_fieldsets(
         "cover_thumbnail",
         "title_ne",
         "title_en",
-        "content_type",
+        "category",
         "author",
         "language",
         "copyright_status",
@@ -48,7 +48,7 @@ def test_literary_work_admin_has_requested_columns_filters_search_and_fieldsets(
         "published_at",
     )
     assert model_admin.list_filter == (
-        ("content_type", MultipleChoicesDropdownFilter),
+        ("category", AutocompleteSelectFilter),
         PublicationStatusFilter,
         ("is_featured", BooleanRadioFilter),
         ("copyright_status", MultipleChoicesDropdownFilter),

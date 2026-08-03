@@ -87,6 +87,7 @@ export function mapCompactTrack(value: ApiCompactTrack): CatalogTrack {
     title: value.title,
     subtitle: value.subtitle || value.titleEnglish || undefined,
     contentType: value.contentType,
+    category: value.category ? mapTaxonomy(value.category) : undefined,
     author: mapAuthorSummary(value.author),
     narrator: mapNarratorSummary(value.narrator),
     coverImage: value.coverImage || DEFAULT_ARTWORK_PATH,

@@ -1,6 +1,7 @@
 import type { AuthorSummary } from "@/types/author";
 import type { ContentType, Language } from "@/types/common";
 import type { NarratorSummary } from "@/types/narrator";
+import type { ContentCategory } from "@/types/library";
 
 export interface LiteraryWorkSummary {
   title: string;
@@ -15,6 +16,7 @@ export interface Track {
   subtitle?: string;
   description?: string;
   contentType: ContentType;
+  category?: ContentCategory;
   author: AuthorSummary;
   narrator: NarratorSummary;
   coverImage: string;

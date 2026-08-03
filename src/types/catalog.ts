@@ -1,6 +1,7 @@
 import type { AuthorSummary } from "@/types/author";
 import type { ContentType } from "@/types/common";
 import type { CatalogTrack } from "@/types/track";
+import type { ContentCategory } from "@/types/library";
 
 export interface LiteraryWork {
   id: string;
@@ -10,6 +11,7 @@ export interface LiteraryWork {
   subtitle?: string;
   description: string;
   contentType: ContentType;
+  category?: ContentCategory;
   author: AuthorSummary;
   language: string;
   genres: string[];

@@ -11,7 +11,7 @@ from apps.common.audit import administrative_audit_service
 from apps.common.models import AdministrativeAuditAction
 from apps.narrators.models import Narrator
 from apps.playlists.models import Playlist
-from apps.taxonomy.models import Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
 
 MAX_IMPORT_BYTES = 1024 * 1024
 MAX_IMPORT_ROWS = 500
@@ -42,7 +42,7 @@ EXPORT_FIELDS = {
         "slug",
         "title_ne",
         "title_en",
-        "content_type",
+        "category_slug",
         "author_slug",
         "language_slug",
         "publication_year",
@@ -121,7 +121,7 @@ IMPORT_FIELDS = {
         "subtitle_en",
         "description_ne",
         "description_en",
-        "content_type",
+        "category_slug",
         "author_slug",
         "language_slug",
         "genre_slugs",
@@ -180,6 +180,7 @@ def _export_value(obj, field):
     relations = {
         "author_slug": lambda: obj.author.slug,
         "language_slug": lambda: obj.language.slug,
+        "category_slug": lambda: obj.category.slug,
         "work_slug": lambda: obj.work.slug,
         "narrator_slug": lambda: obj.narrator.slug,
         "owner_email": lambda: obj.owner.email if obj.owner_id else "",
@@ -239,6 +240,7 @@ def _build(kind, row):
         return MODEL_BY_IMPORT[kind](**row), {}
     author = Author.objects.get(slug=row["author_slug"])
     language = Language.objects.get(slug=row["language_slug"])
+    category = ContentCategory.objects.get(slug=row["category_slug"])
     genres = list(Genre.objects.filter(slug__in=row["genre_slugs"]))
     moods = list(Mood.objects.filter(slug__in=row["mood_slugs"]))
     missing_genres = set(row["genre_slugs"]) - {item.slug for item in genres}
@@ -251,13 +253,20 @@ def _build(kind, row):
     values = {
         key: value
         for key, value in row.items()
-        if key not in {"author_slug", "language_slug", "genre_slugs", "mood_slugs"}
+        if key not in {
+            "author_slug",
+            "language_slug",
+            "category_slug",
+            "genre_slugs",
+            "mood_slugs",
+        }
     }
     return (
         LiteraryWork(
             **values,
             author=author,
             language=language,
+            category=category,
             is_published=False,
             published_at=None,
         ),

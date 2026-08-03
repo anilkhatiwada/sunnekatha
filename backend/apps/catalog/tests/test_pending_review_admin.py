@@ -18,6 +18,7 @@ from apps.catalog.review_workflow import (
     review_readiness_issues,
 )
 from apps.catalog.tests.factories import AudioTrackFactory
+from apps.taxonomy.tests.factories import ContentCategoryFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -71,23 +72,24 @@ def test_pending_review_page_requires_editor_permission(client):
 def test_pending_page_only_lists_submitted_tracks_and_supports_filters(client):
     reviewer = editor()
     matching = pending_track(
-        content_type="story",
+        work__content_type="story",
         processing_status=TrackProcessingStatus.FAILED,
         reviewed_by=reviewer,
     )
     matching.work.copyright_status = CopyrightStatus.UNKNOWN
     matching.work.save(update_fields=("copyright_status", "updated_at"))
     other_type = pending_track()
-    other_type.work.content_type = "poem"
-    other_type.work.save(update_fields=("content_type", "updated_at"))
-    other_type.save(update_fields=("content_type", "updated_at"))
+    other_type.work.category = ContentCategoryFactory(
+        slug="poem", name_ne="कविता", name_en="Poetry"
+    )
+    other_type.work.save(update_fields=("category", "updated_at"))
     AudioTrackFactory(review_status=TrackReviewStatus.DRAFT)
     client.force_login(reviewer)
 
     response = client.get(
         reverse("admin:catalog_pendingreviewtrack_changelist"),
         {
-            "content_type": "story",
+            "work__category": matching.work.category_id,
             "processing_status": TrackProcessingStatus.FAILED,
             "work__copyright_status": CopyrightStatus.UNKNOWN,
             "reviewed_by": reviewer.pk,

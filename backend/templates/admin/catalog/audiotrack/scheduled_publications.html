@@ -24,7 +24,7 @@
             <thead>
               <tr class="text-left">
                 <th class="p-3">Content title</th>
-                <th class="p-3">Content type</th>
+                <th class="p-3">Category</th>
                 <th class="p-3">Author</th>
                 <th class="p-3">Narrator</th>
                 <th class="p-3">Scheduled time</th>
@@ -39,7 +39,7 @@
               {% for item in group.items %}
                 <tr class="border-t border-base-100 align-top dark:border-base-800">
                   <td class="p-3 font-medium">{{ item.title }}</td>
-                  <td class="p-3">{{ item.content_type }}</td>
+                  <td class="p-3">{{ item.category }}</td>
                   <td class="p-3">{{ item.author }}</td>
                   <td class="p-3">{{ item.narrator }}</td>
                   <td class="p-3">

@@ -22,16 +22,7 @@ from apps.common.validators import (
     validate_permission_document_upload,
 )
 from apps.narrators.models import Narrator
-from apps.taxonomy.models import Genre, Language, Mood
-
-
-class ContentType(models.TextChoices):
-    POEM = "poem", "Poem"
-    STORY = "story", "Story"
-    ESSAY = "essay", "Essay"
-    NOVEL_CHAPTER = "novel_chapter", "Novel chapter"
-    FOLK_TALE = "folk_tale", "Folk tale"
-    DRAMA = "drama", "Drama"
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
 
 
 class CopyrightStatus(models.TextChoices):
@@ -145,7 +136,11 @@ class LiteraryWork(UUIDTimeStampedModel):
     subtitle_en = models.CharField(max_length=300, blank=True)
     description_ne = models.TextField(blank=True)
     description_en = models.TextField(blank=True)
-    content_type = models.CharField(max_length=24, choices=ContentType.choices)
+    category = models.ForeignKey(
+        ContentCategory,
+        related_name="literary_works",
+        on_delete=models.PROTECT,
+    )
     author = models.ForeignKey(
         Author,
         related_name="literary_works",
@@ -197,8 +192,8 @@ class LiteraryWork(UUIDTimeStampedModel):
                 name="work_public_featured_idx",
             ),
             models.Index(
-                fields=("content_type", "is_published"),
-                name="work_type_published_idx",
+                fields=("category", "is_published"),
+                name="work_category_public_idx",
             ),
         ]
 
@@ -352,14 +347,6 @@ class AudioTrack(UUIDTimeStampedModel):
     review_comments = models.TextField(blank=True)
     published_at = models.DateTimeField(blank=True, null=True, db_index=True)
     play_count_cache = models.PositiveBigIntegerField(default=0)
-    # A joined LiteraryWork field cannot be indexed on this table.
-    content_type = models.CharField(
-        max_length=24,
-        choices=ContentType.choices,
-        editable=False,
-        db_index=True,
-    )
-
     objects = AudioTrackQuerySet.as_manager()
 
     class Meta:
@@ -380,10 +367,6 @@ class AudioTrack(UUIDTimeStampedModel):
             models.Index(
                 fields=("is_published", "is_featured", "-published_at"),
                 name="track_public_featured_idx",
-            ),
-            models.Index(
-                fields=("content_type", "is_published", "-published_at"),
-                name="track_type_published_idx",
             ),
             models.Index(
                 fields=("narrator", "is_published", "-published_at"),
@@ -428,8 +411,6 @@ class AudioTrack(UUIDTimeStampedModel):
             self.slug = generate_unique_slug(
                 self, self.title_ne, fallback="audio-track"
             )
-        if self.work_id:
-            self.content_type = self.work.content_type
         super().save(*args, **kwargs)
 
     def __str__(self):

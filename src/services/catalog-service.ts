@@ -20,6 +20,7 @@ import type {
   Album,
   CatalogTrack,
   ContentType,
+  ContentCategory,
   Genre,
   LiteraryWork,
   Mood,
@@ -77,6 +78,24 @@ export async function getGenres(): Promise<Genre[]> {
     return payload.map(mapTaxonomy);
   }
   return mockApiResponse(genres);
+}
+
+export async function getContentCategories(): Promise<ContentCategory[]> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<ApiTaxonomy[]>("/content-categories/", {
+      query: { active: true },
+    });
+    return payload.map(mapTaxonomy);
+  }
+  const slugs = [...new Set(tracks.map((track) => track.contentType))];
+  return mockApiResponse(
+    slugs.map((slug) => ({
+      id: slug,
+      slug,
+      name: slug,
+      description: "",
+    })),
+  );
 }
 
 export async function getMoods(): Promise<Mood[]> {

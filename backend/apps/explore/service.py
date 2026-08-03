@@ -2,7 +2,7 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from apps.authors.models import Author
-from apps.catalog.models import Album, ContentType, TrackProcessingStatus
+from apps.catalog.models import Album, TrackProcessingStatus
 from apps.catalog.track_serializers import CompactTrackSerializer
 from apps.catalog.track_views import public_track_queryset
 from apps.home.serializers import (
@@ -13,21 +13,11 @@ from apps.home.serializers import (
 )
 from apps.narrators.models import Narrator
 from apps.playlists.models import Playlist, PlaylistType, PlaylistVisibility
-from apps.taxonomy.models import Genre, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Mood
 from apps.taxonomy.serializers import GenreSerializer, MoodSerializer
 
 SECTION_LIMIT = 6
 COLLECTION_LIMIT = 12
-
-CONTENT_TYPE_TITLES = {
-    ContentType.POEM: "कविता",
-    ContentType.STORY: "कथा",
-    ContentType.ESSAY: "निबन्ध",
-    ContentType.NOVEL_CHAPTER: "उपन्यास",
-    ContentType.FOLK_TALE: "लोककथा",
-    ContentType.DRAMA: "नाटक",
-}
-
 
 def section(identifier, title, items):
     return {"id": identifier, "title": title, "items": items}
@@ -42,20 +32,25 @@ class ExploreService:
         )
         tracks = public_track_queryset()
         content_counts = {
-            row["content_type"]: row["track_count"]
-            for row in tracks.values("content_type").annotate(
+            row["work__category_id"]: row["track_count"]
+            for row in tracks.values("work__category_id").annotate(
                 track_count=Count("id", distinct=True)
             )
         }
+        categories = list(
+            ContentCategory.objects.filter(is_active=True).order_by(
+                "sort_order", "name_ne", "id"
+            )[:COLLECTION_LIMIT]
+        )
         content_types = [
             {
-                "id": value,
-                "slug": value,
-                "name": CONTENT_TYPE_TITLES[value],
-                "nameEnglish": label,
-                "trackCount": content_counts.get(value, 0),
+                "id": str(category.id),
+                "slug": category.slug,
+                "name": category.name_ne,
+                "nameEnglish": category.name_en,
+                "trackCount": content_counts.get(category.id, 0),
             }
-            for value, label in ContentType.choices
+            for category in categories
         ]
         genres = list(
             Genre.objects.filter(is_active=True)

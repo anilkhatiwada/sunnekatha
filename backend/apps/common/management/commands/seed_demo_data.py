@@ -12,7 +12,6 @@ from apps.catalog.models import (
     Album,
     AlbumType,
     AudioTrack,
-    ContentType,
     CopyrightStatus,
     LiteraryWork,
     TrackProcessingStatus,
@@ -41,7 +40,7 @@ from apps.subscriptions.models import (
     UserSubscription,
 )
 from apps.taxonomy.management.commands.seed_taxonomies import SEED_GROUPS
-from apps.taxonomy.models import Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
 
 DEMO_PASSWORD = "SunneKathaDemo!2026"
 DEMO_EMAILS = (
@@ -292,7 +291,7 @@ class Command(BaseCommand):
                 "pahadko-bato",
                 "पहाडको बाटो",
                 "The Mountain Path",
-                ContentType.STORY,
+                "story",
                 "anupama-karki",
                 ("short-story",),
                 ("inspiration",),
@@ -301,7 +300,7 @@ class Command(BaseCommand):
                 "jhyalma-pareko-jun",
                 "झ्यालमा परेको जून",
                 "Moonlight at the Window",
-                ContentType.POEM,
+                "poem",
                 "dipen-rai",
                 ("poetry",),
                 ("calm", "longing"),
@@ -310,7 +309,7 @@ class Command(BaseCommand):
                 "sano-biu",
                 "सानो बिउ",
                 "The Little Seed",
-                ContentType.FOLK_TALE,
+                "folk_tale",
                 "maya-tamang",
                 ("folk-tale", "children"),
                 ("inspiration",),
@@ -319,7 +318,7 @@ class Command(BaseCommand):
                 "pharkine-chara",
                 "फर्किने चरा",
                 "The Returning Bird",
-                ContentType.ESSAY,
+                "essay",
                 "anupama-karki",
                 ("essay",),
                 ("longing",),
@@ -344,7 +343,7 @@ class Command(BaseCommand):
                     "description_ne": (
                         "SunneKatha का लागि तयार गरिएको पूर्णतः मौलिक डेमो रचना।"
                     ),
-                    "content_type": content_type,
+                    "category": ContentCategory.objects.get(slug=content_type),
                     "author": authors[author_slug],
                     "language": language,
                     "publication_year": date.today().year,

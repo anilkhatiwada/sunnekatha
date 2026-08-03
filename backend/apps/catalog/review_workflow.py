@@ -480,7 +480,7 @@ def work_id_metadata_complete(track) -> bool:
         track.work_id
         and track.language_id
         and track.work.author_id
-        and track.work.content_type
+        and track.work.category_id
     )
 
 

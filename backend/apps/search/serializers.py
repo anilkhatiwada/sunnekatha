@@ -23,10 +23,7 @@ class SearchQuerySerializer(serializers.Serializer):
         required=False,
         default="all",
     )
-    content_type = serializers.ChoiceField(
-        choices=("poem", "story", "essay", "novel_chapter", "folk_tale", "drama"),
-        required=False,
-    )
+    content_type = serializers.SlugField(required=False, allow_unicode=True)
     query = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -48,10 +45,8 @@ class SearchQuerySerializer(serializers.Serializer):
         required=False,
         write_only=True,
     )
-    contentType = serializers.ChoiceField(
-        choices=("poem", "story", "essay", "novel_chapter", "folk_tale", "drama"),
-        required=False,
-        write_only=True,
+    contentType = serializers.SlugField(
+        required=False, allow_unicode=True, write_only=True
     )
 
     def validate(self, attrs):

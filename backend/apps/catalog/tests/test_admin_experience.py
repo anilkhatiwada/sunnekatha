@@ -76,7 +76,7 @@ def test_track_admin_has_requested_columns_filters_search_and_sections():
         ("is_premium", BooleanRadioFilter),
         ("narrator", AutocompleteSelectFilter),
         ("work__author", AutocompleteSelectFilter),
-        ("content_type", MultipleChoicesDropdownFilter),
+        ("work__category", AutocompleteSelectFilter),
         ("created_at", RangeDateTimeFilter),
         ("published_at", RangeDateTimeFilter),
         ("duration_seconds", RangeNumericFilter),

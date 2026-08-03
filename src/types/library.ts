@@ -19,6 +19,8 @@ export interface Mood {
   description: string;
 }
 
+export type ContentCategory = Genre;
+
 export interface ListeningProgress {
   trackId: string;
   progressSeconds: number;

@@ -30,6 +30,7 @@ def public_track_queryset():
         AudioTrack.objects.published()
         .select_related(
             "work",
+            "work__category",
             "work__author",
             "album",
             "narrator",
@@ -93,7 +94,7 @@ class TrackRelationListView(TrackListView):
 
 
 class TracksByContentTypeView(TrackRelationListView):
-    relation_lookup = "content_type"
+    relation_lookup = "work__category__slug"
     url_kwarg = "content_type"
 
 
@@ -228,7 +229,7 @@ class RelatedTrackListView(TrackListView):
             public_track_queryset()
             .exclude(pk=source.pk)
             .filter(
-                Q(content_type=source.content_type)
+                Q(work__category=source.work.category)
                 | Q(work__author_id=source.work.author_id)
                 | Q(work__genres__id__in=genre_ids)
                 | Q(work__moods__id__in=mood_ids)

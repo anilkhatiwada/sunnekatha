@@ -36,6 +36,7 @@ export const queryKeys = {
     }) => [...queryKeys.explore.all, "releases", filters] as const,
     moods: () => [...queryKeys.explore.all, "moods"] as const,
     genres: () => [...queryKeys.explore.all, "genres"] as const,
+    categories: () => [...queryKeys.explore.all, "categories"] as const,
     featuredPlaylists: () =>
       [...queryKeys.explore.all, "featured-playlists"] as const,
     popularAuthors: () =>

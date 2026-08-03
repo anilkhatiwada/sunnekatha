@@ -18,13 +18,11 @@ import { SectionError } from "@/components/common/section-error";
 import { CardRailSkeleton } from "@/components/sections/card-rail-skeleton";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
-import {
-  EXPLORE_FILTERS,
-  type ExploreFilter,
-} from "@/features/explore/explore-config";
+import type { ExploreFilter } from "@/features/explore/explore-config";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import {
   getExploreTracks,
+  getContentCategories,
   getFeaturedPlaylists,
   getGenres,
   getMoods,
@@ -91,6 +89,17 @@ export function ExplorePageContent({
     queryKey: queryKeys.explore.genres(),
     queryFn: getGenres,
   });
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.explore.categories(),
+    queryFn: getContentCategories,
+  });
+  const categoryFilters: ExploreFilter[] = [
+    { label: "सबै", value: "all" },
+    ...(categoriesQuery.data ?? []).map((category) => ({
+      label: category.name,
+      value: category.slug,
+    })),
+  ];
   const playlistsQuery = useQuery({
     queryKey: queryKeys.explore.featuredPlaylists(),
     queryFn: getFeaturedPlaylists,
@@ -127,7 +136,7 @@ export function ExplorePageContent({
       </header>
 
       <FilterChips
-        filters={EXPLORE_FILTERS}
+        filters={categoryFilters}
         activeFilter={activeFilter}
       />
       <form

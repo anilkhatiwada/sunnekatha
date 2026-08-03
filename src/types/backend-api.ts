@@ -48,6 +48,7 @@ export interface ApiCompactTrack {
   titleEnglish: string;
   subtitle: string;
   contentType: ContentType;
+  category?: ApiTaxonomy;
   author: ApiAuthorSummary;
   narrator: ApiNarratorSummary;
   coverImage: string | null;
@@ -77,6 +78,7 @@ export interface ApiDetailedTrack extends ApiCompactTrack {
     titleEnglish: string;
     type: "novel" | "collection";
     contentType: ContentType;
+    category?: Pick<ApiTaxonomy, "id" | "slug" | "name" | "nameEnglish">;
     chapterNumber: number | null;
   };
   album: {
@@ -133,6 +135,7 @@ export interface ApiCompactLiteraryWork {
   subtitle: string;
   subtitleEnglish: string;
   contentType: ContentType;
+  category?: ApiTaxonomy;
   author: ApiAuthorSummary;
   language: string;
   genres: string[];

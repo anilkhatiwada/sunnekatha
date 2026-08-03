@@ -32,5 +32,7 @@ class LanguageFactory(TaxonomyFactory):
 
 
 class ContentCategoryFactory(TaxonomyFactory):
+    slug = factory.Sequence(lambda number: f"category-{number}")
+
     class Meta:
         model = ContentCategory

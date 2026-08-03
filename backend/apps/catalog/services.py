@@ -68,13 +68,13 @@ class EditorialService:
         """Create an unpublished editorial copy without copying related tracks."""
         EditorialService._require(actor, "catalog.change_literarywork")
         duplicate = LiteraryWork.objects.create(
+            category=work.category,
             title_ne=work.title_ne,
             title_en=work.title_en,
             subtitle_ne=work.subtitle_ne,
             subtitle_en=work.subtitle_en,
             description_ne=work.description_ne,
             description_en=work.description_en,
-            content_type=work.content_type,
             author=work.author,
             language=work.language,
             publication_year=work.publication_year,

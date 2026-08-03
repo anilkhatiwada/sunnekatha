@@ -8,6 +8,7 @@ export {
 export {
   getAlbumBySlug,
   getCatalogTracks,
+  getContentCategories,
   getExploreTracks,
   getGenreBySlug,
   getGenres,

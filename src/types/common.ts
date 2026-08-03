@@ -1,9 +1,4 @@
-export type ContentType =
-  | "poem"
-  | "story"
-  | "essay"
-  | "novel_chapter"
-  | "folk_tale"
-  | "drama";
+/** @deprecated Use a category slug. Kept while older API consumers migrate. */
+export type ContentType = string;
 
 export type Language = "ne" | "en";

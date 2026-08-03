@@ -196,8 +196,8 @@ class SearchService:
             ),
         )
         if content_type:
-            tracks = tracks.filter(content_type=content_type)
-            works = works.filter(content_type=content_type)
+            tracks = tracks.filter(work__category__slug=content_type)
+            works = works.filter(category__slug=content_type)
         return {
             "tracks": tracks,
             "literaryWorks": works,

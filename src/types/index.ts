@@ -14,6 +14,7 @@ export type {
   RefreshTokenResponse,
 } from "@/types/api";
 export type { ContentType, Language } from "@/types/common";
+export type { ContentCategory } from "@/types/library";
 export type {
   ApiAuthenticatedUser,
   ApiAlbum,

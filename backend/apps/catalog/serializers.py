@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from apps.authors.models import Author
 from apps.catalog.models import Album, LiteraryWork
+from apps.taxonomy.serializers import ContentCategorySerializer
 
 
 class CatalogAuthorSummarySerializer(serializers.ModelSerializer):
@@ -19,7 +20,8 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
     titleEnglish = serializers.CharField(source="title_en")
     subtitle = serializers.CharField(source="subtitle_ne")
     subtitleEnglish = serializers.CharField(source="subtitle_en")
-    contentType = serializers.CharField(source="content_type")
+    category = ContentCategorySerializer()
+    contentType = serializers.CharField(source="category.slug")
     author = CatalogAuthorSummarySerializer()
     language = serializers.SlugRelatedField(read_only=True, slug_field="slug")
     genres = serializers.SlugRelatedField(
@@ -47,6 +49,7 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
             "subtitle",
             "subtitleEnglish",
             "contentType",
+            "category",
             "author",
             "language",
             "genres",

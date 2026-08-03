@@ -978,7 +978,7 @@ class LiteraryWorkAdmin(CatalogAdminBase):
         "cover_thumbnail",
         "title_ne",
         "title_en",
-        "content_type",
+        "category",
         "author",
         "language",
         "copyright_status",
@@ -988,7 +988,7 @@ class LiteraryWorkAdmin(CatalogAdminBase):
         "published_at",
     )
     list_filter = (
-        ("content_type", MultipleChoicesDropdownFilter),
+        ("category", AutocompleteSelectFilter),
         PublicationStatusFilter,
         ("is_featured", BooleanRadioFilter),
         ("copyright_status", MultipleChoicesDropdownFilter),
@@ -1033,7 +1033,7 @@ class LiteraryWorkAdmin(CatalogAdminBase):
             {
                 "fields": (
                     "author",
-                    "content_type",
+                    "category",
                     "language",
                     "genres",
                     "moods",
@@ -1638,7 +1638,7 @@ class AudioTrackAdmin(
         ("is_premium", BooleanRadioFilter),
         ("narrator", AutocompleteSelectFilter),
         ("work__author", AutocompleteSelectFilter),
-        ("content_type", MultipleChoicesDropdownFilter),
+        ("work__category", AutocompleteSelectFilter),
         ("created_at", RangeDateTimeFilter),
         ("published_at", RangeDateTimeFilter),
         ("duration_seconds", RangeNumericFilter),
@@ -1668,7 +1668,6 @@ class AudioTrackAdmin(
     readonly_fields = (
         "id",
         "slug",
-        "content_type",
         "formatted_duration",
         "processing_indicator",
         "processing_guidance",
@@ -1702,7 +1701,6 @@ class AudioTrackAdmin(
                     "description_ne",
                     "description_en",
                     "slug",
-                    "content_type",
                 )
             },
         ),
@@ -2464,7 +2462,7 @@ class AudioTrackAdmin(
 class PendingReviewTrackAdmin(ProcessingStatusMediaMixin, ModelAdmin):
     list_display = (
         "content_title",
-        "content_type_display",
+        "category_display",
         "creator_or_uploader",
         "author",
         "narrator",
@@ -2478,7 +2476,7 @@ class PendingReviewTrackAdmin(ProcessingStatusMediaMixin, ModelAdmin):
     )
     list_display_links = None
     list_filter = (
-        ("content_type", MultipleChoicesDropdownFilter),
+        ("work__category", AutocompleteSelectFilter),
         PendingCreatorFilter,
         ("reviewed_by", AutocompleteSelectFilter),
         ("processing_status", ChoicesDropdownFilter),
@@ -2553,9 +2551,9 @@ class PendingReviewTrackAdmin(ProcessingStatusMediaMixin, ModelAdmin):
     def content_title(self, obj):
         return obj.title_ne
 
-    @admin.display(description="Content type", ordering="content_type")
-    def content_type_display(self, obj):
-        return obj.get_content_type_display()
+    @admin.display(description="Category", ordering="work__category__name_ne")
+    def category_display(self, obj):
+        return obj.work.category
 
     @admin.display(description="Creator / uploader")
     def creator_or_uploader(self, obj):

@@ -38,7 +38,7 @@ class LiteraryWorkListView(CatalogQueryMixin, ListAPIView):
     def get_queryset(self):
         return (
             LiteraryWork.objects.published()
-            .select_related("author", "language")
+            .select_related("author", "language", "category")
             .prefetch_related("genres", "moods")
             .defer(
                 "description_ne",
@@ -62,7 +62,7 @@ class LiteraryWorkDetailView(CatalogQueryMixin, RetrieveAPIView):
     def get_queryset(self):
         return (
             LiteraryWork.objects.published()
-            .select_related("author", "language")
+            .select_related("author", "language", "category")
             .prefetch_related("genres", "moods")
         )
 

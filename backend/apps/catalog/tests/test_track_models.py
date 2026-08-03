@@ -15,14 +15,14 @@ from apps.catalog.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
-def test_track_generates_slug_and_syncs_content_type():
+def test_track_generates_slug_and_inherits_work_category():
     track = AudioTrackFactory(
         title_ne="वर्षाको साँझ",
         work__content_type="poem",
     )
 
     assert track.slug == "वर्षाको-साँझ"
-    assert track.content_type == "poem"
+    assert track.work.category.slug == "poem"
 
 
 def test_published_queryset_enforces_time_status_and_flag():
@@ -64,7 +64,6 @@ def test_track_indexed_fields_are_configured():
     assert AudioTrack._meta.get_field("slug").unique is True
     for field_name in (
         "published_at",
-        "content_type",
         "is_featured",
         "is_published",
     ):

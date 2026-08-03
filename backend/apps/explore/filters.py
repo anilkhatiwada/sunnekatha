@@ -4,8 +4,9 @@ from apps.catalog.models import AudioTrack
 
 
 class ExploreTrackFilter(django_filters.FilterSet):
-    content_type = django_filters.CharFilter(field_name="content_type")
-    contentType = django_filters.CharFilter(field_name="content_type")
+    category = django_filters.CharFilter(field_name="work__category__slug")
+    content_type = django_filters.CharFilter(field_name="work__category__slug")
+    contentType = django_filters.CharFilter(field_name="work__category__slug")
     author = django_filters.CharFilter(field_name="work__author__slug")
     narrator = django_filters.CharFilter(field_name="narrator__slug")
     genre = django_filters.CharFilter(field_name="work__genres__slug")
@@ -19,6 +20,7 @@ class ExploreTrackFilter(django_filters.FilterSet):
         fields = (
             "content_type",
             "contentType",
+            "category",
             "genre",
             "mood",
             "language",

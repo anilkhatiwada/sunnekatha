@@ -11,7 +11,7 @@ from apps.catalog.review_workflow import copyright_readiness_issues
 class ScheduledPublicationItem(TypedDict):
     id: object
     title: str
-    content_type: str
+    category: str
     author: str
     narrator: str
     scheduled_time: datetime
@@ -45,6 +45,7 @@ class ScheduledPublicationAdminService:
             .select_related(
                 "work",
                 "work__author",
+                "work__category",
                 "narrator",
                 "reviewed_by",
             )
@@ -82,7 +83,7 @@ class ScheduledPublicationAdminService:
                 {
                     "id": track.pk,
                     "title": track.title_ne,
-                    "content_type": track.get_content_type_display(),
+                    "category": track.work.category.name_ne,
                     "author": track.work.author.name_ne,
                     "narrator": track.narrator.name_ne,
                     "scheduled_time": local_time,
