@@ -156,7 +156,7 @@ do not fetch directly from a route component.
 3. Select mock or remote adapters inside the service layer using
    `NEXT_PUBLIC_API_MODE`.
 4. Establish JWT sessions with `setAuthTokens`. Tokens are currently stored in
-   tab-scoped `sessionStorage` because the backend returns JSON tokens. This is
+   persistent `localStorage` because the backend returns JSON tokens. This is
    an interim design and requires strong XSS controls and HTTPS. Prefer
    same-origin HttpOnly refresh cookies if the backend contract later supports
    them.

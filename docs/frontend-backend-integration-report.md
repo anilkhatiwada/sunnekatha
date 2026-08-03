@@ -65,8 +65,9 @@ from the media-access endpoint and receives a CloudFront URL.
 
 - Account-only navigation is hidden until a current user is available.
 - Protected pages use `AuthRequired`.
-- Access and rotated refresh tokens are stored in tab-scoped
-  `sessionStorage`, not persistent local storage.
+- Access and rotated refresh tokens are stored in persistent `localStorage` so
+  login survives closing and reopening the browser. Existing `sessionStorage`
+  sessions migrate automatically.
 - Authenticated requests add a Bearer access token.
 - One shared refresh request prevents refresh storms during concurrent 401s.
 - Failed refresh clears the local session.
@@ -74,10 +75,9 @@ from the media-access endpoint and receives a CloudFront URL.
   the local session even when it is not.
 - Google login and email/password login establish the same frontend session.
 
-The current token storage is safer than persistent local storage but still
-accessible to JavaScript. Moving refresh tokens to secure, HttpOnly,
-same-site cookies would require an intentional backend authentication-contract
-change.
+The current token storage is accessible to JavaScript and therefore requires
+strong XSS controls. Moving refresh tokens to secure, HttpOnly, same-site
+cookies would require an intentional backend authentication-contract change.
 
 ## Pagination and errors
 

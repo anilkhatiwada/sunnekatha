@@ -18,12 +18,15 @@ interface StoredTokens {
 
 type RefreshRequest = (refreshToken: string) => Promise<AuthTokens | null>;
 
-function getSessionStorage() {
+function getPersistentStorage() {
+  return typeof window === "undefined" ? null : window.localStorage;
+}
+
+function getLegacySessionStorage() {
   return typeof window === "undefined" ? null : window.sessionStorage;
 }
 
-function readStoredTokens(): StoredTokens | null {
-  const value = getSessionStorage()?.getItem(AUTH_STORAGE_KEY);
+function parseStoredTokens(value: string | null): StoredTokens | null {
   if (!value) return null;
 
   try {
@@ -39,8 +42,28 @@ function readStoredTokens(): StoredTokens | null {
   }
 }
 
+function readStoredTokens(): StoredTokens | null {
+  const persistentStorage = getPersistentStorage();
+  const persistent = parseStoredTokens(
+    persistentStorage?.getItem(AUTH_STORAGE_KEY) ?? null,
+  );
+  if (persistent) return persistent;
+
+  const legacyStorage = getLegacySessionStorage();
+  const legacy = parseStoredTokens(
+    legacyStorage?.getItem(AUTH_STORAGE_KEY) ?? null,
+  );
+  if (!legacy) return null;
+
+  persistentStorage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(legacy));
+  legacyStorage?.removeItem(AUTH_STORAGE_KEY);
+  return legacy;
+}
+
 function writeStoredTokens(tokens: StoredTokens | null) {
-  const storage = getSessionStorage();
+  const storage = getPersistentStorage();
+  const legacyStorage = getLegacySessionStorage();
+  legacyStorage?.removeItem(AUTH_STORAGE_KEY);
   if (!storage) return;
 
   if (tokens) {
