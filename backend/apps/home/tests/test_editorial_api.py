@@ -36,6 +36,9 @@ def test_active_editorial_sections_control_order_titles_and_items():
         title_ne="नयाँ कविता",
         section_type=HomeSectionType.TRACKS,
         sort_order=10,
+        subtitle_ne="आजका उत्कृष्ट रचना",
+        layout="grid",
+        max_items=1,
     )
     HomeSectionItem.objects.create(
         section=first_section, track=second_track, position=2
@@ -52,9 +55,11 @@ def test_active_editorial_sections_control_order_titles_and_items():
         "editors-picks",
     ]
     assert response.data["sections"][0]["title"] == "नयाँ कविता"
+    assert response.data["sections"][0]["subtitle"] == "आजका उत्कृष्ट रचना"
+    assert response.data["sections"][0]["sectionType"] == "tracks"
+    assert response.data["sections"][0]["layout"] == "grid"
     assert [item["id"] for item in response.data["sections"][0]["items"]] == [
         str(first_track.id),
-        str(second_track.id),
     ]
 
 

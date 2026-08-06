@@ -90,7 +90,7 @@ function section<TKind extends HomeSection["kind"]>(
   kind: TKind,
   items: Extract<HomeSection, { kind: TKind }>["items"],
 ) {
-  return { id, title, kind, items } as Extract<
+  return { id, title, kind, items, layout: "rail" } as Extract<
     HomeSection,
     { kind: TKind }
   >;
@@ -140,8 +140,22 @@ function mapSection(value: unknown): HomeSection[] {
   const titleEnglish = isString(value.titleEnglish)
     ? value.titleEnglish
     : undefined;
-  const base = { id: value.id, title: value.title, titleEnglish };
-  const kind = classifySection(value.id, value.items);
+  const subtitle =
+    isString(value.subtitle) && value.subtitle ? value.subtitle : undefined;
+  const subtitleEnglish =
+    isString(value.subtitleEnglish) && value.subtitleEnglish
+      ? value.subtitleEnglish
+      : undefined;
+  const layout = value.layout === "grid" ? ("grid" as const) : ("rail" as const);
+  const base = {
+    id: value.id,
+    title: value.title,
+    titleEnglish,
+    subtitle,
+    subtitleEnglish,
+    layout,
+  };
+  const kind = classifySection(value.id, value.items, value.sectionType);
 
   if (kind === "tracks") {
     return [{
@@ -221,7 +235,20 @@ function mapSection(value: unknown): HomeSection[] {
   return [];
 }
 
-function classifySection(id: string, items: unknown[]) {
+function classifySection(id: string, items: unknown[], sectionType: unknown) {
+  const explicitKinds: Record<string, HomeSection["kind"]> = {
+    tracks: "tracks",
+    playlists: "playlists",
+    albums: "albums",
+    authors: "authors",
+    narrators: "narrators",
+    genres: "genres",
+    moods: "moods",
+    continue_listening: "continue-listening",
+  };
+  if (isString(sectionType) && explicitKinds[sectionType]) {
+    return explicitKinds[sectionType];
+  }
   if (id === "continue-listening" || id === "resume") {
     return "continue-listening";
   }

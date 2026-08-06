@@ -40,6 +40,7 @@ describe("remote homepage", () => {
         {
           id: "authors",
           title: "पहिलो खण्ड",
+          layout: "rail",
           kind: "authors",
           items: [
             {
@@ -56,12 +57,14 @@ describe("remote homepage", () => {
         {
           id: "empty",
           title: "खाली खण्ड",
+          layout: "rail",
           kind: "tracks",
           items: [],
         },
         {
           id: "narrators",
           title: "दोस्रो खण्ड",
+          layout: "rail",
           kind: "narrators",
           items: [
             {

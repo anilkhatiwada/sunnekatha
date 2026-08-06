@@ -169,6 +169,8 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
         "title_ne",
         "title_en",
         "section_type",
+        "layout",
+        "max_items",
         "schedule_badge",
         "item_count",
         "starts_at",
@@ -189,7 +191,7 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
 
         return RequestHomeSectionItemFormSet
 
-    list_filter = ("section_type", "is_active", "starts_at", "ends_at")
+    list_filter = ("section_type", "layout", "is_active", "starts_at", "ends_at")
     search_fields = ("identifier", "title_ne", "title_en")
     readonly_fields = ("id", "homepage_preview", "created_at", "updated_at")
     ordering = ("sort_order", "identifier")
@@ -198,7 +200,26 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
     fieldsets = (
         (
             "Identity",
-            {"fields": ("identifier", "title_ne", "title_en", "section_type")},
+            {
+                "fields": (
+                    "identifier",
+                    "title_ne",
+                    "title_en",
+                    "subtitle_ne",
+                    "subtitle_en",
+                    "section_type",
+                )
+            },
+        ),
+        (
+            "Presentation",
+            {
+                "fields": ("layout", "max_items"),
+                "description": (
+                    "Choose a consistent frontend-owned layout. Horizontal rails "
+                    "work best for most content; grids suit categories and moods."
+                ),
+            },
         ),
         (
             "Visibility and scheduling",

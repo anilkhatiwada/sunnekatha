@@ -24,6 +24,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "tracks";
       items: CatalogTrack[];
     }
@@ -31,6 +34,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "playlists";
       items: CatalogPlaylist[];
     }
@@ -38,6 +44,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "authors";
       items: Author[];
     }
@@ -45,6 +54,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "narrators";
       items: Narrator[];
     }
@@ -52,6 +64,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "moods" | "genres";
       items: (Mood | Genre)[];
     }
@@ -59,6 +74,9 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "albums";
       items: HomeAlbum[];
     }
@@ -66,9 +84,14 @@ export type HomeSection =
       id: string;
       title: string;
       titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "continue-listening";
       items: HomeContinueListeningItem[];
     };
+
+export type HomeSectionLayout = "rail" | "grid";
 
 export interface HomePageData {
   hero: HomeHero | null;

@@ -370,6 +370,10 @@ export interface ApiHomeSection {
   id: string;
   title: string;
   titleEnglish?: string;
+  subtitle?: string;
+  subtitleEnglish?: string;
+  sectionType?: string;
+  layout?: "rail" | "grid";
   items: unknown[];
 }
 

@@ -213,96 +213,111 @@ function HomeSectionRail({
   onPlayTrack: (track: CatalogTrack, resumeAt?: number) => Promise<void>;
   onPlayPlaylist: (playlist: CatalogPlaylist) => void;
 }) {
-  if (section.kind === "continue-listening") {
+  const content = renderSectionItems(section, onPlayTrack, onPlayPlaylist);
+  if (!content) return null;
+
+  if (section.layout === "grid") {
     return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((item) => (
-          <div key={item.track.id} className={continueCardWidth}>
-            <ContinueListeningCard
-              item={item}
-              onPlay={(track) =>
-                void onPlayTrack(track, item.progress.progressSeconds)
-              }
-            />
-          </div>
-        ))}
-      </HorizontalSection>
+      <section aria-labelledby={`${section.id}-title`}>
+        <div className="mb-5 sm:mb-7">
+          <h2
+            id={`${section.id}-title`}
+            className="font-literary text-2xl font-semibold text-foreground sm:text-3xl"
+          >
+            {section.title}
+          </h2>
+          {section.subtitle && (
+            <p className="mt-2 max-w-2xl font-nepali leading-7 text-muted-foreground">
+              {section.subtitle}
+            </p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {content}
+        </div>
+      </section>
     );
+  }
+
+  return (
+    <HorizontalSection title={section.title} description={section.subtitle}>
+      {content}
+    </HorizontalSection>
+  );
+}
+
+function renderSectionItems(
+  section: HomeSection,
+  onPlayTrack: (track: CatalogTrack, resumeAt?: number) => Promise<void>,
+  onPlayPlaylist: (playlist: CatalogPlaylist) => void,
+) {
+  const standardItemClass = section.layout === "grid" ? "min-w-0" : cardWidth;
+  const personItemClass =
+    section.layout === "grid" ? "min-w-0" : personCardWidth;
+  const continueItemClass =
+    section.layout === "grid"
+      ? "col-span-2 min-w-0 sm:col-span-3 lg:col-span-2"
+      : continueCardWidth;
+
+  if (section.kind === "continue-listening") {
+    return section.items.map((item) => (
+      <div key={item.track.id} className={continueItemClass}>
+        <ContinueListeningCard
+          item={item}
+          onPlay={(track) =>
+            void onPlayTrack(track, item.progress.progressSeconds)
+          }
+        />
+      </div>
+    ));
   }
   if (section.kind === "tracks") {
-    return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((track) => (
-          <div key={track.id} className={cardWidth}>
-            <TrackCard
-              track={track}
-              onPlay={(selected) => void onPlayTrack(selected)}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((track) => (
+      <div key={track.id} className={standardItemClass}>
+        <TrackCard
+          track={track}
+          onPlay={(selected) => void onPlayTrack(selected)}
+        />
+      </div>
+    ));
   }
   if (section.kind === "playlists") {
-    return (
-      <HorizontalSection title={section.title} viewAllHref="/playlists">
-        {section.items.map((playlist) => (
-          <div key={playlist.id} className={cardWidth}>
-            <PlaylistCard
-              playlist={playlist}
-              onPlay={onPlayPlaylist}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((playlist) => (
+      <div key={playlist.id} className={standardItemClass}>
+        <PlaylistCard playlist={playlist} onPlay={onPlayPlaylist} />
+      </div>
+    ));
   }
   if (section.kind === "authors") {
-    return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((author) => (
-          <div key={author.id} className={personCardWidth}>
-            <AuthorCard author={author} onPlay={() => undefined} />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((author) => (
+      <div key={author.id} className={personItemClass}>
+        <AuthorCard author={author} onPlay={() => undefined} />
+      </div>
+    ));
   }
   if (section.kind === "narrators") {
-    return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((narrator) => (
-          <div key={narrator.id} className={personCardWidth}>
-            <NarratorCard narrator={narrator} onPlay={() => undefined} />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((narrator) => (
+      <div key={narrator.id} className={personItemClass}>
+        <NarratorCard narrator={narrator} onPlay={() => undefined} />
+      </div>
+    ));
   }
   if (section.kind === "moods" || section.kind === "genres") {
-    return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((collection) => (
-          <div key={collection.id} className={cardWidth}>
-            <ExploreCollectionCard
-              collection={collection}
-              kind={section.kind === "moods" ? "mood" : "genre"}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((collection) => (
+      <div key={collection.id} className={standardItemClass}>
+        <ExploreCollectionCard
+          collection={collection}
+          kind={section.kind === "moods" ? "mood" : "genre"}
+        />
+      </div>
+    ));
   }
   if (section.kind === "albums") {
-    return (
-      <HorizontalSection title={section.title}>
-        {section.items.map((album) => (
-          <div key={album.id} className={cardWidth}>
-            <AlbumCard album={album} />
-          </div>
-        ))}
-      </HorizontalSection>
-    );
+    return section.items.map((album) => (
+      <div key={album.id} className={standardItemClass}>
+        <AlbumCard album={album} />
+      </div>
+    ));
   }
   return null;
 }

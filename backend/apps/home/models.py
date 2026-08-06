@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -40,6 +41,11 @@ class HomeSectionType(models.TextChoices):
     MOODS = "moods", "Moods"
 
 
+class HomeSectionLayout(models.TextChoices):
+    RAIL = "rail", "Horizontal rail"
+    GRID = "grid", "Responsive grid"
+
+
 class HomeSectionQuerySet(models.QuerySet):
     def active(self, *, at=None):
         at = at or timezone.now()
@@ -53,7 +59,19 @@ class HomeSection(UUIDTimeStampedModel):
     identifier = models.SlugField(max_length=120, unique=True)
     title_ne = models.CharField(max_length=200)
     title_en = models.CharField(max_length=200, blank=True)
+    subtitle_ne = models.CharField(max_length=280, blank=True)
+    subtitle_en = models.CharField(max_length=280, blank=True)
     section_type = models.CharField(max_length=24, choices=HomeSectionType.choices)
+    layout = models.CharField(
+        max_length=16,
+        choices=HomeSectionLayout.choices,
+        default=HomeSectionLayout.RAIL,
+    )
+    max_items = models.PositiveSmallIntegerField(
+        default=6,
+        validators=(MinValueValidator(1), MaxValueValidator(12)),
+        help_text="Maximum number of visible items (1–12).",
+    )
     sort_order = models.PositiveIntegerField(default=0, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     starts_at = models.DateTimeField(blank=True, null=True, db_index=True)

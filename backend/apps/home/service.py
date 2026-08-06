@@ -30,8 +30,14 @@ CONTINUE_LIMIT = 6
 MOOD_LIMIT = 4
 
 
-def section(identifier, title, items):
-    return {"id": identifier, "title": title, "items": items}
+def section(identifier, title, items, *, section_type, layout="rail"):
+    return {
+        "id": identifier,
+        "title": title,
+        "sectionType": section_type,
+        "layout": layout,
+        "items": items,
+    }
 
 
 class HomeService:
@@ -102,13 +108,17 @@ class HomeService:
                     "id": configured.identifier,
                     "title": configured.title_ne,
                     "titleEnglish": configured.title_en,
+                    "subtitle": configured.subtitle_ne,
+                    "subtitleEnglish": configured.subtitle_en,
+                    "sectionType": configured.section_type,
+                    "layout": configured.layout,
                 }
                 continue
             items = [
                 serialized
                 for item in configured.items.all()
                 if (serialized := self.serialize_editorial_item(item)) is not None
-            ][:SECTION_LIMIT]
+            ][: configured.max_items]
             if configured.section_type == HomeSectionType.HERO:
                 if items:
                     content_type, content = items[0]
@@ -116,6 +126,8 @@ class HomeService:
                         "id": configured.identifier,
                         "title": configured.title_ne,
                         "titleEnglish": configured.title_en,
+                        "subtitle": configured.subtitle_ne,
+                        "subtitleEnglish": configured.subtitle_en,
                         "contentType": content_type,
                         "content": content,
                     }
@@ -125,6 +137,10 @@ class HomeService:
                     "id": configured.identifier,
                     "title": configured.title_ne,
                     "titleEnglish": configured.title_en,
+                    "subtitle": configured.subtitle_ne,
+                    "subtitleEnglish": configured.subtitle_en,
+                    "sectionType": configured.section_type,
+                    "layout": configured.layout,
                     "items": [content for _, content in items],
                 }
             )
@@ -291,25 +307,49 @@ class HomeService:
                 "content": hero_content,
             },
             "sections": [
-                section("featured-playlists", "विशेष प्लेलिस्टहरू", playlist_data),
-                section("trending-tracks", "यो हप्ता लोकप्रिय", trending_data),
-                section("recently-added", "भर्खरै थपिएका", recent_data),
+                section(
+                    "featured-playlists",
+                    "विशेष प्लेलिस्टहरू",
+                    playlist_data,
+                    section_type=HomeSectionType.PLAYLISTS,
+                ),
+                section(
+                    "trending-tracks",
+                    "यो हप्ता लोकप्रिय",
+                    trending_data,
+                    section_type=HomeSectionType.TRACKS,
+                ),
+                section(
+                    "recently-added",
+                    "भर्खरै थपिएका",
+                    recent_data,
+                    section_type=HomeSectionType.TRACKS,
+                ),
                 section(
                     "popular-authors",
                     "लोकप्रिय लेखकहरू",
                     HomeAuthorSerializer(authors, many=True).data,
+                    section_type=HomeSectionType.AUTHORS,
                 ),
                 section(
                     "popular-narrators",
                     "लोकप्रिय वाचकहरू",
                     HomeNarratorSerializer(narrators, many=True).data,
+                    section_type=HomeSectionType.NARRATORS,
                 ),
                 section(
                     "mood-collections",
                     "मूडअनुसार सुन्नुहोस्",
                     HomeMoodCollectionSerializer(moods, many=True).data,
+                    section_type=HomeSectionType.MOODS,
+                    layout="grid",
                 ),
-                section("featured-albums", "विशेष एल्बमहरू", album_data),
+                section(
+                    "featured-albums",
+                    "विशेष एल्बमहरू",
+                    album_data,
+                    section_type=HomeSectionType.ALBUMS,
+                ),
             ],
         }
 
@@ -337,9 +377,13 @@ class HomeService:
             configuration["id"] if configuration else "continue-listening",
             configuration["title"] if configuration else "अहिले सुन्दै हुनुहुन्छ",
             ContinueListeningSerializer(progress, many=True).data,
+            section_type=HomeSectionType.CONTINUE_LISTENING,
+            layout=configuration["layout"] if configuration else "rail",
         )
         if configuration:
             result["titleEnglish"] = configuration["titleEnglish"]
+            result["subtitle"] = configuration["subtitle"]
+            result["subtitleEnglish"] = configuration["subtitleEnglish"]
         return result
 
 

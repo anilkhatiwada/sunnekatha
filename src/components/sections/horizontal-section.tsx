@@ -7,6 +7,7 @@ import { type ReactNode, useId } from "react";
 interface HorizontalSectionProps {
   title: string;
   eyebrow?: string;
+  description?: string;
   children: ReactNode;
   viewAllHref?: string;
 }
@@ -14,6 +15,7 @@ interface HorizontalSectionProps {
 export function HorizontalSection({
   title,
   eyebrow,
+  description,
   children,
   viewAllHref,
 }: HorizontalSectionProps) {
@@ -41,6 +43,11 @@ export function HorizontalSection({
           >
             {title}
           </h2>
+          {description && (
+            <p className="mt-2 max-w-2xl font-nepali leading-7 text-muted-foreground">
+              {description}
+            </p>
+          )}
         </div>
         {viewAllHref && (
           <Link

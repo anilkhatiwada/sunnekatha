@@ -48,7 +48,7 @@ const playlist = {
 };
 
 describe("homepage response adapter", () => {
-  it("preserves backend section order and classifies editorial content by shape", () => {
+  it("preserves backend section order and uses explicit editorial presentation", () => {
     const result = mapHomeResponse({
       hero: {
         id: "hero",
@@ -60,11 +60,16 @@ describe("homepage response adapter", () => {
         {
           id: "editors-selection",
           title: "सम्पादकको रोजाइ",
+          subtitle: "आजका उत्कृष्ट रचना",
+          sectionType: "tracks",
+          layout: "grid",
           items: [track],
         },
         {
           id: "featured-playlists",
           title: "प्लेलिस्ट",
+          sectionType: "playlists",
+          layout: "rail",
           items: [playlist],
         },
       ],
@@ -85,6 +90,10 @@ describe("homepage response adapter", () => {
       "सम्पादकको रोजाइ",
       "प्लेलिस्ट",
     ]);
+    expect(result.sections[0]).toMatchObject({
+      subtitle: "आजका उत्कृष्ट रचना",
+      layout: "grid",
+    });
   });
 
   it("maps personalized continue listening without inventing an audio URL", () => {
