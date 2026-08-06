@@ -19,6 +19,7 @@ export interface PlayerState {
   playbackSpeed: number;
   isShuffleEnabled: boolean;
   repeatMode: RepeatMode;
+  sleepTimerMinutes: number;
   isLoading: boolean;
   playbackError: PlayerError | null;
 }
@@ -38,6 +39,7 @@ export interface PlayerActions {
   setPlaybackSpeed: (speed: number) => void;
   toggleShuffle: () => void;
   setRepeatMode: (mode: RepeatMode) => void;
+  setSleepTimer: (minutes: number) => void;
   addToQueue: (track: Track) => void;
   playNext: (track: Track) => void;
   playQueueItem: (queueItemId: string) => void;

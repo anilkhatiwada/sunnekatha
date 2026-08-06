@@ -170,17 +170,20 @@ export class ApiClient {
           authSession.setTokens(tokens);
           return true;
         })
-        .catch(() => false)
         .finally(() => {
           this.refreshPromise = null;
         });
     }
 
-    const didRefresh = await this.refreshPromise;
-    if (!didRefresh) {
-      this.dependencies.getAuthSession().onAuthenticationFailure();
+    try {
+      const didRefresh = await this.refreshPromise;
+      if (!didRefresh) {
+        this.dependencies.getAuthSession().onAuthenticationFailure();
+      }
+      return didRefresh;
+    } catch {
+      return false;
     }
-    return didRefresh;
   }
 }
 

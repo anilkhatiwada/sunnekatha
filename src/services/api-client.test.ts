@@ -144,4 +144,25 @@ describe("ApiClient", () => {
     expect(authSession.onAuthenticationFailure).toHaveBeenCalledOnce();
     expect(fetchMock).toHaveBeenCalledOnce();
   });
+
+  it("preserves authentication when refresh is temporarily unavailable", async () => {
+    const authSession = createAuthSession({
+      refreshAccessToken: vi.fn().mockRejectedValue(new Error("Network error")),
+    });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ detail: "Unauthorized" }), {
+        status: 401,
+      }),
+    );
+    const client = new ApiClient("https://api.example.com/api/v1", 1000, {
+      fetch: asFetch(fetchMock),
+      getAuthSession: () => authSession,
+    });
+
+    await expect(
+      client.get("/auth/me/", { requiresAuth: true }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(authSession.onAuthenticationFailure).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
 });

@@ -18,6 +18,15 @@ interface StoredTokens {
 
 type RefreshRequest = (refreshToken: string) => Promise<AuthTokens | null>;
 
+const AUTH_REFRESH_LOCK = "sunnekatha:auth-refresh";
+
+export class AuthRefreshUnavailableError extends Error {
+  constructor(options?: ErrorOptions) {
+    super("Authentication refresh is temporarily unavailable.", options);
+    this.name = "AuthRefreshUnavailableError";
+  }
+}
+
 function getPersistentStorage() {
   return typeof window === "undefined" ? null : window.localStorage;
 }
@@ -95,7 +104,10 @@ async function requestTokenRefresh(
         body: JSON.stringify({ refresh: refreshToken }),
       },
     );
-    if (!response.ok) return null;
+    if (response.status === 400 || response.status === 401) return null;
+    if (!response.ok) {
+      throw new AuthRefreshUnavailableError();
+    }
 
     const payload: unknown = await response.json();
     if (!payload || typeof payload !== "object") return null;
@@ -109,11 +121,20 @@ async function requestTokenRefresh(
               : undefined,
         }
       : null;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof AuthRefreshUnavailableError) throw error;
+    throw new AuthRefreshUnavailableError({ cause: error });
   } finally {
     window.clearTimeout(timeoutId);
   }
+}
+
+async function withAuthenticationRefreshLock<T>(callback: () => Promise<T>) {
+  if (typeof navigator === "undefined" || !navigator.locks) {
+    return callback();
+  }
+
+  return navigator.locks.request(AUTH_REFRESH_LOCK, callback);
 }
 
 export function createBrowserAuthSession(
@@ -131,17 +152,29 @@ export function createBrowserAuthSession(
       writeStoredTokens({ access: tokens.access, refresh });
     },
     refreshAccessToken: async () => {
-      const current = readStoredTokens();
-      if (!current?.refresh) return null;
+      const initial = readStoredTokens();
+      if (!initial?.refresh) return null;
 
-      const refreshed = await refreshRequest(current.refresh);
-      if (!refreshed?.access) return null;
-      const tokens = {
-        access: refreshed.access,
-        refresh: refreshed.refresh ?? current.refresh,
-      };
-      writeStoredTokens(tokens);
-      return tokens;
+      return withAuthenticationRefreshLock(async () => {
+        const current = readStoredTokens();
+        if (!current?.refresh) return null;
+
+        if (
+          current.access !== initial.access ||
+          current.refresh !== initial.refresh
+        ) {
+          return current;
+        }
+
+        const refreshed = await refreshRequest(current.refresh);
+        if (!refreshed?.access) return null;
+        const tokens = {
+          access: refreshed.access,
+          refresh: refreshed.refresh ?? current.refresh,
+        };
+        writeStoredTokens(tokens);
+        return tokens;
+      });
     },
     onAuthenticationFailure: () => writeStoredTokens(null),
   };

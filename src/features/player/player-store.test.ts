@@ -16,6 +16,7 @@ function resetPlayerStore() {
     playbackSpeed: 1,
     isShuffleEnabled: false,
     repeatMode: "off",
+    sleepTimerMinutes: 0,
     isLoading: false,
     playbackError: null,
   });
@@ -23,6 +24,49 @@ function resetPlayerStore() {
 
 describe("player store", () => {
   beforeEach(resetPlayerStore);
+
+  it("plays, pauses, and toggles the current track", () => {
+    usePlayerStore.getState().play(tracks[0]);
+    expect(usePlayerStore.getState().isPlaying).toBe(true);
+
+    usePlayerStore.getState().pause();
+    expect(usePlayerStore.getState().isPlaying).toBe(false);
+
+    usePlayerStore.getState().togglePlay();
+    expect(usePlayerStore.getState().isPlaying).toBe(true);
+  });
+
+  it("clamps seeking, volume, and playback speed to safe ranges", () => {
+    usePlayerStore.getState().play(tracks[0]);
+    usePlayerStore.getState().setDuration(100);
+    usePlayerStore.getState().seek(150);
+    usePlayerStore.getState().setVolume(2);
+    usePlayerStore.getState().setPlaybackSpeed(10);
+
+    expect(usePlayerStore.getState().currentTime).toBe(100);
+    expect(usePlayerStore.getState().volume).toBe(1);
+    expect(usePlayerStore.getState().playbackSpeed).toBe(3);
+
+    usePlayerStore.getState().seek(-10);
+    usePlayerStore.getState().setVolume(0);
+    usePlayerStore.getState().setPlaybackSpeed(0.1);
+
+    expect(usePlayerStore.getState().currentTime).toBe(0);
+    expect(usePlayerStore.getState().volume).toBe(0);
+    expect(usePlayerStore.getState().isMuted).toBe(true);
+    expect(usePlayerStore.getState().playbackSpeed).toBe(0.5);
+  });
+
+  it("toggles mute without losing the selected volume", () => {
+    usePlayerStore.getState().setVolume(0.65);
+    usePlayerStore.getState().toggleMuted();
+
+    expect(usePlayerStore.getState().isMuted).toBe(true);
+    expect(usePlayerStore.getState().volume).toBe(0.65);
+
+    usePlayerStore.getState().toggleMuted();
+    expect(usePlayerStore.getState().isMuted).toBe(false);
+  });
 
   it("moves to the next and previous queue items", () => {
     usePlayerStore.getState().replaceQueue(tracks.slice(0, 3));
@@ -68,6 +112,24 @@ describe("player store", () => {
 
     expect(usePlayerStore.getState().currentQueueIndex).toBe(1);
     expect(usePlayerStore.getState().currentTrack?.id).not.toBe(tracks[0].id);
+  });
+
+  it("does not loop a single queue item when shuffle is enabled", () => {
+    usePlayerStore.getState().replaceQueue(tracks.slice(0, 1));
+    usePlayerStore.getState().toggleShuffle();
+
+    usePlayerStore.getState().next();
+
+    expect(usePlayerStore.getState().currentTrack?.id).toBe(tracks[0].id);
+    expect(usePlayerStore.getState().isPlaying).toBe(false);
+  });
+
+  it("keeps the sleep timer in global player state", () => {
+    usePlayerStore.getState().setSleepTimer(30);
+    expect(usePlayerStore.getState().sleepTimerMinutes).toBe(30);
+
+    usePlayerStore.getState().setSleepTimer(0);
+    expect(usePlayerStore.getState().sleepTimerMinutes).toBe(0);
   });
 
   it("supports adding, prioritizing, moving, removing, and clearing queue items", () => {

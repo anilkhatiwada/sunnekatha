@@ -10,7 +10,7 @@ import {
   Timer,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { PlayerControls } from "@/components/player/player-controls";
@@ -49,8 +49,8 @@ export function FullPlayerPanel({
   const [placeholderNotice, setPlaceholderNotice] = useState<string | null>(
     null,
   );
-  const [sleepMinutes, setSleepMinutes] = useState(0);
-  const pause = usePlayerStore((state) => state.pause);
+  const sleepMinutes = usePlayerStore((state) => state.sleepTimerMinutes);
+  const setSleepTimer = usePlayerStore((state) => state.setSleepTimer);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -71,16 +71,6 @@ export function FullPlayerPanel({
         : currentIndex + 1;
     setPlaybackSpeed(PLAYBACK_SPEEDS[nextIndex]);
   };
-
-  useEffect(() => {
-    if (!sleepMinutes) return;
-    const timeout = window.setTimeout(() => {
-      pause();
-      setSleepMinutes(0);
-      setPlaceholderNotice("निद्रा टाइमर पूरा भयो। प्लेब्याक रोकियो।");
-    }, sleepMinutes * 60_000);
-    return () => window.clearTimeout(timeout);
-  }, [pause, sleepMinutes]);
 
   const showPlaceholderNotice = (label: string) => {
     setPlaceholderNotice(`${label} सुविधा चाँडै उपलब्ध हुनेछ।`);
@@ -251,7 +241,7 @@ export function FullPlayerPanel({
                         : sleepMinutes === 30
                           ? 45
                           : 0;
-                  setSleepMinutes(next);
+                  setSleepTimer(next);
                   setPlaceholderNotice(
                     next
                       ? `निद्रा टाइमर ${next} मिनेटमा सेट भयो।`

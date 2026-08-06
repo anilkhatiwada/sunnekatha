@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { usePlayerStore } from "@/features/player/player-store";
 import { usePreferencesStore } from "@/features/profile/preferences-store";
+import { getSimilarTracks } from "@/services/track-service";
 import {
   getResumePosition,
   PROGRESS_UPDATE_INTERVAL_SECONDS,
@@ -77,6 +78,9 @@ export function AudioEngine() {
   const volume = usePlayerStore((state) => state.volume);
   const isMuted = usePlayerStore((state) => state.isMuted);
   const playbackSpeed = usePlayerStore((state) => state.playbackSpeed);
+  const sleepTimerMinutes = usePlayerStore(
+    (state) => state.sleepTimerMinutes,
+  );
   const next = usePlayerStore((state) => state.next);
   const previous = usePlayerStore((state) => state.previous);
   const play = usePlayerStore((state) => state.play);
@@ -89,6 +93,7 @@ export function AudioEngine() {
     (state) => state.setPlaybackError,
   );
   const updateTrackSource = usePlayerStore((state) => state.updateTrackSource);
+  const setSleepTimer = usePlayerStore((state) => state.setSleepTimer);
   const activeTrack = useRef<Track | null>(null);
   const pendingResumeTime = useRef(0);
   const wasPlaying = useRef(false);
@@ -169,7 +174,7 @@ export function AudioEngine() {
 
       flushProgress(track, audio.currentTime, audio.duration);
     };
-    const handleEnded = () => {
+    const handleEnded = async () => {
       const state = usePlayerStore.getState();
       const track = activeTrack.current;
 
@@ -192,7 +197,45 @@ export function AudioEngine() {
       }
 
       if (usePreferencesStore.getState().autoplay) {
-        state.next();
+        const hasQueuedSuccessor = state.isShuffleEnabled
+          ? state.queue.length > 1
+          : state.currentQueueIndex < state.queue.length - 1 ||
+            (state.repeatMode === "all" && state.queue.length > 0);
+
+        if (hasQueuedSuccessor) {
+          state.next();
+          return;
+        }
+
+        state.setLoading(true);
+        try {
+          const queuedTrackIds = new Set(
+            state.queue.map((item) => item.track.id),
+          );
+          const relatedTracks = await getSimilarTracks(track?.slug ?? "", 6);
+          const recommendation = relatedTracks.find(
+            (candidate) => !queuedTrackIds.has(candidate.id),
+          );
+          if (!recommendation) throw new Error("No recommendation available.");
+
+          const stream = await getTrackStream(recommendation.slug);
+          const latestState = usePlayerStore.getState();
+          if (
+            latestState.currentTrack?.id !== track?.id ||
+            !latestState.isPlaying
+          ) {
+            latestState.setLoading(false);
+            return;
+          }
+          latestState.play(mapPlayableTrack(stream));
+        } catch {
+          const latestState = usePlayerStore.getState();
+          if (latestState.currentTrack?.id === track?.id) {
+            latestState.pause();
+            latestState.setCurrentTime(track?.duration ?? latestState.duration);
+          }
+          latestState.setLoading(false);
+        }
       } else {
         state.pause();
         state.setCurrentTime(track?.duration ?? state.duration);
@@ -433,6 +476,18 @@ export function AudioEngine() {
   useEffect(() => {
     getAudioInstance().playbackRate = playbackSpeed;
   }, [playbackSpeed]);
+
+  useEffect(() => {
+    if (!sleepTimerMinutes) return;
+
+    const timeoutId = window.setTimeout(() => {
+      getAudioInstance().pause();
+      usePlayerStore.getState().pause();
+      usePlayerStore.getState().setSleepTimer(0);
+    }, sleepTimerMinutes * 60_000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [setSleepTimer, sleepTimerMinutes]);
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;

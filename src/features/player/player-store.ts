@@ -31,6 +31,7 @@ const initialState: PlayerState = {
   playbackSpeed: DEFAULT_PLAYBACK_SPEED,
   isShuffleEnabled: false,
   repeatMode: "off",
+  sleepTimerMinutes: 0,
   isLoading: false,
   playbackError: null,
 };
@@ -80,7 +81,7 @@ export const usePlayerStore = create<PlayerStore>()(
         if (state.queue.length === 0) return;
 
         let nextIndex: number;
-        if (state.isShuffleEnabled) {
+        if (state.isShuffleEnabled && state.queue.length > 1) {
           nextIndex = getRandomQueueIndex(
             state.queue.length,
             state.currentQueueIndex,
@@ -162,6 +163,11 @@ export const usePlayerStore = create<PlayerStore>()(
       toggleShuffle: () =>
         set((state) => ({ isShuffleEnabled: !state.isShuffleEnabled })),
       setRepeatMode: (repeatMode) => set({ repeatMode }),
+      setSleepTimer: (minutes) =>
+        set({
+          sleepTimerMinutes:
+            Number.isFinite(minutes) && minutes > 0 ? minutes : 0,
+        }),
 
       addToQueue: (track) =>
         set((state) => ({ queue: [...state.queue, createQueueItem(track)] })),
