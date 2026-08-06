@@ -61,6 +61,35 @@ def test_homepage_preview_uses_named_home_endpoint():
     assert 'href="/api/v1/home/"' in str(model_admin.homepage_preview())
 
 
+def test_superuser_can_create_homepage_section_through_admin(client):
+    user = UserFactory(is_staff=True, is_superuser=True)
+    client.force_login(user)
+
+    response = client.post(
+        reverse("admin:home_homesection_add"),
+        {
+            "identifier": "continue-listening",
+            "title_ne": "सुन्न जारी राख्नुहोस्",
+            "title_en": "Continue listening",
+            "subtitle_ne": "जहाँ रोक्नुभएको थियो, त्यहीँबाट सुरु गर्नुहोस्।",
+            "subtitle_en": "Resume from where you left off.",
+            "section_type": "continue_listening",
+            "layout": "rail",
+            "max_items": 6,
+            "is_active": "on",
+            "sort_order": 20,
+            "items-TOTAL_FORMS": 0,
+            "items-INITIAL_FORMS": 0,
+            "items-MIN_NUM_FORMS": 0,
+            "items-MAX_NUM_FORMS": 1000,
+            "_save": "Save",
+        },
+    )
+
+    assert response.status_code == 302
+    assert HomeSection.objects.filter(identifier="continue-listening").exists()
+
+
 def test_editorial_section_admin_pages_render(client):
     user = UserFactory(is_staff=True, is_superuser=True)
     section = HomeSectionFactory()

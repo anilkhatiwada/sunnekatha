@@ -141,6 +141,15 @@ class HomeSectionItemInline(TabularInline):
     )
     readonly_fields = ("linked_content_preview",)
 
+    def get_formset(self, request, obj=None, **kwargs):
+        base_formset = super().get_formset(request, obj, **kwargs)
+        user = request.user
+
+        class RequestHomeSectionItemFormSet(base_formset):
+            admin_user = user
+
+        return RequestHomeSectionItemFormSet
+
     def get_queryset(self, request):
         return (
             super()
@@ -181,15 +190,6 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
     list_display_links = ("identifier",)
     ordering_field = "sort_order"
     hide_ordering_field = False
-
-    def get_formset(self, request, obj=None, **kwargs):
-        base_formset = super().get_formset(request, obj, **kwargs)
-        user = request.user
-
-        class RequestHomeSectionItemFormSet(base_formset):
-            admin_user = user
-
-        return RequestHomeSectionItemFormSet
 
     list_filter = ("section_type", "layout", "is_active", "starts_at", "ends_at")
     search_fields = ("identifier", "title_ne", "title_en")
