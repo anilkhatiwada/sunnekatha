@@ -309,7 +309,7 @@ class Command(BaseCommand):
                 "sano-biu",
                 "सानो बिउ",
                 "The Little Seed",
-                "folk_tale",
+                "folk-tale",
                 "maya-tamang",
                 ("folk-tale", "children"),
                 ("inspiration",),
@@ -330,7 +330,7 @@ class Command(BaseCommand):
             slug,
             title_ne,
             title_en,
-            content_type,
+            category_slug,
             author_slug,
             genre_slugs,
             mood_slugs,
@@ -343,7 +343,7 @@ class Command(BaseCommand):
                     "description_ne": (
                         "SunneKatha का लागि तयार गरिएको पूर्णतः मौलिक डेमो रचना।"
                     ),
-                    "category": ContentCategory.objects.get(slug=content_type),
+                    "category": ContentCategory.objects.get(slug=category_slug),
                     "author": authors[author_slug],
                     "language": language,
                     "publication_year": date.today().year,

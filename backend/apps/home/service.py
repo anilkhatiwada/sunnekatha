@@ -65,6 +65,7 @@ class HomeService:
             .select_related()
             .prefetch_related(
                 "items__track__work__author",
+                "items__track__work__category",
                 "items__track__work__genres",
                 "items__track__work__moods",
                 "items__track__narrator",
@@ -324,6 +325,7 @@ class HomeService:
                 "track",
                 "track__work",
                 "track__work__author",
+                "track__work__category",
                 "track__album",
                 "track__narrator",
                 "track__language",

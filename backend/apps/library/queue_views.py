@@ -30,6 +30,7 @@ def queue_queryset():
                 "track",
                 "track__work",
                 "track__work__author",
+                "track__work__category",
                 "track__album",
                 "track__narrator",
                 "track__language",

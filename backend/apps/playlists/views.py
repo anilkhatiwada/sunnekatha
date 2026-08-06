@@ -4,13 +4,13 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import (
     GenericAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import NotAuthenticated
 from rest_framework.response import Response
 
 from apps.catalog.models import TrackProcessingStatus
@@ -50,6 +50,7 @@ def playlist_queryset(*, include_tracks=True):
         )
         .select_related(
             "track__work__author",
+            "track__work__category",
             "track__album",
             "track__narrator",
             "track__language",
