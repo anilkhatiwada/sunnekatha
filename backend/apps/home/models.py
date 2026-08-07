@@ -14,6 +14,7 @@ ITEM_TARGET_FIELDS = (
     "narrator",
     "genre",
     "mood",
+    "category",
 )
 
 
@@ -39,6 +40,7 @@ class HomeSectionType(models.TextChoices):
     NARRATORS = "narrators", "Narrators"
     GENRES = "genres", "Genres"
     MOODS = "moods", "Moods"
+    CATEGORIES = "categories", "Categories"
 
 
 class HomeSectionLayout(models.TextChoices):
@@ -173,6 +175,13 @@ class HomeSectionItem(UUIDTimeStampedModel):
         blank=True,
         null=True,
     )
+    category = models.ForeignKey(
+        "taxonomy.ContentCategory",
+        related_name="home_section_items",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     position = models.PositiveIntegerField()
 
     TARGET_FIELDS = ITEM_TARGET_FIELDS
@@ -184,6 +193,7 @@ class HomeSectionItem(UUIDTimeStampedModel):
         HomeSectionType.NARRATORS: {"narrator"},
         HomeSectionType.GENRES: {"genre"},
         HomeSectionType.MOODS: {"mood"},
+        HomeSectionType.CATEGORIES: {"category"},
         HomeSectionType.HERO: {"track", "playlist", "album"},
         HomeSectionType.CONTINUE_LISTENING: set(),
     }

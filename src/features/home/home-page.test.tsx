@@ -108,4 +108,40 @@ describe("remote homepage", () => {
     expect(screen.getByText("फेरि प्रयास गर्नुहोस्")).toBeInTheDocument();
     expect(screen.queryByText("प्रेमका कविता")).not.toBeInTheDocument();
   });
+
+  it("renders categories with a link to browse all categories", async () => {
+    const data: HomePageData = {
+      hero: null,
+      sections: [
+        {
+          id: "browse-categories",
+          title: "विधाअनुसार अन्वेषण",
+          layout: "grid",
+          kind: "categories",
+          items: [
+            {
+              id: "story-id",
+              slug: "story",
+              name: "कथा",
+              nameEnglish: "Story",
+              description: "कथाहरू",
+            },
+          ],
+        },
+      ],
+    };
+    vi.spyOn(services, "getHomePage").mockResolvedValue(data);
+
+    renderHomepage();
+
+    expect(await screen.findByText("विधाअनुसार अन्वेषण")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "सबै हेर्नुहोस्" })).toHaveAttribute(
+      "href",
+      "/explore",
+    );
+    expect(screen.getByRole("link", { name: /कथा/ })).toHaveAttribute(
+      "href",
+      "/explore?type=story",
+    );
+  });
 });

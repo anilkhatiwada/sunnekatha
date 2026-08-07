@@ -5,7 +5,7 @@ from apps.catalog.models import Album
 from apps.catalog.serializers import CatalogAuthorSummarySerializer
 from apps.narrators.models import Narrator
 from apps.playlists.models import Playlist
-from apps.taxonomy.models import Genre, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Mood
 
 
 class HomePlaylistSerializer(serializers.ModelSerializer):
@@ -101,6 +101,24 @@ class HomeGenreSerializer(serializers.ModelSerializer):
             "title",
             "titleEnglish",
             "coverImage",
+        )
+        read_only_fields = fields
+
+
+class HomeCategorySerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source="name_ne")
+    titleEnglish = serializers.CharField(source="name_en")
+    coverImage = serializers.ImageField(source="image")
+
+    class Meta:
+        model = ContentCategory
+        fields = (
+            "id",
+            "slug",
+            "title",
+            "titleEnglish",
+            "coverImage",
+            "description",
         )
         read_only_fields = fields
 

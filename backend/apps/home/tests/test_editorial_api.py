@@ -11,6 +11,7 @@ from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
 from apps.home.models import HomeSectionItem, HomeSectionType
 from apps.home.tests.factories import HomeSectionFactory
 from apps.library.progress import listening_progress_service
+from apps.taxonomy.tests.factories import ContentCategoryFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -161,3 +162,33 @@ def test_editing_section_invalidates_public_cache():
     section.save(update_fields=("title_ne", "updated_at"))
     second = APIClient().get(reverse("home:detail"))
     assert second.data["sections"][0]["title"] == "नयाँ शीर्षक"
+
+
+def test_editorial_category_section_returns_only_active_categories():
+    section = HomeSectionFactory(
+        identifier="browse-categories",
+        title_ne="विधाअनुसार अन्वेषण",
+        section_type=HomeSectionType.CATEGORIES,
+        layout="grid",
+    )
+    active = ContentCategoryFactory(name_ne="कथा", name_en="Story", is_active=True)
+    inactive = ContentCategoryFactory(is_active=False)
+    HomeSectionItem.objects.create(section=section, category=active, position=1)
+    HomeSectionItem.objects.create(section=section, category=inactive, position=2)
+
+    response = APIClient().get(reverse("home:detail"))
+
+    assert response.status_code == 200
+    payload = response.data["sections"][0]
+    assert payload["sectionType"] == "categories"
+    assert payload["layout"] == "grid"
+    assert payload["items"] == [
+        {
+            "id": str(active.id),
+            "slug": active.slug,
+            "title": "कथा",
+            "titleEnglish": "Story",
+            "coverImage": None,
+            "description": active.description,
+        }
+    ]

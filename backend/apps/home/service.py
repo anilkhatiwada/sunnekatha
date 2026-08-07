@@ -14,6 +14,7 @@ from apps.home.models import HomeSection, HomeSectionType
 from apps.home.serializers import (
     HomeAlbumSerializer,
     HomeAuthorSerializer,
+    HomeCategorySerializer,
     HomeGenreSerializer,
     HomeMoodCollectionSerializer,
     HomeNarratorSerializer,
@@ -84,6 +85,7 @@ class HomeService:
                 "items__narrator",
                 "items__genre",
                 "items__mood",
+                "items__category",
             )
             .order_by("sort_order", "identifier", "id")
         )
@@ -201,6 +203,10 @@ class HomeService:
                 return None
             item.mood.trackCount = 0
             return "mood", HomeMoodCollectionSerializer(item.mood).data
+        if item.category_id:
+            if not item.category.is_active:
+                return None
+            return "category", HomeCategorySerializer(item.category).data
         return None
 
     def build_default_payload(self):

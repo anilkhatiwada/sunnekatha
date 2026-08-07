@@ -6,7 +6,7 @@ import type { Genre, Mood } from "@/types";
 
 interface ExploreCollectionCardProps {
   collection: Genre | Mood;
-  kind: "genre" | "mood";
+  kind: "genre" | "mood" | "category";
 }
 
 export function ExploreCollectionCard({
@@ -17,7 +17,9 @@ export function ExploreCollectionCard({
   const href =
     kind === "genre"
       ? `/genre/${collection.slug}`
-      : `/mood/${collection.slug}`;
+      : kind === "mood"
+        ? `/mood/${collection.slug}`
+        : `/explore?type=${encodeURIComponent(collection.slug)}`;
 
   return (
     <Link

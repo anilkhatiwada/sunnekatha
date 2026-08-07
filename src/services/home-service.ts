@@ -232,6 +232,16 @@ function mapSection(value: unknown): HomeSection[] {
       }),
     }];
   }
+  if (kind === "categories") {
+    return [{
+      ...base,
+      kind,
+      items: value.items.flatMap((item) => {
+        const parsed = mapHomeCollection(item);
+        return parsed ? [parsed] : [];
+      }),
+    }];
+  }
   return [];
 }
 
@@ -244,6 +254,7 @@ function classifySection(id: string, items: unknown[], sectionType: unknown) {
     narrators: "narrators",
     genres: "genres",
     moods: "moods",
+    categories: "categories",
     continue_listening: "continue-listening",
   };
   if (isString(sectionType) && explicitKinds[sectionType]) {
@@ -431,7 +442,7 @@ function mapHomeCollection(value: unknown): Mood | null {
     nameEnglish: isString(value.titleEnglish)
       ? value.titleEnglish
       : undefined,
-    description: "",
+    description: isString(value.description) ? value.description : "",
   };
 }
 

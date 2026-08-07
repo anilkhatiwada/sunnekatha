@@ -9,6 +9,7 @@ from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
 from apps.home.models import HomeSection, HomeSectionItem, HomeSectionType
 from apps.home.tests.factories import HomeSectionFactory
 from apps.playlists.tests.factories import PlaylistFactory
+from apps.taxonomy.tests.factories import ContentCategoryFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -77,6 +78,17 @@ def test_hero_accepts_track_playlist_or_album():
     ):
         item = HomeSectionItem(section=section, position=1, **{field: target})
         item.full_clean()
+
+
+def test_category_section_accepts_one_active_category():
+    section = HomeSectionFactory(section_type=HomeSectionType.CATEGORIES)
+    item = HomeSectionItem(
+        section=section,
+        category=ContentCategoryFactory(),
+        position=1,
+    )
+
+    item.full_clean()
 
 
 def test_database_rejects_multiple_targets_and_duplicate_positions():

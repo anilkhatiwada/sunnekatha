@@ -163,6 +163,42 @@ describe("homepage response adapter", () => {
     expect(result.sections[0]?.items).toHaveLength(1);
   });
 
+  it("maps editorial category sections for the explore category filter", () => {
+    const result = mapHomeResponse({
+      hero: null,
+      sections: [
+        {
+          id: "browse-categories",
+          title: "विधाअनुसार अन्वेषण",
+          sectionType: "categories",
+          layout: "grid",
+          items: [
+            {
+              id: "category-id",
+              slug: "story",
+              title: "कथा",
+              titleEnglish: "Story",
+              coverImage: null,
+              description: "कथाहरू",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.sections[0]).toMatchObject({
+      kind: "categories",
+      layout: "grid",
+      items: [
+        {
+          id: "category-id",
+          slug: "story",
+          name: "कथा",
+        },
+      ],
+    });
+  });
+
   it("rejects malformed top-level responses", () => {
     expect(() => mapHomeResponse({ hero: null })).toThrow(
       "गृहपृष्ठको उत्तर बुझ्न सकिएन।",

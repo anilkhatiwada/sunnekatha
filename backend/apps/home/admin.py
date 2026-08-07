@@ -30,6 +30,7 @@ class HomeSectionItemAdminForm(forms.ModelForm):
             "narrator",
             "genre",
             "mood",
+            "category",
         )
 
     def _get_validation_exclusions(self):
@@ -127,6 +128,7 @@ class HomeSectionItemInline(TabularInline):
         "narrator",
         "genre",
         "mood",
+        "category",
     )
     fields = (
         "position",
@@ -137,6 +139,7 @@ class HomeSectionItemInline(TabularInline):
         "narrator",
         "genre",
         "mood",
+        "category",
         "linked_content_preview",
     )
     readonly_fields = ("linked_content_preview",)
@@ -162,6 +165,7 @@ class HomeSectionItemInline(TabularInline):
                 "narrator",
                 "genre",
                 "mood",
+                "category",
             )
         )
 
@@ -331,6 +335,7 @@ class HomeSectionItemAdmin(ModelAdmin):
         "narrator__name_ne",
         "genre__name_ne",
         "mood__name_ne",
+        "category__name_ne",
     )
     autocomplete_fields = (
         "section",
@@ -341,6 +346,7 @@ class HomeSectionItemAdmin(ModelAdmin):
         "narrator",
         "genre",
         "mood",
+        "category",
     )
     readonly_fields = ("id", "created_at", "updated_at")
     list_select_related = (
@@ -352,6 +358,7 @@ class HomeSectionItemAdmin(ModelAdmin):
         "narrator",
         "genre",
         "mood",
+        "category",
     )
     ordering = ("section__sort_order", "position")
 

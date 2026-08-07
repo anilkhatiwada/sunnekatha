@@ -77,6 +77,16 @@ export type HomeSection =
       subtitle?: string;
       subtitleEnglish?: string;
       layout: HomeSectionLayout;
+      kind: "categories";
+      items: Genre[];
+    }
+  | {
+      id: string;
+      title: string;
+      titleEnglish?: string;
+      subtitle?: string;
+      subtitleEnglish?: string;
+      layout: HomeSectionLayout;
       kind: "albums";
       items: HomeAlbum[];
     }
