@@ -10,6 +10,7 @@ import { AppProviders } from "@/components/providers/app-providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sunnekatha.com"),
   title: {
     default: "SunneKatha",
     template: "%s · SunneKatha",
@@ -25,6 +26,20 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: "/icons/pwa-192.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "SunneKatha",
+    locale: "ne_NP",
+    title: "SunneKatha",
+    description:
+      "नेपाली कथा, कविता र साहित्य सुन्ने शान्त र आत्मीय डिजिटल मञ्च।",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SunneKatha",
+    description:
+      "नेपाली कथा, कविता र साहित्य सुन्ने शान्त र आत्मीय डिजिटल मञ्च।",
   },
 };
 
