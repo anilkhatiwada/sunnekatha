@@ -63,11 +63,11 @@ export async function renderSocialCard(input: SocialCardInput): Promise<Buffer> 
       <defs>
         <style>
           @font-face {
-            font-family: 'SunneKatha Devanagari';
+            font-family: 'Noto Sans Devanagari';
             src: url(data:font/ttf;base64,${fontData}) format('truetype');
             font-weight: 100 900;
           }
-          text { font-family: 'SunneKatha Devanagari', sans-serif; }
+          text { font-family: 'Noto Sans Devanagari', sans-serif; }
         </style>
         <radialGradient id="warm" cx="0" cy="0" r="1" gradientTransform="translate(145 65) rotate(44) scale(590 420)">
           <stop stop-color="#3b2116" stop-opacity=".75"/>
