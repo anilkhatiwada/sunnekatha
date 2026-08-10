@@ -118,6 +118,7 @@ describe("remote homepage", () => {
           title: "विधाअनुसार अन्वेषण",
           layout: "grid",
           kind: "categories",
+          viewAllHref: "/explore",
           items: [
             {
               id: "story-id",

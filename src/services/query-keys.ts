@@ -85,6 +85,8 @@ export const queryKeys = {
   },
   authors: {
     all: ["authors"] as const,
+    list: (search: string, page: number) =>
+      [...queryKeys.authors.all, "list", search, page] as const,
     detail: (slug: string) =>
       [...queryKeys.authors.all, "detail", slug] as const,
     tracks: (authorId?: string) =>

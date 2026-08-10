@@ -41,6 +41,52 @@ export async function getPopularAuthors(): Promise<Author[]> {
   return mockApiResponse(popularAuthors);
 }
 
+export interface AuthorPage {
+  count: number;
+  next: boolean;
+  previous: boolean;
+  results: Author[];
+}
+
+export async function getAuthors(search = "", page = 1): Promise<AuthorPage> {
+  if (environment.apiMode === "remote") {
+    const payload = await apiClient.get<{
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: ApiAuthorSummary[];
+    }>("/authors/", {
+      query: { search: search || undefined, page, pageSize: 24 },
+    });
+    return {
+      count: payload.count,
+      next: Boolean(payload.next),
+      previous: Boolean(payload.previous),
+      results: unwrapPage(payload).map((value) => ({
+        ...mapAuthorSummary(value),
+        biography: "",
+        genres: [],
+        popularTracks: [],
+      })),
+    };
+  }
+  const normalized = search.trim().toLocaleLowerCase();
+  const filtered = authors.filter((author) =>
+      !normalized
+        ? true
+        : [author.name, author.nameEnglish].some((name) =>
+            name?.toLocaleLowerCase().includes(normalized),
+          ),
+    );
+  const start = (page - 1) * 24;
+  return mockApiResponse({
+    count: filtered.length,
+    next: start + 24 < filtered.length,
+    previous: page > 1,
+    results: filtered.slice(start, start + 24),
+  });
+}
+
 export async function getAuthorBySlug(slug: string): Promise<Author | null> {
   if (environment.apiMode === "remote") {
     const payload = await nullOnNotFound(

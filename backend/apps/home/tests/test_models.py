@@ -6,7 +6,12 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
-from apps.home.models import HomeSection, HomeSectionItem, HomeSectionType
+from apps.home.models import (
+    HomeSection,
+    HomeSectionItem,
+    HomeSectionSource,
+    HomeSectionType,
+)
 from apps.home.tests.factories import HomeSectionFactory
 from apps.playlists.tests.factories import PlaylistFactory
 from apps.taxonomy.tests.factories import ContentCategoryFactory
@@ -89,6 +94,22 @@ def test_category_section_accepts_one_active_category():
     )
 
     item.full_clean()
+
+
+def test_automatic_source_and_browse_category_require_track_sections():
+    invalid_source = HomeSectionFactory.build(
+        section_type=HomeSectionType.AUTHORS,
+        content_source=HomeSectionSource.RECENT_RELEASES,
+    )
+    with pytest.raises(ValidationError, match="new releases"):
+        invalid_source.full_clean()
+
+    invalid_category = HomeSectionFactory.build(
+        section_type=HomeSectionType.AUTHORS,
+        browse_category=ContentCategoryFactory(),
+    )
+    with pytest.raises(ValidationError, match="browse category"):
+        invalid_category.full_clean()
 
 
 def test_database_rejects_multiple_targets_and_duplicate_positions():

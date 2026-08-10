@@ -10,7 +10,7 @@ from apps.catalog.models import Album, TrackProcessingStatus
 from apps.catalog.track_serializers import CompactTrackSerializer
 from apps.catalog.track_views import public_track_queryset
 from apps.common.cache import public_cache_keys
-from apps.home.models import HomeSection, HomeSectionType
+from apps.home.models import HomeSection, HomeSectionSource, HomeSectionType
 from apps.home.serializers import (
     HomeAlbumSerializer,
     HomeAuthorSerializer,
@@ -22,9 +22,8 @@ from apps.home.serializers import (
 )
 from apps.library.models import ListeningProgress
 from apps.library.serializers import ContinueListeningSerializer
-from apps.narrators.models import Narrator
 from apps.playlists.models import Playlist, PlaylistType, PlaylistVisibility
-from apps.taxonomy.models import Mood
+from apps.taxonomy.models import ContentCategory, Mood
 
 SECTION_LIMIT = 6
 CONTINUE_LIMIT = 6
@@ -44,11 +43,11 @@ def section(identifier, title, items, *, section_type, layout="rail"):
 class HomeService:
     def compose(self, *, user):
         payload = deepcopy(self.get_public_payload())
-        continue_index = payload.pop("_continueIndex", 0)
+        payload.pop("_continueIndex", None)
         continue_config = payload.pop("_continueSection", None)
         if user and user.is_authenticated and user.is_active:
             payload["sections"].insert(
-                continue_index,
+                0,
                 self.get_continue_section(user, configuration=continue_config),
             )
         return payload
@@ -69,7 +68,7 @@ class HomeService:
     def build_public_payload(self):
         editorial_sections = list(
             HomeSection.objects.active()
-            .select_related()
+            .select_related("browse_category")
             .prefetch_related(
                 "items__track__work__author",
                 "items__track__work__category",
@@ -116,11 +115,22 @@ class HomeService:
                     "layout": configured.layout,
                 }
                 continue
-            items = [
-                serialized
-                for item in configured.items.all()
-                if (serialized := self.serialize_editorial_item(item)) is not None
-            ][: configured.max_items]
+            if configured.content_source == HomeSectionSource.RECENT_RELEASES:
+                items = [
+                    ("track", item)
+                    for item in CompactTrackSerializer(
+                        public_track_queryset().order_by(
+                            "-published_at", "-created_at", "id"
+                        )[: configured.max_items],
+                        many=True,
+                    ).data
+                ]
+            else:
+                items = [
+                    serialized
+                    for item in configured.items.all()
+                    if (serialized := self.serialize_editorial_item(item)) is not None
+                ][: configured.max_items]
             if configured.section_type == HomeSectionType.HERO:
                 if items:
                     content_type, content = items[0]
@@ -134,18 +144,22 @@ class HomeService:
                         "content": content,
                     }
                 continue
-            sections.append(
-                {
-                    "id": configured.identifier,
-                    "title": configured.title_ne,
-                    "titleEnglish": configured.title_en,
-                    "subtitle": configured.subtitle_ne,
-                    "subtitleEnglish": configured.subtitle_en,
-                    "sectionType": configured.section_type,
-                    "layout": configured.layout,
-                    "items": [content for _, content in items],
+            section_payload = {
+                "id": configured.identifier,
+                "title": configured.title_ne,
+                "titleEnglish": configured.title_en,
+                "subtitle": configured.subtitle_ne,
+                "subtitleEnglish": configured.subtitle_en,
+                "sectionType": configured.section_type,
+                "layout": configured.layout,
+                "items": [content for _, content in items],
+            }
+            if configured.browse_category_id:
+                section_payload["browseCategory"] = {
+                    "slug": configured.browse_category.slug,
+                    "name": configured.browse_category.name_ne,
                 }
-            )
+            sections.append(section_payload)
         return {
             "hero": hero,
             "sections": sections,
@@ -261,13 +275,9 @@ class HomeService:
                 :SECTION_LIMIT
             ]
         )
-        narrators = list(
-            Narrator.objects.order_by(
-                "-is_featured",
-                "-follower_count_cache",
-                "-is_verified",
-                "name_ne",
-                "id",
+        categories = list(
+            ContentCategory.objects.filter(is_active=True).order_by(
+                "sort_order", "name_ne", "id"
             )[:SECTION_LIMIT]
         )
         moods = list(
@@ -314,6 +324,13 @@ class HomeService:
             },
             "sections": [
                 section(
+                    "categories",
+                    "विधाअनुसार सुन्नुहोस्",
+                    HomeCategorySerializer(categories, many=True).data,
+                    section_type=HomeSectionType.CATEGORIES,
+                    layout="grid",
+                ),
+                section(
                     "featured-playlists",
                     "विशेष प्लेलिस्टहरू",
                     playlist_data,
@@ -332,16 +349,10 @@ class HomeService:
                     section_type=HomeSectionType.TRACKS,
                 ),
                 section(
-                    "popular-authors",
-                    "लोकप्रिय लेखकहरू",
+                    "creator-voices",
+                    "सर्जकका स्वरहरू",
                     HomeAuthorSerializer(authors, many=True).data,
                     section_type=HomeSectionType.AUTHORS,
-                ),
-                section(
-                    "popular-narrators",
-                    "लोकप्रिय वाचकहरू",
-                    HomeNarratorSerializer(narrators, many=True).data,
-                    section_type=HomeSectionType.NARRATORS,
                 ),
                 section(
                     "mood-collections",

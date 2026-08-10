@@ -147,6 +147,7 @@ function mapSection(value: unknown): HomeSection[] {
       ? value.subtitleEnglish
       : undefined;
   const layout = value.layout === "grid" ? ("grid" as const) : ("rail" as const);
+  const kind = classifySection(value.id, value.items, value.sectionType);
   const base = {
     id: value.id,
     title: value.title,
@@ -154,8 +155,8 @@ function mapSection(value: unknown): HomeSection[] {
     subtitle,
     subtitleEnglish,
     layout,
+    viewAllHref: mapSectionViewAllHref(value, kind),
   };
-  const kind = classifySection(value.id, value.items, value.sectionType);
 
   if (kind === "tracks") {
     return [{
@@ -243,6 +244,22 @@ function mapSection(value: unknown): HomeSection[] {
     }];
   }
   return [];
+}
+
+function mapSectionViewAllHref(
+  value: Record<string, unknown>,
+  kind: HomeSection["kind"] | "unknown",
+) {
+  if (kind === "categories") return "/explore";
+  if (kind === "authors") return "/authors";
+  if (
+    kind === "tracks" &&
+    isRecord(value.browseCategory) &&
+    isString(value.browseCategory.slug)
+  ) {
+    return `/explore?type=${encodeURIComponent(value.browseCategory.slug)}`;
+  }
+  return undefined;
 }
 
 function classifySection(id: string, items: unknown[], sectionType: unknown) {

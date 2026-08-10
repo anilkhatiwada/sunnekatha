@@ -48,6 +48,11 @@ class HomeSectionLayout(models.TextChoices):
     GRID = "grid", "Responsive grid"
 
 
+class HomeSectionSource(models.TextChoices):
+    EDITORIAL = "editorial", "Selected editorial items"
+    RECENT_RELEASES = "recent_releases", "Automatic new releases"
+
+
 class HomeSectionQuerySet(models.QuerySet):
     def active(self, *, at=None):
         at = at or timezone.now()
@@ -64,6 +69,19 @@ class HomeSection(UUIDTimeStampedModel):
     subtitle_ne = models.CharField(max_length=280, blank=True)
     subtitle_en = models.CharField(max_length=280, blank=True)
     section_type = models.CharField(max_length=24, choices=HomeSectionType.choices)
+    content_source = models.CharField(
+        max_length=24,
+        choices=HomeSectionSource.choices,
+        default=HomeSectionSource.EDITORIAL,
+    )
+    browse_category = models.ForeignKey(
+        "taxonomy.ContentCategory",
+        related_name="homepage_track_sections",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="Optional category used by track sections for their See all link.",
+    )
     layout = models.CharField(
         max_length=16,
         choices=HomeSectionLayout.choices,
@@ -98,6 +116,25 @@ class HomeSection(UUIDTimeStampedModel):
         super().clean()
         if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
             raise ValidationError({"ends_at": "End time must be after start time."})
+        if (
+            self.content_source == HomeSectionSource.RECENT_RELEASES
+            and self.section_type != HomeSectionType.TRACKS
+        ):
+            raise ValidationError(
+                {
+                    "content_source": (
+                        "Automatic new releases can only be used for track sections."
+                    )
+                }
+            )
+        if self.browse_category_id and self.section_type != HomeSectionType.TRACKS:
+            raise ValidationError(
+                {
+                    "browse_category": (
+                        "A browse category can only be attached to track sections."
+                    )
+                }
+            )
         if self.pk and HomeSection.objects.filter(pk=self.pk).exists():
             allowed = HomeSectionItem.SECTION_TARGETS[self.section_type]
             incompatible = []

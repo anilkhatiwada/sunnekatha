@@ -199,6 +199,30 @@ describe("homepage response adapter", () => {
     });
   });
 
+  it("maps safe view-all links for writers and category track sections", () => {
+    const result = mapHomeResponse({
+      hero: null,
+      sections: [
+        {
+          id: "poetry-picks",
+          title: "कविताका रोजाइ",
+          sectionType: "tracks",
+          browseCategory: { slug: "poetry", name: "कविता" },
+          items: [track],
+        },
+        {
+          id: "writers",
+          title: "सर्जकका स्वरहरू",
+          sectionType: "authors",
+          items: [],
+        },
+      ],
+    });
+
+    expect(result.sections[0]?.viewAllHref).toBe("/explore?type=poetry");
+    expect(result.sections[1]?.viewAllHref).toBe("/authors");
+  });
+
   it("rejects malformed top-level responses", () => {
     expect(() => mapHomeResponse({ hero: null })).toThrow(
       "गृहपृष्ठको उत्तर बुझ्न सकिएन।",

@@ -1,4 +1,5 @@
 export {
+  getAuthors,
   getAuthorFeaturedCollections,
   getAuthorBySlug,
   getAuthorTracks,

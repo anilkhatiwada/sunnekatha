@@ -74,6 +74,7 @@ def test_superuser_can_create_homepage_section_through_admin(client):
             "subtitle_ne": "जहाँ रोक्नुभएको थियो, त्यहीँबाट सुरु गर्नुहोस्।",
             "subtitle_en": "Resume from where you left off.",
             "section_type": "continue_listening",
+            "content_source": "editorial",
             "layout": "rail",
             "max_items": 6,
             "is_active": "on",

@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.tests.factories import UserFactory
 from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
-from apps.home.models import HomeSectionItem, HomeSectionType
+from apps.home.models import HomeSectionItem, HomeSectionSource, HomeSectionType
 from apps.home.tests.factories import HomeSectionFactory
 from apps.library.progress import listening_progress_service
 from apps.taxonomy.tests.factories import ContentCategoryFactory
@@ -110,7 +110,7 @@ def test_editorial_hero_uses_first_visible_item():
     assert response.data["hero"]["content"]["id"] == str(album.id)
 
 
-def test_configured_continue_listening_uses_editorial_position():
+def test_configured_continue_listening_is_always_immediately_after_hero():
     before = HomeSectionFactory(
         section_type=HomeSectionType.ALBUMS,
         sort_order=10,
@@ -141,10 +141,46 @@ def test_configured_continue_listening_uses_editorial_position():
     response = client.get(reverse("home:detail"))
 
     assert [section["id"] for section in response.data["sections"]] == [
-        before.identifier,
         "resume",
+        before.identifier,
         after.identifier,
     ]
+
+
+def test_automatic_new_releases_ignores_editorial_items_and_uses_publish_order():
+    older = AudioTrackFactory(published_at=timezone.now() - timedelta(days=2))
+    newer = AudioTrackFactory(published_at=timezone.now() - timedelta(hours=1))
+    section = HomeSectionFactory(
+        identifier="new-releases",
+        section_type=HomeSectionType.TRACKS,
+        content_source=HomeSectionSource.RECENT_RELEASES,
+        max_items=1,
+    )
+    HomeSectionItem.objects.create(section=section, track=older, position=1)
+
+    response = APIClient().get(reverse("home:detail"))
+
+    assert [item["id"] for item in response.data["sections"][0]["items"]] == [
+        str(newer.id)
+    ]
+
+
+def test_track_section_exposes_structured_browse_category():
+    category = ContentCategoryFactory(name_ne="कविता")
+    section = HomeSectionFactory(
+        section_type=HomeSectionType.TRACKS,
+        browse_category=category,
+    )
+    HomeSectionItem.objects.create(
+        section=section, track=AudioTrackFactory(), position=1
+    )
+
+    response = APIClient().get(reverse("home:detail"))
+
+    assert response.data["sections"][0]["browseCategory"] == {
+        "slug": category.slug,
+        "name": "कविता",
+    }
 
 
 def test_editing_section_invalidates_public_cache():

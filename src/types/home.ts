@@ -19,87 +19,49 @@ export interface HomeAlbum {
   releaseDate: string | null;
 }
 
+interface HomeSectionBase {
+  id: string;
+  title: string;
+  titleEnglish?: string;
+  subtitle?: string;
+  subtitleEnglish?: string;
+  layout: HomeSectionLayout;
+  viewAllHref?: string;
+}
+
 export type HomeSection =
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "tracks";
       items: CatalogTrack[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "playlists";
       items: CatalogPlaylist[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "authors";
       items: Author[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "narrators";
       items: Narrator[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "moods" | "genres";
       items: (Mood | Genre)[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "categories";
       items: Genre[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "albums";
       items: HomeAlbum[];
-    }
+    } & HomeSectionBase
   | {
-      id: string;
-      title: string;
-      titleEnglish?: string;
-      subtitle?: string;
-      subtitleEnglish?: string;
-      layout: HomeSectionLayout;
       kind: "continue-listening";
       items: HomeContinueListeningItem[];
-    };
+    } & HomeSectionBase;
 
 export type HomeSectionLayout = "rail" | "grid";
 

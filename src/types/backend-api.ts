@@ -374,6 +374,7 @@ export interface ApiHomeSection {
   subtitleEnglish?: string;
   sectionType?: string;
   layout?: "rail" | "grid";
+  browseCategory?: { slug: string; name: string };
   items: unknown[];
 }
 

@@ -85,21 +85,21 @@ export function HomePageContent() {
   const hero = homeQuery.data?.hero;
 
   return (
-    <div className="space-y-12 pb-6 sm:space-y-16 lg:space-y-20">
+    <div className="space-y-10 pb-6 sm:space-y-14 lg:space-y-16">
       <motion.header
         initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="pt-2 sm:pt-4"
+        className="pt-1 sm:pt-2"
       >
         <p className="font-nepali text-sm font-medium text-primary">शुभ साँझ</p>
-        <h1 className="mt-2 max-w-3xl font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl lg:text-6xl">
+        <h1 className="mt-2 max-w-3xl font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl">
           नेपाली साहित्य अब कानसम्म
         </h1>
         <p className="mt-4 max-w-2xl font-nepali text-base leading-8 text-muted-foreground sm:text-lg">
           कथा, कविता र विचारका प्रिय नेपाली आवाजहरू एकै ठाउँमा सुन्नुहोस्।
         </p>
-        <SearchInput className="mt-7 max-w-2xl" />
+        <SearchInput className="mt-6 max-w-2xl" />
       </motion.header>
 
       <section aria-label="विशेष प्रस्तुति">
@@ -233,9 +233,9 @@ function HomeSectionRail({
               </p>
             )}
           </div>
-          {section.kind === "categories" && (
+          {section.viewAllHref && (
             <Link
-              href="/explore"
+              href={section.viewAllHref}
               className="inline-flex min-h-11 shrink-0 items-center rounded-sm font-nepali text-sm font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary"
             >
               सबै हेर्नुहोस्
@@ -253,7 +253,7 @@ function HomeSectionRail({
     <HorizontalSection
       title={section.title}
       description={section.subtitle}
-      viewAllHref={section.kind === "categories" ? "/explore" : undefined}
+      viewAllHref={section.viewAllHref}
     >
       {content}
     </HorizontalSection>
@@ -327,8 +327,11 @@ function renderSectionItems(
     ));
   }
   if (section.kind === "categories") {
-    return section.items.map((collection) => (
-      <div key={collection.id} className={standardItemClass}>
+    return section.items.slice(0, 6).map((collection, index) => (
+      <div
+        key={collection.id}
+        className={`${standardItemClass} ${index >= 4 ? "hidden sm:block" : ""}`}
+      >
         <ExploreCollectionCard collection={collection} kind="category" />
       </div>
     ));

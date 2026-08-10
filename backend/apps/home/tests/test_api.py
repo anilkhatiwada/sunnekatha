@@ -10,7 +10,7 @@ from apps.library.progress import listening_progress_service
 from apps.narrators.tests.factories import NarratorFactory
 from apps.playlists.models import PlaylistType, PlaylistVisibility
 from apps.playlists.tests.factories import PlaylistFactory, PlaylistItemFactory
-from apps.taxonomy.tests.factories import MoodFactory
+from apps.taxonomy.tests.factories import ContentCategoryFactory, MoodFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -40,6 +40,7 @@ def seed_public_home():
     AudioTrackFactory.create_batch(7)
     NarratorFactory(is_featured=True, follower_count_cache=500)
     MoodFactory(is_active=True)
+    ContentCategoryFactory(is_active=True)
     AlbumFactory(is_featured=True, is_published=True)
     return playlist
 
@@ -60,11 +61,11 @@ def test_anonymous_home_returns_all_public_sections_without_personal_data():
     assert response.data["hero"]["content"]["id"] == str(playlist.id)
     identifiers = [section["id"] for section in response.data["sections"]]
     assert identifiers == [
+        "categories",
         "featured-playlists",
         "trending-tracks",
         "recently-added",
-        "popular-authors",
-        "popular-narrators",
+        "creator-voices",
         "mood-collections",
         "featured-albums",
     ]

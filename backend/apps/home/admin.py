@@ -182,6 +182,7 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
         "title_ne",
         "title_en",
         "section_type",
+        "content_source",
         "layout",
         "max_items",
         "schedule_badge",
@@ -195,10 +196,18 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
     ordering_field = "sort_order"
     hide_ordering_field = False
 
-    list_filter = ("section_type", "layout", "is_active", "starts_at", "ends_at")
+    list_filter = (
+        "section_type",
+        "content_source",
+        "layout",
+        "is_active",
+        "starts_at",
+        "ends_at",
+    )
     search_fields = ("identifier", "title_ne", "title_en")
     readonly_fields = ("id", "homepage_preview", "created_at", "updated_at")
     ordering = ("sort_order", "identifier")
+    autocomplete_fields = ("browse_category",)
     inlines = (HomeSectionItemInline,)
     actions = ("activate_sections", "deactivate_sections")
     fieldsets = (
@@ -212,6 +221,8 @@ class HomeSectionAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
                     "subtitle_ne",
                     "subtitle_en",
                     "section_type",
+                    "content_source",
+                    "browse_category",
                 )
             },
         ),
