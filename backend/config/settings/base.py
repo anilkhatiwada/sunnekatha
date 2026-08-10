@@ -116,14 +116,14 @@ UNFOLD = {
     "SITE_TITLE": "SunneKatha Administration",
     "SITE_HEADER": "SunneKatha",
     "SITE_SUBHEADER": "Audio Literature Management",
-    "SITE_ICON": lambda request: static("admin/brand/sunnekatha-monogram.svg"),
+    "SITE_ICON": lambda request: static("admin/brand/sunnekatha-mark.png"),
     "SITE_SYMBOL": "auto_stories",
     "SITE_FAVICONS": [
         {
             "rel": "icon",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "href": lambda request: static("admin/brand/sunnekatha-favicon.svg"),
+            "sizes": "128x128",
+            "type": "image/png",
+            "href": lambda request: static("admin/brand/sunnekatha-mark.png"),
         }
     ],
     "ENVIRONMENT": "config.admin.environment_callback",
@@ -170,7 +170,7 @@ UNFOLD = {
         },
     },
     "LOGIN": {
-        "image": lambda request: static("admin/brand/sunnekatha-login.svg"),
+        "image": lambda request: static("admin/brand/sunnekatha-login.png"),
     },
     "COMMAND": {
         "search_models": True,

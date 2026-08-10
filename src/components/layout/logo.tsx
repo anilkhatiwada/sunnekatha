@@ -1,4 +1,4 @@
-import { AudioLines } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -18,18 +18,27 @@ export function Logo({ compact = false, className }: LogoProps) {
         className,
       )}
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/15 text-primary shadow-[0_0_24px_rgb(229_138_82_/_0.12)] transition-colors group-hover:bg-primary/20">
-        <AudioLines aria-hidden="true" className="size-5" strokeWidth={1.8} />
+      <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-primary/30 bg-surface-soft shadow-[0_0_24px_rgb(229_138_82_/_0.12)] transition-colors group-hover:border-primary/50">
+        <Image
+          src="/brand/sunnekatha-waveform.png"
+          alt=""
+          aria-hidden="true"
+          width={40}
+          height={40}
+          className="h-auto w-9"
+          priority
+        />
       </span>
       {!compact && (
-        <span className="min-w-0">
-          <span className="block truncate text-lg leading-none font-semibold tracking-tight text-foreground">
-            SunneKatha
-          </span>
-          <span className="mt-1 block truncate font-nepali text-[0.68rem] text-muted-foreground">
-            सुन्ने कथा, सम्झिने शब्द
-          </span>
-        </span>
+        <Image
+          src="/brand/sunnekatha-wordmark.png"
+          alt=""
+          aria-hidden="true"
+          width={520}
+          height={158}
+          className="h-auto w-[8.6rem] sm:w-[9.25rem]"
+          priority
+        />
       )}
     </Link>
   );

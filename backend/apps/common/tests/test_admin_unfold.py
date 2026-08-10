@@ -26,7 +26,7 @@ def test_default_admin_site_is_unfold_without_changing_url(client):
 
     assert response.status_code == 200
     assert b"SunneKatha Administration" in response.content
-    assert b"admin/brand/sunnekatha-login.svg" in response.content
+    assert b"admin/brand/sunnekatha-login.png" in response.content
 
 
 @pytest.mark.django_db
@@ -46,7 +46,7 @@ def test_authenticated_admin_templates_and_custom_user_form_render(client):
     assert user_add_response.status_code == 200
     assert settings.UNFOLD["SITE_SUBHEADER"] == "Audio Literature Management"
     assert b"Audio Literature Management" in index_response.content
-    assert b"admin/brand/sunnekatha-monogram.svg" in index_response.content
+    assert b"admin/brand/sunnekatha-mark.png" in index_response.content
     assert b'name="email"' in user_add_response.content
 
 
