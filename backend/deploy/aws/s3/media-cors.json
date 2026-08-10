@@ -1,0 +1,20 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "https://sunnekatha.com",
+        "https://www.sunnekatha.com"
+      ],
+      "AllowedMethods": [
+        "POST"
+      ],
+      "AllowedHeaders": [
+        "*"
+      ],
+      "ExposeHeaders": [
+        "ETag"
+      ],
+      "MaxAgeSeconds": 900
+    }
+  ]
+}

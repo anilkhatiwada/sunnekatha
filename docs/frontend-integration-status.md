@@ -1,6 +1,6 @@
 # SunneKatha frontend integration status
 
-**Last updated:** 2026-07-30
+**Last updated:** 2026-08-10
 
 **Frontend:** `https://sunnekatha.com`
 
@@ -24,6 +24,7 @@
 | Grouped, paginated, autocomplete search | Complete |
 | Notifications | Complete |
 | Creator center and direct S3 uploads | Complete |
+| Private S3 and CloudFront media delivery | CloudFront deployed; Cloudflare DNS pending |
 | Responsive and interaction review | Complete locally |
 | Production deployment of this change | Deployed |
 
@@ -44,6 +45,36 @@ Post-deployment verification:
 - Anonymous `playlists/?mine=true`: HTTP 401 as required
 - Work track filter: HTTP 200
 - Frontend, Gunicorn, Celery worker, and Celery Beat: active
+
+## CloudFront media delivery
+
+- Distribution: `SunneKathaMediaDistribution`
+- Distribution ID: `E1F8UZR7Q8N16Y`
+- CloudFront hostname: `d3dazzi8rnwbjc.cloudfront.net`
+- Custom hostname: `media.sunnekatha.com`
+- S3 origin: `sunnekatha-prod-media-533463644243-ap-south-1`
+- OAC: `SunneKathaMediaOAC` (`E2NV3UGUN46AWN`)
+- Trusted key group: `SunneKathaMediaSigning`
+- Price class: `PriceClass_100`
+
+The bucket remains private with all S3 public-access blocks enabled. Its policy
+allows `s3:GetObject` only when requested by the exact CloudFront distribution
+ARN. `/covers/*` and `/free/*` are public viewer paths. `/premium/*`,
+`/restricted/*`, and the default behavior require the trusted key group.
+
+The remaining external DNS step is a DNS-only Cloudflare CNAME:
+
+```text
+Type: CNAME
+Name: media
+Target: d3dazzi8rnwbjc.cloudfront.net
+Proxy status: DNS only
+TTL: Auto
+```
+
+After DNS propagation, verify a cover through `media.sunnekatha.com`, confirm
+direct S3 access is denied, verify anonymous free-track playback, and verify
+premium playback requires a valid short-lived signed URL.
 
 The production `npm ci` audit reported 11 high-severity dependency findings.
 No automatic force-upgrade was applied during deployment because it could make

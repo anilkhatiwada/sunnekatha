@@ -78,8 +78,45 @@
     "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6"
   },
   "CacheBehaviors": {
-    "Quantity": 3,
+    "Quantity": 4,
     "Items": [
+      {
+        "PathPattern": "/covers/*",
+        "TargetOriginId": "sunnekatha-media-s3",
+        "TrustedSigners": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "TrustedKeyGroups": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 2,
+          "Items": [
+            "HEAD",
+            "GET"
+          ],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
+          }
+        },
+        "SmoothStreaming": false,
+        "Compress": true,
+        "FunctionAssociations": {
+          "Quantity": 0
+        },
+        "LambdaFunctionAssociations": {
+          "Quantity": 0
+        },
+        "FieldLevelEncryptionId": "",
+        "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6"
+      },
       {
         "PathPattern": "/free/*",
         "TargetOriginId": "sunnekatha-media-s3",
@@ -220,14 +257,14 @@
   "CustomErrorResponses": {
     "Quantity": 0
   },
-  "Comment": "SunneKatha private media delivery",
+  "Comment": "SunneKathaMediaDistribution",
   "Logging": {
     "Enabled": false,
     "IncludeCookies": false,
     "Bucket": "",
     "Prefix": ""
   },
-  "PriceClass": "PriceClass_200",
+  "PriceClass": "PriceClass_100",
   "Enabled": true,
   "ViewerCertificate": {
     "CloudFrontDefaultCertificate": false,
