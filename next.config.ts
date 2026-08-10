@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "sunnekatha-prod-media-533463644243-ap-south-1.s3.amazonaws.com",
+        hostname: "d3dazzi8rnwbjc.cloudfront.net",
         pathname: "/**",
       },
     ],

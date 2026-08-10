@@ -7,9 +7,9 @@ export const SITE_URL = "https://sunnekatha.com";
 const SOCIAL_DESCRIPTION_LIMIT = 180;
 const SOCIAL_ARTWORK_HOSTS = new Set([
   "media.sunnekatha.com",
+  "d3dazzi8rnwbjc.cloudfront.net",
   "sunnekatha.com",
   "www.sunnekatha.com",
-  "sunnekatha-prod-media-533463644243-ap-south-1.s3.amazonaws.com",
 ]);
 
 export async function getSocialTrack(slug: string) {
