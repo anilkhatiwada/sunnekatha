@@ -9,6 +9,7 @@ export interface Genre {
   name: string;
   nameEnglish?: string;
   description: string;
+  image?: string;
 }
 
 export interface Mood {
@@ -17,6 +18,7 @@ export interface Mood {
   name: string;
   nameEnglish?: string;
   description: string;
+  image?: string;
 }
 
 export type ContentCategory = Genre;

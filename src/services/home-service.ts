@@ -460,6 +460,7 @@ function mapHomeCollection(value: unknown): Mood | null {
       ? value.titleEnglish
       : undefined,
     description: isString(value.description) ? value.description : "",
+    image: isString(value.coverImage) ? value.coverImage : undefined,
   };
 }
 

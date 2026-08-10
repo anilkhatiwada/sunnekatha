@@ -1,4 +1,5 @@
 import { ArrowUpRight, BookOpenText, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -31,8 +32,18 @@ export function ExploreCollectionCard({
       )}
     >
       <div className="flex items-start justify-between">
-        <span className="grid size-9 place-items-center rounded-lg bg-primary-muted/35 text-primary">
-          <Icon aria-hidden="true" className="size-4.5" />
+        <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-primary-muted/35 text-primary">
+          {kind === "category" && collection.image ? (
+            <Image
+              src={collection.image}
+              alt=""
+              fill
+              sizes="40px"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <Icon aria-hidden="true" className="size-4.5" />
+          )}
         </span>
         <ArrowUpRight
           aria-hidden="true"

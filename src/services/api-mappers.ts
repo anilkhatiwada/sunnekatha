@@ -162,6 +162,7 @@ export function mapTaxonomy(value: ApiTaxonomy): Genre | Mood {
     name: value.name,
     nameEnglish: value.nameEnglish || undefined,
     description: value.description,
+    image: value.image || undefined,
   };
 }
 

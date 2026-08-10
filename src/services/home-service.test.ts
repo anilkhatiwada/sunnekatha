@@ -199,6 +199,32 @@ describe("homepage response adapter", () => {
     });
   });
 
+  it("preserves category artwork for the category icon", () => {
+    const result = mapHomeResponse({
+      hero: null,
+      sections: [
+        {
+          id: "categories",
+          title: "विधाहरू",
+          sectionType: "categories",
+          items: [
+            {
+              id: "poetry-id",
+              slug: "poetry",
+              title: "कविता",
+              coverImage: "https://media.sunnekatha.com/covers/poetry.jpg",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.sections[0]?.items[0]).toMatchObject({
+      name: "कविता",
+      image: "https://media.sunnekatha.com/covers/poetry.jpg",
+    });
+  });
+
   it("maps safe view-all links for writers and category track sections", () => {
     const result = mapHomeResponse({
       hero: null,
