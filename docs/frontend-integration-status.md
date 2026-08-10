@@ -24,7 +24,7 @@
 | Grouped, paginated, autocomplete search | Complete |
 | Notifications | Complete |
 | Creator center and direct S3 uploads | Complete |
-| Private S3 and CloudFront media delivery | CloudFront deployed; Cloudflare DNS pending |
+| Private S3 and CloudFront media delivery | Complete |
 | Responsive and interaction review | Complete locally |
 | Production deployment of this change | Deployed |
 
@@ -55,6 +55,7 @@ Post-deployment verification:
 - S3 origin: `sunnekatha-prod-media-533463644243-ap-south-1`
 - OAC: `SunneKathaMediaOAC` (`E2NV3UGUN46AWN`)
 - Trusted key group: `SunneKathaMediaSigning`
+- Active public signing key: `SunneKathaMediaPublicKeyV2` (`K2H067RBECFGR8`)
 - Price class: `PriceClass_100`
 
 The bucket remains private with all S3 public-access blocks enabled. Its policy
@@ -62,7 +63,7 @@ allows `s3:GetObject` only when requested by the exact CloudFront distribution
 ARN. `/covers/*` and `/free/*` are public viewer paths. `/premium/*`,
 `/restricted/*`, and the default behavior require the trusted key group.
 
-The remaining external DNS step is a DNS-only Cloudflare CNAME:
+Cloudflare uses this DNS-only CNAME:
 
 ```text
 Type: CNAME
@@ -72,9 +73,14 @@ Proxy status: DNS only
 TTL: Auto
 ```
 
-After DNS propagation, verify a cover through `media.sunnekatha.com`, confirm
-direct S3 access is denied, verify anonymous free-track playback, and verify
-premium playback requires a valid short-lived signed URL.
+Production verification completed on 2026-08-10:
+
+- homepage API cover URLs use `media.sunnekatha.com` instead of S3;
+- a public cover returns HTTP 200 through CloudFront;
+- direct S3 access returns HTTP 403;
+- free audio supports HTTP 206 byte-range playback without a signature;
+- premium audio supports HTTP 206 only with a 300-second signed URL;
+- unsigned premium and restricted paths return HTTP 403.
 
 The production `npm ci` audit reported 11 high-severity dependency findings.
 No automatic force-upgrade was applied during deployment because it could make
