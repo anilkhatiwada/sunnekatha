@@ -1,4 +1,4 @@
-import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/manrope/wght.css";
 import "@fontsource-variable/noto-sans-devanagari/wght.css";
 import "@fontsource-variable/noto-serif-devanagari/wght.css";
 

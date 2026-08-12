@@ -25,7 +25,7 @@
     "test:e2e:ui": "NEXT_PUBLIC_API_MODE=mock NEXT_PUBLIC_APP_ENV=local npm run build && playwright test --ui"
   },
   "dependencies": {
-    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/noto-sans-devanagari": "^5.3.0",
     "@fontsource-variable/noto-serif-devanagari": "^5.3.0",
     "@hookform/resolvers": "5.4.0",
