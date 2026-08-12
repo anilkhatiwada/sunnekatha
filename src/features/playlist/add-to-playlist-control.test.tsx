@@ -67,11 +67,11 @@ describe("AddToPlaylistControl", () => {
     const user = userEvent.setup();
     const { onMessage } = renderControl();
 
-    await user.click(screen.getByRole("button", { name: "प्लेलिस्टमा थप्नुहोस्" }));
+    await user.click(screen.getByRole("button", { name: "Add to playlist" }));
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     const playlistButton = await screen.findByRole("button", {
-      name: "मेरो सङ्ग्रह 2 रचना · निजी",
+      name: "मेरो सङ्ग्रह 2 tracks · Private",
     });
     expect(playlistButton).toHaveClass("min-h-14");
     await user.click(playlistButton);
@@ -83,7 +83,7 @@ describe("AddToPlaylistControl", () => {
       ),
     );
     await waitFor(() =>
-      expect(onMessage).toHaveBeenCalledWith("“मेरो सङ्ग्रह” मा रचना थपियो।"),
+      expect(onMessage).toHaveBeenCalledWith("“मेरो सङ्ग्रह” — track added."),
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -95,17 +95,17 @@ describe("AddToPlaylistControl", () => {
     mocks.addTrackToPlaylist.mockResolvedValue({ ...playlist, slug: "naya" });
     renderControl();
 
-    await user.click(screen.getByRole("button", { name: "प्लेलिस्टमा थप्नुहोस्" }));
+    await user.click(screen.getByRole("button", { name: "Add to playlist" }));
     await user.click(
       await screen.findByRole("button", {
-        name: "नयाँ प्लेलिस्ट बनाएर थप्नुहोस्",
+        name: "Create a new playlist and add",
       }),
     );
     await user.type(
-      screen.getByLabelText("नयाँ निजी प्लेलिस्टको नाम"),
+      screen.getByLabelText("New private playlist name"),
       "नयाँ सङ्ग्रह",
     );
-    await user.click(screen.getByRole("button", { name: "बनाएर थप्नुहोस्" }));
+    await user.click(screen.getByRole("button", { name: "Create and add" }));
 
     await waitFor(() =>
       expect(mocks.createPlaylist).toHaveBeenCalledWith({
@@ -127,10 +127,10 @@ describe("AddToPlaylistControl", () => {
     mocks.useAuth.mockReturnValue({ user: null });
     renderControl(onMessage);
 
-    await user.click(screen.getByRole("button", { name: "प्लेलिस्टमा थप्नुहोस्" }));
+    await user.click(screen.getByRole("button", { name: "Add to playlist" }));
 
     expect(onMessage).toHaveBeenCalledWith(
-      "प्लेलिस्टमा थप्न पहिले साइन इन गर्नुहोस्।",
+      "Sign in to add tracks to a playlist.",
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

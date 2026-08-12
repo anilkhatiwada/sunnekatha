@@ -32,7 +32,7 @@ export function SearchInput({ className }: SearchInputProps) {
       className={cn("relative w-full", className)}
     >
       <label htmlFor="homepage-search" className="sr-only">
-        कथा, कविता, लेखक वा वाचक खोज्नुहोस्
+        Search stories, poems, authors, or narrators
       </label>
       <Search
         aria-hidden="true"
@@ -43,14 +43,14 @@ export function SearchInput({ className }: SearchInputProps) {
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="कथा, कविता, लेखक वा वाचक खोज्नुहोस्"
+        placeholder="Search stories, poems, authors, or narrators"
         className="h-12 w-full rounded-full border border-border bg-surface/90 pr-24 pl-12 font-nepali text-sm text-foreground shadow-[0_10px_32px_rgb(0_0_0_/_0.16)] transition-colors placeholder:text-muted-foreground/75 hover:border-primary/25 focus:border-primary/50 focus:outline-2 focus:outline-primary sm:h-14 sm:text-base"
       />
       <button
         type="submit"
         className="absolute top-1/2 right-1.5 min-h-11 -translate-y-1/2 rounded-full bg-primary px-4 font-nepali text-sm font-semibold text-background transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 sm:px-5"
       >
-        खोज्नुहोस्
+        Search
       </button>
     </form>
   );

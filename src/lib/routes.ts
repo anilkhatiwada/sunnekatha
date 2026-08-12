@@ -17,28 +17,28 @@ export interface NavigationItem {
 export const MAIN_NAVIGATION: NavigationItem[] = [
   {
     href: "/",
-    label: "गृहपृष्ठ",
+    label: "Home",
     icon: House,
   },
   {
     href: "/search",
-    label: "खोज्नुहोस्",
+    label: "Search",
     icon: Search,
   },
   {
     href: "/library",
-    label: "लाइब्रेरी",
+    label: "Library",
     icon: Library,
     requiresAuth: true,
   },
   {
     href: "/playlists",
-    label: "प्लेलिस्ट",
+    label: "Playlists",
     icon: ListMusic,
   },
   {
     href: "/profile",
-    label: "प्रोफाइल",
+    label: "Profile",
     icon: CircleUserRound,
     requiresAuth: true,
   },

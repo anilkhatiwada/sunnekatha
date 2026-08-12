@@ -65,7 +65,6 @@ export {
   updatePlaylist,
 } from "@/services/playlist-service";
 export type { PlaylistWriteInput } from "@/services/playlist-service";
-export { getListeningStatistics } from "@/services/profile-service";
 export {
   getServerListeningProgress,
   getResumePosition,

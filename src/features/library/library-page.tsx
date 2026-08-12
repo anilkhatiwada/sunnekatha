@@ -46,7 +46,7 @@ export function LibraryPageContent() {
   if (libraryQuery.isError) {
     return (
       <SectionError
-        message="लाइब्रेरी लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The library could not be loaded. Please try again."
         onRetry={() => void libraryQuery.refetch()}
         isRetrying={libraryQuery.isFetching}
       />
@@ -80,20 +80,20 @@ export function LibraryPageContent() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgb(229_138_82_/_0.18),transparent_34rem)]" />
         <div className="relative">
           <p className="font-nepali text-xs font-semibold tracking-wide text-primary">
-            तपाईंको सङ्ग्रह
+            Your collection
           </p>
           <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-            लाइब्रेरी
+            Library
           </h1>
           <p className="mt-3 max-w-2xl font-nepali text-sm leading-7 text-muted-foreground sm:text-base">
-            मन परेका रचना, सुरक्षित प्लेलिस्ट र अधुरा श्रवणहरू एउटै ठाउँमा।
+            Favorite tracks, saved playlists, and unfinished listening in one place.
           </p>
         </div>
       </header>
 
       <LibraryRail
-        title="मनपर्ने"
-        eyebrow="तपाईंले रोजेका"
+        title="Favorite tracks"
+        eyebrow="Your picks"
         isEmpty={favoriteTracks.length === 0}
       >
         {favoriteTracks.map((track) => (
@@ -109,8 +109,8 @@ export function LibraryPageContent() {
       <section aria-labelledby="recently-listened-heading">
         <SectionHeading
           id="recently-listened-heading"
-          title="हालै सुनेका"
-          eyebrow="पछिल्लो गतिविधि"
+          title="Recently played"
+          eyebrow="Recent activity"
         />
         {recentTracks.length > 0 ? (
           <div className="grid gap-1 sm:grid-cols-2">
@@ -124,13 +124,13 @@ export function LibraryPageContent() {
             ))}
           </div>
         ) : (
-          <LibraryEmptyState message="तपाईंले सुन्न थालेपछि हालैका रचना यहाँ देखिनेछन्।" />
+          <LibraryEmptyState message="Recently played tracks will appear here after you start listening." />
         )}
       </section>
 
       <LibraryRail
-        title="सुरक्षित प्लेलिस्ट"
-        eyebrow="फेरि सुन्नका लागि"
+        title="Saved playlists"
+        eyebrow="Listen again"
         isEmpty={savedPlaylists.length === 0}
       >
         {savedPlaylists.map((playlist) => (
@@ -144,8 +144,8 @@ export function LibraryPageContent() {
       </LibraryRail>
 
       <LibraryRail
-        title="फलो गरेका लेखकहरू"
-        eyebrow="मनपर्ने सर्जक"
+        title="Followed authors"
+        eyebrow="Favorite creators"
         isEmpty={followedAuthors.length === 0}
       >
         {followedAuthors.map((author) => (
@@ -159,8 +159,8 @@ export function LibraryPageContent() {
       </LibraryRail>
 
       <LibraryRail
-        title="फलो गरेका वाचकहरू"
-        eyebrow="मनपर्ने स्वर"
+        title="Followed narrators"
+        eyebrow="Favorite voices"
         isEmpty={followedNarrators.length === 0}
       >
         {followedNarrators.map((narrator) => (
@@ -176,8 +176,8 @@ export function LibraryPageContent() {
       <section aria-labelledby="continue-library-heading">
         <SectionHeading
           id="continue-library-heading"
-          title="अधुरो सुनेका सामग्री"
-          eyebrow="जहाँ रोक्नुभएको थियो"
+          title="Continue listening"
+          eyebrow="Pick up where you left off"
         />
         {continueListening.length > 0 ? (
           <div className="grid gap-3 lg:grid-cols-2">
@@ -191,7 +191,7 @@ export function LibraryPageContent() {
             ))}
           </div>
         ) : (
-          <LibraryEmptyState message="अधुरा श्रवणहरू यहाँ सुरक्षित हुनेछन्।" />
+          <LibraryEmptyState message="Unfinished listening will appear here." />
         )}
       </section>
 
@@ -204,10 +204,10 @@ export function LibraryPageContent() {
           id="downloads-heading"
           className="mt-4 font-literary text-2xl font-semibold"
         >
-          डाउनलोड
+          Downloads
         </h2>
         <p className="mt-2 max-w-xl font-nepali text-sm leading-6 text-muted-foreground">
-          अफलाइन सुन्न मिल्ने डाउनलोड सुविधा भविष्यको संस्करणमा उपलब्ध हुनेछ।
+          Offline downloads will be available in a future release.
         </p>
         <Button
           type="button"
@@ -215,7 +215,7 @@ export function LibraryPageContent() {
           disabled
           className="mt-5 rounded-full font-nepali"
         >
-          चाँडै उपलब्ध
+          Coming soon
         </Button>
       </section>
     </div>
@@ -237,7 +237,7 @@ function LibraryRail({
     return (
       <section>
         <SectionHeading title={title} eyebrow={eyebrow} />
-        <LibraryEmptyState message="यस खण्डमा अहिलेसम्म कुनै सामग्री छैन।" />
+        <LibraryEmptyState message="There is no content in this section yet." />
       </section>
     );
   }
@@ -278,7 +278,7 @@ function LibraryEmptyState({ message }: { message: string }) {
     <EmptyState
       compact
       icon={LibraryBig}
-      title="अहिलेसम्म खाली छ"
+      title="Nothing here yet"
       description={message}
     />
   );
@@ -294,7 +294,7 @@ function CardWidth({ children }: { children: ReactNode }) {
 
 function LibraryPageSkeleton() {
   return (
-    <div aria-label="लाइब्रेरी लोड हुँदैछ" role="status" className="space-y-12">
+    <div aria-label="Loading library" role="status" className="space-y-12">
       <div className="rounded-2xl border border-border bg-surface/55 p-8">
         <LoadingSkeleton className="h-4 w-24" />
         <LoadingSkeleton className="mt-4 h-14 w-56" />

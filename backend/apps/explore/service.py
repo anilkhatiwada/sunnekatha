@@ -19,6 +19,7 @@ from apps.taxonomy.serializers import GenreSerializer, MoodSerializer
 SECTION_LIMIT = 6
 COLLECTION_LIMIT = 12
 
+
 def section(identifier, title, items):
     return {"id": identifier, "title": title, "items": items}
 

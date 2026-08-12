@@ -73,13 +73,13 @@ async function getMockHomePage(): Promise<HomePageData> {
       ? { kind: "playlist", content: playlists[0] }
       : null,
     sections: [
-      section("continue-listening", "अहिले सुन्दै हुनुहुन्छ", "continue-listening", continuing),
-      section("featured-playlists", "विशेष प्लेलिस्टहरू", "playlists", playlists),
-      section("trending-tracks", "यो हप्ता लोकप्रिय", "tracks", trending),
-      section("recently-added", "भर्खरै थपिएका", "tracks", recent),
-      section("popular-authors", "लोकप्रिय लेखकहरू", "authors", authors),
-      section("popular-narrators", "लोकप्रिय वाचकहरू", "narrators", narrators),
-      section("mood-collections", "मूडअनुसार सुन्नुहोस्", "playlists", moodPlaylists),
+      section("continue-listening", "Continue listening", "continue-listening", continuing),
+      section("featured-playlists", "Featured playlists", "playlists", playlists),
+      section("trending-tracks", "Popular this week", "tracks", trending),
+      section("recently-added", "Recently added", "tracks", recent),
+      section("popular-authors", "Popular authors", "authors", authors),
+      section("popular-narrators", "Popular narrators", "narrators", narrators),
+      section("mood-collections", "Listen by mood", "playlists", moodPlaylists),
     ],
   };
 }
@@ -150,9 +150,9 @@ function mapSection(value: unknown): HomeSection[] {
   const kind = classifySection(value.id, value.items, value.sectionType);
   const base = {
     id: value.id,
-    title: value.title,
+    title: titleEnglish || value.title,
     titleEnglish,
-    subtitle,
+    subtitle: subtitleEnglish || subtitle,
     subtitleEnglish,
     layout,
     viewAllHref: mapSectionViewAllHref(value, kind),
@@ -455,7 +455,10 @@ function mapHomeCollection(value: unknown): Mood | null {
   return {
     id: value.id as string,
     slug: value.slug as string,
-    name: value.title as string,
+    name:
+      isString(value.titleEnglish) && value.titleEnglish
+        ? value.titleEnglish
+        : (value.title as string),
     nameEnglish: isString(value.titleEnglish)
       ? value.titleEnglish
       : undefined,
@@ -467,7 +470,7 @@ function mapHomeCollection(value: unknown): Mood | null {
 function malformedHomeResponse() {
   return new ApiError({
     code: "malformed_response",
-    message: "गृहपृष्ठको उत्तर बुझ्न सकिएन।",
+    message: "The homepage response could not be processed.",
   });
 }
 

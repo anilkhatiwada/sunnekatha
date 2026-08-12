@@ -51,10 +51,14 @@ export function ExploreCollectionCard({
         />
       </div>
       <h3 className="mt-4 font-literary text-lg font-semibold text-foreground">
-        {collection.name}
+        {collection.nameEnglish || collection.name}
       </h3>
       <p className="mt-1 line-clamp-2 font-nepali text-xs leading-5 text-muted-foreground">
-        {collection.description}
+        {kind === "category"
+          ? "Browse this category"
+          : kind === "mood"
+            ? "Explore this mood"
+            : "Explore this genre"}
       </p>
     </Link>
   );

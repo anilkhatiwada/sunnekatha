@@ -4,9 +4,9 @@ export const profilePreferencesSchema = z.object({
   displayName: z
     .string()
     .trim()
-    .min(2, "नाम कम्तीमा २ अक्षरको हुनुपर्छ।")
-    .max(50, "नाम ५० अक्षरभन्दा लामो हुन सक्दैन।"),
-  email: z.email("मान्य इमेल ठेगाना लेख्नुहोस्।"),
+    .min(2, "Name must be at least 2 characters.")
+    .max(50, "Name cannot exceed 50 characters."),
+  email: z.email("Enter a valid email address."),
   preferredLanguage: z.enum(["ne", "en"]),
   autoplay: z.boolean(),
   defaultPlaybackSpeed: z.number().min(0.5).max(2),

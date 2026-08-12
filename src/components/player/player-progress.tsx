@@ -46,7 +46,7 @@ export function PlayerProgress({
         value={Math.min(currentTime, duration || 0)}
         disabled={!hasTrack || duration <= 0}
         onChange={(event) => seek(event.currentTarget.valueAsNumber)}
-        aria-label="अडियो समय"
+        aria-label="Audio progress"
         aria-valuetext={`${formatPlayerTime(currentTime)} / ${formatPlayerTime(duration)}`}
         aria-keyshortcuts="ArrowLeft ArrowRight"
         className="player-range min-w-0 flex-1"

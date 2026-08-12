@@ -42,27 +42,27 @@ function getAudioError(audio: HTMLAudioElement) {
     case MediaError.MEDIA_ERR_ABORTED:
       return {
         code: "playback-aborted",
-        message: "अडियो प्लेब्याक रोकियो। कृपया फेरि प्रयास गर्नुहोस्।",
+        message: "Audio playback stopped. Please try again.",
       };
     case MediaError.MEDIA_ERR_NETWORK:
       return {
         code: "network-error",
-        message: "अडियो लोड गर्न नेटवर्क समस्या भयो।",
+        message: "A network error interrupted audio loading.",
       };
     case MediaError.MEDIA_ERR_DECODE:
       return {
         code: "decode-error",
-        message: "यो अडियो फाइल चलाउन सकिएन।",
+        message: "This audio file could not be played.",
       };
     case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
       return {
         code: "unsupported-audio",
-        message: "यो अडियो स्रोत ब्राउजरले समर्थन गर्दैन।",
+        message: "This browser does not support the audio source.",
       };
     default:
       return {
         code: "unknown-audio-error",
-        message: "अडियो चलाउँदा समस्या भयो।",
+        message: "Audio playback encountered a problem.",
       };
   }
 }
@@ -189,7 +189,7 @@ export function AudioEngine() {
           if (!isExpectedPlayInterruption(error)) {
             state.setPlaybackError({
               code: "playback-failed",
-              message: "अडियो फेरि चलाउन सकिएन।",
+              message: "Audio playback could not resume.",
             });
           }
         });
@@ -349,8 +349,8 @@ export function AudioEngine() {
                   : "playback-failed",
               message:
                 error instanceof DOMException && error.name === "NotAllowedError"
-                  ? "अडियो चलाउन प्ले बटन थिच्नुहोस्।"
-                  : "अडियो चलाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+                  ? "Press Play to start the audio."
+                  : "Audio could not be played. Please try again.",
             });
           });
         } else if (!state.isPlaying && previousState.isPlaying) {
@@ -426,8 +426,8 @@ export function AudioEngine() {
             : "playback-failed",
         message:
           error instanceof DOMException && error.name === "NotAllowedError"
-            ? "अडियो चलाउन प्ले बटन थिच्नुहोस्।"
-            : "अडियो चलाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+            ? "Press Play to start the audio."
+            : "Audio could not be played. Please try again.",
       });
     });
   }, [currentTrack, isPlaying, setPlaybackError]);

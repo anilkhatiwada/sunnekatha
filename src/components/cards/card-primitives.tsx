@@ -142,7 +142,7 @@ export function PersonCardLayout({
     <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
       <MediaArtwork
         src={image}
-        alt={`${name} को तस्बिर`}
+        alt={`${name} photo`}
         sizes="(max-width: 640px) 44vw, (max-width: 1024px) 28vw, 220px"
         className="aspect-square rounded-full shadow-[0_16px_42px_rgb(0_0_0_/_0.3)]"
       >

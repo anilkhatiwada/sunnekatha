@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { SearchPageContent } from "@/features/search/search-page";
 
 export const metadata: Metadata = {
-  title: "खोज",
-  description: "नेपाली श्रव्य साहित्य, लेखक, वाचक र सङ्ग्रह खोज्नुहोस्।",
+  title: "Search",
+  description: "Search Nepali audio literature, authors, narrators, and collections.",
 };
 
 interface SearchPageProps {

@@ -53,7 +53,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
     <div data-modal-root className="fixed inset-0 z-[65]">
       <button
         type="button"
-        aria-label="प्ले सूची बन्द गर्नुहोस्"
+        aria-label="Close queue"
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
@@ -74,13 +74,13 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
               id="queue-panel-title"
               className="font-literary text-xl font-semibold"
             >
-              प्ले सूची
+              Queue
             </h2>
             <p
               id="queue-panel-description"
               className="font-nepali text-xs text-muted-foreground"
             >
-              {queue.length} ट्र्याक
+              {queue.length} tracks
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -92,7 +92,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
               onClick={clearQueue}
               className="min-h-11 font-nepali text-xs text-muted-foreground hover:text-destructive"
             >
-              सबै हटाउनुहोस्
+              Clear all
             </Button>
             <Button
               ref={closeButtonRef}
@@ -100,7 +100,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
               variant="ghost"
               size="icon"
               onClick={onClose}
-              aria-label="प्ले सूची बन्द गर्नुहोस्"
+              aria-label="Close queue"
               className="size-11 rounded-full"
             >
               <X aria-hidden="true" className="size-5" />
@@ -112,8 +112,8 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
           <div className="flex-1 px-4 py-8">
             <EmptyState
               icon={ListMusic}
-              title="प्ले सूची खाली छ"
-              description="कथा, कविता वा प्लेलिस्ट बजाउँदा आगामी रचनाहरू यहाँ देखिन्छन्।"
+              title="Your queue is empty"
+              description="Upcoming tracks will appear here when you play a story, poem, or playlist."
               className="h-full border-0 bg-transparent"
             />
           </div>
@@ -125,7 +125,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
                   id="now-playing-heading"
                   className="mb-2 px-1 font-nepali text-xs font-semibold tracking-wide text-primary"
                 >
-                  अहिले बज्दैछ
+                  Now playing
                 </h3>
                 <QueueTrack
                   item={nowPlaying}
@@ -144,7 +144,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
                 id="up-next-heading"
                 className="mb-2 px-1 font-nepali text-xs font-semibold tracking-wide text-muted-foreground"
               >
-                यसपछि
+                Up next
               </h3>
               {upNext.length > 0 ? (
                 <ol className="space-y-1">
@@ -179,8 +179,8 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={`${item.track.title} को क्रम बदल्नुहोस्`}
-                              title="तान्नुहोस् वा माथि/तल एरो थिच्नुहोस्"
+                              aria-label={`${item.track.title} — change position`}
+                              title="Drag or use the up and down arrow keys"
                               onKeyDown={(event) => {
                                 if (event.key === "ArrowUp") {
                                   event.preventDefault();
@@ -212,7 +212,7 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
                 </ol>
               ) : (
                 <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center font-nepali text-sm text-muted-foreground">
-                  यसपछि कुनै ट्र्याक छैन
+                  Nothing else is queued
                 </p>
               )}
             </section>
@@ -250,7 +250,7 @@ function QueueTrack({
       {dragHandle}
       <Image
         src={item.track.coverImage}
-        alt={`${item.track.title} को आवरण`}
+        alt={`${item.track.title} cover`}
         width={48}
         height={48}
         className="size-11 shrink-0 rounded-md object-cover sm:size-12"
@@ -259,7 +259,7 @@ function QueueTrack({
         type="button"
         onClick={onPlay}
         className="min-h-11 min-w-0 flex-1 rounded-md text-left focus-visible:outline-2 focus-visible:outline-primary"
-        aria-label={`${item.track.title} बजाउनुहोस्`}
+        aria-label={`${item.track.title} — play`}
       >
         <span className="block truncate font-nepali text-sm font-medium text-foreground">
           {item.track.title}
@@ -276,14 +276,14 @@ function QueueTrack({
         variant="ghost"
         size="icon"
         onClick={onRemove}
-        aria-label={`${item.track.title} प्ले सूचीबाट हटाउनुहोस्`}
+        aria-label={`${item.track.title} — remove from queue`}
         className="size-11 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
       >
         <Trash2 aria-hidden="true" className="size-4" />
       </Button>
       {isActive ? (
         <Headphones
-          aria-label="अहिले बज्दैछ"
+          aria-label="Now playing"
           className="hidden size-4 shrink-0 text-primary sm:block"
         />
       ) : (

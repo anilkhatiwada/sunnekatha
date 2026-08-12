@@ -36,6 +36,7 @@ import type {
   CatalogTrack,
   HomeHero,
   HomeSection,
+  Track,
 } from "@/types";
 
 const cardWidth = "w-[10.5rem] shrink-0 snap-start sm:w-[13rem] lg:w-[14rem]";
@@ -61,6 +62,12 @@ export function HomePageContent() {
 
   const playCatalogTrack = useCallback(
     async (track: CatalogTrack, resumeAt?: number) => {
+      if ("audioUrl" in track && typeof track.audioUrl === "string") {
+        playTrack(track as Track);
+        if (resumeAt && resumeAt > 0) seek(resumeAt);
+        return;
+      }
+
       setLoading(true);
       setPlaybackError(null);
       try {
@@ -71,7 +78,7 @@ export function HomePageContent() {
         setLoading(false);
         setPlaybackError({
           code: "stream-unavailable",
-          message: "यो रचना अहिले बजाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+          message: "This track cannot be played right now. Please try again.",
         });
       }
     },
@@ -92,17 +99,17 @@ export function HomePageContent() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="pt-1 sm:pt-2"
       >
-        <p className="font-nepali text-sm font-medium text-primary">शुभ साँझ</p>
+        <p className="font-nepali text-sm font-medium text-primary">Good evening</p>
         <h1 className="mt-2 max-w-3xl font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl">
-          नेपाली साहित्य अब कानसम्म
+          Nepali literature, now in audio
         </h1>
         <p className="mt-4 max-w-2xl font-nepali text-base leading-8 text-muted-foreground sm:text-lg">
-          कथा, कविता र विचारका प्रिय नेपाली आवाजहरू एकै ठाउँमा सुन्नुहोस्।
+          Listen to beloved Nepali stories, poetry, and ideas in one place.
         </p>
         <SearchInput className="mt-6 max-w-2xl" />
       </motion.header>
 
-      <section aria-label="विशेष प्रस्तुति">
+      <section aria-label="Featured">
         {homeQuery.isPending && <FeaturedHeroCardSkeleton />}
         {homeQuery.isError && (
           <SectionError
@@ -113,8 +120,8 @@ export function HomePageContent() {
         {homeQuery.isSuccess && !hero && (
           <EmptyState
             compact
-            title="विशेष प्रस्तुति आउँदैछ"
-            description="नयाँ साहित्यिक सङ्ग्रह तयार भएपछि यहाँ देखिनेछ।"
+            title="Featured content is coming"
+            description="New literary collections will appear here."
           />
         )}
         {hero?.kind === "playlist" && (
@@ -173,7 +180,7 @@ function ContentHeroCard({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgb(11_10_9_/_0.98)_0%,rgb(11_10_9_/_0.82)_44%,rgb(11_10_9_/_0.2)_100%)]" />
       <div className="relative flex min-h-[24rem] max-w-2xl flex-col justify-end p-6 sm:min-h-[28rem] sm:p-9 lg:min-h-[30rem] lg:p-12">
         <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-          विशेष प्रस्तुति
+          Featured
         </p>
         <h2 className="mt-4 font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl lg:text-6xl">
           {href ? (
@@ -193,7 +200,7 @@ function ContentHeroCard({
         {hero.kind === "track" && (
           <div className="mt-8">
             <CardPlayButton
-              label={`${hero.content.title} बजाउनुहोस्`}
+              label={`${hero.content.title} — play`}
               onPlay={() => void onPlayTrack(hero.content)}
               size="lg"
             />
@@ -238,7 +245,7 @@ function HomeSectionRail({
               href={section.viewAllHref}
               className="inline-flex min-h-11 shrink-0 items-center rounded-sm font-nepali text-sm font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary"
             >
-              सबै हेर्नुहोस्
+              View all
             </Link>
           )}
         </div>
@@ -349,10 +356,10 @@ function renderSectionItems(
 function HomepageSectionsSkeleton() {
   return (
     <>
-      <HorizontalSection title="सामग्री लोड हुँदैछ">
+      <HorizontalSection title="Loading content">
         <CardRailSkeleton variant="track" count={6} />
       </HorizontalSection>
-      <HorizontalSection title="सङ्ग्रह लोड हुँदैछ">
+      <HorizontalSection title="Loading collection">
         <CardRailSkeleton variant="playlist" count={5} />
       </HorizontalSection>
     </>

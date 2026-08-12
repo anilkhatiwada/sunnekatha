@@ -134,7 +134,7 @@ export class ApiClient {
       if (didTimeout) {
         throw new ApiError({
           code: "request_timeout",
-          message: "सर्भरले समयमा जवाफ दिएन। फेरि प्रयास गर्नुहोस्।",
+          message: "The server did not respond in time. Please try again.",
           cause: error,
         });
       }

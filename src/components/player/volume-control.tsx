@@ -19,7 +19,7 @@ export function VolumeControl() {
         variant="ghost"
         size="icon"
         onClick={toggleMuted}
-        aria-label={isMuted ? "आवाज खोल्नुहोस्" : "आवाज बन्द गर्नुहोस्"}
+        aria-label={isMuted ? "Unmute" : "Mute"}
         aria-pressed={isMuted}
         aria-keyshortcuts="M"
         className="size-8 rounded-full"
@@ -37,8 +37,8 @@ export function VolumeControl() {
         step={0.01}
         value={audibleVolume}
         onChange={(event) => setVolume(event.currentTarget.valueAsNumber)}
-        aria-label="आवाजको स्तर"
-        aria-valuetext={`${Math.round(audibleVolume * 100)} प्रतिशत`}
+        aria-label="Volume"
+        aria-valuetext={`${Math.round(audibleVolume * 100)}%`}
         className="player-range w-20"
         style={
           {

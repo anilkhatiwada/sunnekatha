@@ -94,7 +94,7 @@ export function ExplorePageContent({
     queryFn: getContentCategories,
   });
   const categoryFilters: ExploreFilter[] = [
-    { label: "सबै", value: "all" },
+    { label: "All", value: "all" },
     ...(categoriesQuery.data ?? []).map((category) => ({
       label: category.name,
       value: category.slug,
@@ -125,13 +125,13 @@ export function ExplorePageContent({
     <div className="space-y-12 pb-8 sm:space-y-16">
       <header className="max-w-3xl pt-2">
         <p className="font-nepali text-sm font-medium text-primary">
-          नयाँ आवाज पत्ता लगाउनुहोस्
+          Discover new voices
         </p>
         <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-          नेपाली साहित्य अन्वेषण
+          Explore Nepali literature
         </h1>
         <p className="mt-3 font-nepali text-base leading-7 text-muted-foreground">
-          मनको लय, प्रिय विधा र नयाँ सर्जकअनुसार सुन्ने अर्को रचना छान्नुहोस्।
+          Find your next listen by mood, category, and creator.
         </p>
       </header>
 
@@ -150,37 +150,37 @@ export function ExplorePageContent({
         {mood ? <input type="hidden" name="mood" value={mood} /> : null}
         <ExploreSelect
           name="language"
-          label="भाषा"
+          label="Language"
           defaultValue={language ?? ""}
           options={[
-            ["", "सबै भाषा"],
-            ["ne", "नेपाली"],
+            ["", "All Language"],
+            ["ne", "Nepali"],
             ["en", "English"],
           ]}
         />
         <ExploreSelect
           name="premium"
-          label="पहुँच"
+          label="Access"
           defaultValue={premium === undefined ? "" : String(premium)}
           options={[
-            ["", "सबै"],
-            ["false", "निःशुल्क"],
-            ["true", "प्रिमियम"],
+            ["", "All"],
+            ["false", "Free"],
+            ["true", "Premium"],
           ]}
         />
         <ExploreSelect
           name="ordering"
-          label="क्रम"
+          label="Sort"
           defaultValue={ordering ?? "-published_at"}
           options={[
-            ["-published_at", "नयाँ पहिले"],
-            ["-play_count_cache", "लोकप्रिय"],
-            ["title_ne", "शीर्षक"],
-            ["duration_seconds", "छोटो पहिले"],
+            ["-published_at", "Newest first"],
+            ["-play_count_cache", "Popular"],
+            ["title_ne", "Title"],
+            ["duration_seconds", "Shortest first"],
           ]}
         />
         <Button type="submit" variant="secondary" className="h-11 font-nepali">
-          फिल्टर लागू गर्नुहोस्
+          Apply filters
         </Button>
         <label className="flex items-center gap-2 font-nepali text-xs text-muted-foreground sm:col-span-4">
           <input
@@ -189,13 +189,13 @@ export function ExplorePageContent({
             value="false"
             defaultChecked={explicit === false}
           />
-          स्पष्ट सामग्री नदेखाउनुहोस्
+          Hide explicit content
         </label>
       </form>
       {(genre || mood) && (
         <div className="-mt-8 flex min-h-8 items-center gap-2 sm:-mt-12">
           <span className="font-nepali text-xs text-muted-foreground">
-            सक्रिय सङ्ग्रह:
+            Active collection:
           </span>
           {activeCollection ? (
             <Link
@@ -203,7 +203,7 @@ export function ExplorePageContent({
               replace
               scroll={false}
               className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary-muted/25 px-3 py-1.5 font-nepali text-xs text-foreground transition-colors hover:bg-primary-muted/40 focus-visible:outline-2 focus-visible:outline-primary"
-              aria-label={`${activeCollection.name} फिल्टर हटाउनुहोस्`}
+              aria-label={`${activeCollection.name} — remove filter`}
             >
               {activeCollection.name}
               <X aria-hidden="true" className="size-3.5" />
@@ -217,11 +217,11 @@ export function ExplorePageContent({
       <section aria-labelledby="new-releases-heading">
         <SectionHeading
           id="new-releases-heading"
-          title="नयाँ रचना"
+          title="New tracks"
           description={
             genre || mood
-              ? "छानिएको सङ्ग्रहसँग मिल्ने नयाँ श्रव्य रचना"
-              : "भर्खरै SunneKatha मा थपिएका श्रव्य रचना"
+              ? "New audio matching this collection"
+              : "Recently added audio on SunneKatha"
           }
         />
         {releasesQuery.isPending ? (
@@ -244,8 +244,8 @@ export function ExplorePageContent({
         ) : (
           <EmptyState
             compact
-            title="यो छनोटमा रचना भेटिएन"
-            description="अर्को विधा वा मूड छानेर फेरि अन्वेषण गर्नुहोस्।"
+            title="No tracks match this selection"
+            description="Try another category or mood."
           />
         )}
       </section>
@@ -253,8 +253,8 @@ export function ExplorePageContent({
       <section aria-labelledby="moods-heading">
         <SectionHeading
           id="moods-heading"
-          title="मूडअनुसार सुन्नुहोस्"
-          description="आजको मनस्थितिसँग मिल्ने साहित्य"
+          title="Listen by mood"
+          description="Literature for your current mood"
         />
         {moodsQuery.isPending ? (
           <CollectionGridSkeleton />
@@ -264,7 +264,7 @@ export function ExplorePageContent({
             isRetrying={moodsQuery.isFetching}
           />
         ) : moodsQuery.data.length === 0 ? (
-          <EmptyState compact title="मूड सङ्ग्रह उपलब्ध छैन" description="नयाँ सङ्ग्रह चाँडै थपिनेछन्।" />
+          <EmptyState compact title="No mood collections available" description="New collections will be added soon." />
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {moodsQuery.data.slice(0, 8).map((item) => (
@@ -281,8 +281,8 @@ export function ExplorePageContent({
       <section aria-labelledby="genres-heading">
         <SectionHeading
           id="genres-heading"
-          title="विधाहरू"
-          description="कथा, विचार र कल्पनाका विविध संसार"
+          title="Genres"
+          description="Stories, ideas, and imagined worlds"
         />
         {genresQuery.isPending ? (
           <CollectionGridSkeleton />
@@ -292,7 +292,7 @@ export function ExplorePageContent({
             isRetrying={genresQuery.isFetching}
           />
         ) : genresQuery.data.length === 0 ? (
-          <EmptyState compact title="विधाहरू उपलब्ध छैनन्" description="विधागत सङ्ग्रह चाँडै थपिनेछन्।" />
+          <EmptyState compact title="No categories available" description="Category collections will be added soon." />
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {genresQuery.data.slice(0, 12).map((item) => (
@@ -306,7 +306,7 @@ export function ExplorePageContent({
         )}
       </section>
 
-      <HorizontalSection title="विशेष प्लेलिस्टहरू" viewAllHref="/playlists">
+      <HorizontalSection title="Featured playlists" viewAllHref="/playlists">
         {playlistsQuery.isPending && (
           <CardRailSkeleton variant="playlist" count={5} />
         )}
@@ -319,7 +319,7 @@ export function ExplorePageContent({
           </div>
         )}
         {playlistsQuery.isSuccess && playlistsQuery.data.length === 0 && (
-          <RailEmpty title="प्लेलिस्ट उपलब्ध छैन" />
+          <RailEmpty title="No playlists available" />
         )}
         {playlistsQuery.data?.map((playlist) => (
           <div key={playlist.id} className={railCardWidth}>
@@ -331,7 +331,7 @@ export function ExplorePageContent({
         ))}
       </HorizontalSection>
 
-      <HorizontalSection title="लोकप्रिय लेखकहरू">
+      <HorizontalSection title="Popular authors">
         {authorsQuery.isPending && (
           <CardRailSkeleton variant="author" count={6} />
         )}
@@ -344,7 +344,7 @@ export function ExplorePageContent({
           </div>
         )}
         {authorsQuery.isSuccess && authorsQuery.data.length === 0 && (
-          <RailEmpty title="लेखकहरू उपलब्ध छैनन्" />
+          <RailEmpty title="No authors available" />
         )}
         {authorsQuery.data?.map((author) => (
           <div key={author.id} className={personCardWidth}>
@@ -353,7 +353,7 @@ export function ExplorePageContent({
         ))}
       </HorizontalSection>
 
-      <HorizontalSection title="लोकप्रिय वाचकहरू">
+      <HorizontalSection title="Popular narrators">
         {narratorsQuery.isPending && (
           <CardRailSkeleton variant="narrator" count={6} />
         )}
@@ -366,7 +366,7 @@ export function ExplorePageContent({
           </div>
         )}
         {narratorsQuery.isSuccess && narratorsQuery.data.length === 0 && (
-          <RailEmpty title="वाचकहरू उपलब्ध छैनन्" />
+          <RailEmpty title="No narrators available" />
         )}
         {narratorsQuery.data?.map((narrator) => (
           <div key={narrator.id} className={personCardWidth}>
@@ -413,7 +413,7 @@ function RailEmpty({ title }: { title: string }) {
       <EmptyState
         compact
         title={title}
-        description="नयाँ सामग्री थपिएपछि यहाँ देखिनेछ।"
+        description="New content will appear here."
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import type { ApiErrorResponse, ApiFieldErrors } from "@/types";
 
-const DEFAULT_ERROR_MESSAGE = "अनुरोध पूरा गर्न सकिएन।";
+const DEFAULT_ERROR_MESSAGE = "The request could not be completed.";
 
 export class ApiError extends Error {
   readonly status: number | null;
@@ -55,7 +55,7 @@ export async function normalizeApiError(
   if (error instanceof DOMException && error.name === "AbortError") {
     return new ApiError({
       code: "request_aborted",
-      message: "अनुरोध रद्द भयो।",
+      message: "The request was cancelled.",
       cause: error,
     });
   }
@@ -63,7 +63,7 @@ export async function normalizeApiError(
   if (error instanceof TypeError) {
     return new ApiError({
       code: "network_error",
-      message: "सर्भरसँग जडान हुन सकेन।",
+      message: "Could not connect to the server.",
       cause: error,
     });
   }
@@ -107,11 +107,11 @@ function normalizeFieldErrors(value: unknown): ApiFieldErrors {
 }
 
 function getStatusMessage(status: number) {
-  if (status === 401) return "कृपया फेरि साइन इन गर्नुहोस्।";
-  if (status === 403) return "यो कार्य गर्न अनुमति छैन।";
-  if (status === 404) return "मागिएको सामग्री भेटिएन।";
-  if (status === 429) return "धेरै अनुरोध भए। केहीबेरपछि फेरि प्रयास गर्नुहोस्।";
-  if (status >= 500) return "सर्भरमा समस्या भयो।";
+  if (status === 401) return "Please sign in again.";
+  if (status === 403) return "You do not have permission to perform this action.";
+  if (status === 404) return "The requested content was not found.";
+  if (status === 429) return "Too many requests. Please try again shortly.";
+  if (status >= 500) return "The server encountered a problem.";
   return DEFAULT_ERROR_MESSAGE;
 }
 

@@ -5,7 +5,7 @@ export function PageSkeleton() {
   return (
     <div
       role="status"
-      aria-label="पृष्ठ लोड हुँदैछ"
+      aria-label="Loading page"
       className="space-y-12 pb-8"
     >
       <header className="max-w-3xl pt-2">

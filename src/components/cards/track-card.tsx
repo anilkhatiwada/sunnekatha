@@ -26,7 +26,7 @@ export function TrackCard<TTrack extends CatalogTrack>({
     <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
       <MediaArtwork
         src={track.coverImage}
-        alt={`${track.title} को आवरण`}
+        alt={`${track.title} cover`}
         sizes="(max-width: 640px) 44vw, (max-width: 1024px) 28vw, 240px"
         priority={priority}
         className="aspect-square rounded-lg shadow-[0_16px_42px_rgb(0_0_0_/_0.3)]"
@@ -35,11 +35,11 @@ export function TrackCard<TTrack extends CatalogTrack>({
         {track.isPremium && (
           <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-full border border-gold/25 bg-background/80 px-2 py-1 text-[0.65rem] font-semibold text-gold backdrop-blur">
             <Crown aria-hidden="true" className="size-3" />
-            प्रिमियम
+            Premium
           </span>
         )}
         <CardPlayButton
-          label={`${track.title} बजाउनुहोस्`}
+          label={`${track.title} — play`}
           onPlay={() => onPlay(track)}
           className="absolute right-3 bottom-3 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
         />
@@ -63,7 +63,7 @@ export function TrackCard<TTrack extends CatalogTrack>({
 
 export function TrackCardSkeleton() {
   return (
-    <div aria-label="रचना लोड हुँदैछ" role="status" className="p-3">
+    <div aria-label="Loading track" role="status" className="p-3">
       <LoadingSkeleton className="aspect-square rounded-lg" />
       <LoadingSkeleton className="mt-4 h-5 w-4/5" />
       <LoadingSkeleton className="mt-2 h-4 w-3/5" />

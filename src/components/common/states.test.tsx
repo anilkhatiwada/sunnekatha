@@ -11,7 +11,7 @@ describe("shared request states", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("लोड भएन");
     fireEvent.click(
-      screen.getByRole("button", { name: "फेरि प्रयास गर्नुहोस्" }),
+      screen.getByRole("button", { name: "Try again" }),
     );
     expect(onRetry).toHaveBeenCalledOnce();
   });

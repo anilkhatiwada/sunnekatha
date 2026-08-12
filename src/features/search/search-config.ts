@@ -6,13 +6,13 @@ export interface SearchFilter {
 }
 
 export const SEARCH_FILTERS: SearchFilter[] = [
-  { label: "सबै", value: "all" },
-  { label: "रचना", value: "tracks" },
-  { label: "कृति", value: "works" },
-  { label: "एल्बम", value: "albums" },
-  { label: "प्लेलिस्ट", value: "playlists" },
-  { label: "लेखक", value: "authors" },
-  { label: "वाचक", value: "narrators" },
-  { label: "विधा", value: "genres" },
-  { label: "मूड", value: "moods" },
+  { label: "All", value: "all" },
+  { label: "Track", value: "tracks" },
+  { label: "Work", value: "works" },
+  { label: "Album", value: "albums" },
+  { label: "Playlist", value: "playlists" },
+  { label: "Author", value: "authors" },
+  { label: "Narrator", value: "narrators" },
+  { label: "Genre", value: "genres" },
+  { label: "Mood", value: "moods" },
 ];

@@ -17,8 +17,8 @@ export function AuthorCard({ author, onPlay }: AuthorCardProps) {
       href={`/author/${author.slug}`}
       image={author.image}
       name={author.name}
-      description="लेखक"
-      playLabel={`${author.name} का लोकप्रिय रचना बजाउनुहोस्`}
+      description="Author"
+      playLabel={`${author.name}  — play popular tracks`}
       isPlayDisabled={!firstTrack}
       onPlay={() => {
         if (firstTrack) {
@@ -32,7 +32,7 @@ export function AuthorCard({ author, onPlay }: AuthorCardProps) {
 export function AuthorCardSkeleton() {
   return (
     <div
-      aria-label="लेखक लोड हुँदैछ"
+      aria-label="Loading author"
       role="status"
       className="p-3 text-center"
     >

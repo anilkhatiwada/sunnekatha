@@ -42,7 +42,7 @@ export function CatalogDetailPage({
   if (detailQuery.isError) {
     return (
       <SectionError
-        message="सङ्ग्रह लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The collection could not be loaded. Please try again."
         onRetry={() => void detailQuery.refetch()}
         isRetrying={detailQuery.isFetching}
       />
@@ -52,14 +52,14 @@ export function CatalogDetailPage({
     return (
       <EmptyState
         icon={kind === "work" ? BookOpenText : Disc3}
-        title="सङ्ग्रह भेटिएन"
-        description="यो सामग्री हटाइएको वा प्रकाशनका लागि उपलब्ध नभएको हुन सक्छ।"
+        title="Collection not found"
+        description="This content may have been removed or is unavailable."
       />
     );
   }
 
   const item = detailQuery.data;
-  const eyebrow = kind === "work" ? "साहित्यिक कृति" : "श्रव्य एल्बम";
+  const eyebrow = kind === "work" ? "Literary Work" : "Audio Album";
   const metadata =
     kind === "work"
       ? getWorkMetadata(item as LiteraryWork)
@@ -72,7 +72,7 @@ export function CatalogDetailPage({
         <div className="relative grid items-end gap-8 md:grid-cols-[16rem_minmax(0,1fr)] lg:grid-cols-[20rem_minmax(0,1fr)]">
           <Image
             src={item.coverImage}
-            alt={`${item.title} को आवरण`}
+            alt={`${item.title} cover`}
             width={720}
             height={720}
             className="aspect-square w-full max-w-sm rounded-xl object-cover shadow-[0_30px_80px_rgb(0_0_0_/_0.5)]"
@@ -96,7 +96,7 @@ export function CatalogDetailPage({
               {item.author.name}
             </Link>
             <p className="mt-4 max-w-3xl font-nepali text-sm leading-7 text-muted-foreground">
-              {item.description || "यस सङ्ग्रहको विवरण चाँडै थपिनेछ।"}
+              {item.description || "A description will be added soon."}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {metadata.map((value) => (
@@ -115,7 +115,7 @@ export function CatalogDetailPage({
               className="mt-7 rounded-full px-6 font-nepali"
             >
               <Play aria-hidden="true" className="size-4 fill-current" />
-              सबै बजाउनुहोस्
+              All — play
             </Button>
           </div>
         </div>
@@ -123,10 +123,10 @@ export function CatalogDetailPage({
 
       <section>
         <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
-          क्रमबद्ध श्रव्य सामग्री
+          Ordered audio content
         </p>
         <h2 className="mt-1 font-literary text-3xl font-semibold">
-          {item.tracks.length} रचना
+          {item.tracks.length} Track
         </h2>
         {item.tracks.length ? (
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
@@ -141,8 +141,8 @@ export function CatalogDetailPage({
         ) : (
           <EmptyState
             compact
-            title="श्रव्य रचना उपलब्ध छैन"
-            description="प्रशोधन पूरा भएका रचना यहाँ देखिनेछन्।"
+            title="No audio tracks available"
+            description="Processed tracks will appear here."
             className="mt-5"
           />
         )}
@@ -172,7 +172,7 @@ function getAlbumMetadata(album: Album) {
 
 function CatalogDetailSkeleton() {
   return (
-    <div className="space-y-10" role="status" aria-label="सङ्ग्रह लोड हुँदैछ">
+    <div className="space-y-10" role="status" aria-label="Loading collection">
       <div className="grid gap-8 rounded-2xl border border-border bg-surface/60 p-6 md:grid-cols-[16rem_minmax(0,1fr)]">
         <TrackCardSkeleton />
         <div className="min-h-72 animate-pulse rounded-xl bg-surface-soft" />

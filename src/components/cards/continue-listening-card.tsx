@@ -41,7 +41,7 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
     <article className="group flex min-w-0 items-center gap-4 rounded-xl border border-border/70 bg-surface p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-primary/30 hover:bg-surface-soft focus-within:border-primary/30">
       <MediaArtwork
         src={track.coverImage}
-        alt={`${track.title} को आवरण`}
+        alt={`${track.title} cover`}
         sizes="80px"
         className="size-20 shrink-0 rounded-lg sm:size-24"
       />
@@ -60,11 +60,11 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
         <div className="mt-3">
           <div
             role="progressbar"
-            aria-label={`${track.title} श्रवण प्रगति`}
+            aria-label={`${track.title} listening progress`}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(percentage)}
-            aria-valuetext={`${Math.round(percentage)} प्रतिशत सुनिएको, ${formatPlayerTime(remainingSeconds)} बाँकी`}
+            aria-valuetext={`${Math.round(percentage)}% listened, ${formatPlayerTime(remainingSeconds)} remaining`}
             className="h-1.5 overflow-hidden rounded-full bg-background"
           >
             <span
@@ -73,15 +73,15 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
             />
           </div>
           <p className="mt-1.5 font-nepali text-xs text-muted-foreground">
-            {Math.round(percentage)}% सुनिएको ·{" "}
-            {formatPlayerTime(remainingSeconds)} बाँकी
+            {Math.round(percentage)}% listened ·{" "}
+            {formatPlayerTime(remainingSeconds)} remaining
           </p>
         </div>
       </div>
 
       <div className="flex shrink-0 flex-col items-center gap-1">
         <CardPlayButton
-          label={`${track.title} सुन्न जारी राख्नुहोस्`}
+          label={`${track.title} Continue listening`}
           onPlay={() => onPlay(track)}
           size="sm"
         />
@@ -89,7 +89,7 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
           <button
             type="button"
             onClick={() => onRemove(track)}
-            aria-label={`${track.title} अधुरो सूचीबाट हटाउनुहोस्`}
+            aria-label={`${track.title}  — remove from continue listening`}
             className="rounded-full p-2 text-muted-foreground hover:text-destructive"
           >
             <X aria-hidden="true" className="size-4" />
@@ -103,7 +103,7 @@ export function ContinueListeningCard<TTrack extends CatalogTrack>({
 export function ContinueListeningCardSkeleton() {
   return (
     <div
-      aria-label="श्रवण प्रगति लोड हुँदैछ"
+      aria-label="Loading listening progress"
       role="status"
       className="flex items-center gap-4 rounded-xl border border-border/70 bg-surface p-3"
     >

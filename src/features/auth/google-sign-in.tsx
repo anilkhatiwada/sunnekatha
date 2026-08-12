@@ -41,7 +41,7 @@ export function GoogleSignIn() {
             window.clearTimeout(responseTimerRef.current);
           }
           if (!credential) {
-            setError("Google बाट पहिचान प्राप्त भएन।");
+            setError("Google did not return an identity.");
             return;
           }
           setError("");
@@ -49,7 +49,7 @@ export function GoogleSignIn() {
             await loginWithGoogle(credential);
             window.location.assign("/profile");
           } catch {
-            setError("Google साइन इन सफल भएन। कृपया फेरि प्रयास गर्नुहोस्।");
+            setError("Google sign-in failed. Please try again.");
           }
         },
       });
@@ -68,7 +68,7 @@ export function GoogleSignIn() {
           }
           responseTimerRef.current = window.setTimeout(() => {
             setError(
-              "Google ले जवाफ दिएन। पपअप अनुमति र Google OAuth मा https://sunnekatha.com origin जाँच गर्नुहोस्।",
+              "Google did not respond. Check popup permissions and the https://sunnekatha.com origin in Google OAuth.",
             );
           }, 10_000);
         },
@@ -99,7 +99,7 @@ export function GoogleSignIn() {
   if (!environment.googleClientId) {
     return (
       <p className="font-nepali text-sm text-muted-foreground">
-        Google साइन इन अहिले कन्फिगर गरिएको छैन।
+        Google sign-in is not configured.
       </p>
     );
   }

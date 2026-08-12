@@ -43,7 +43,7 @@ export function PlaylistOwnerControls({
         visibility,
       }),
     onSuccess: async () => {
-      setMessage("प्लेलिस्टका परिवर्तन सुरक्षित भए।");
+      setMessage("Playlist changes were saved.");
       await invalidate();
     },
   });
@@ -78,10 +78,10 @@ export function PlaylistOwnerControls({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-nepali text-xs font-semibold text-primary">
-            तपाईंको प्लेलिस्ट
+            Your playlist
           </p>
           <h2 className="mt-1 font-literary text-2xl font-semibold">
-            व्यवस्थापन
+            Manage
           </h2>
         </div>
         <Button
@@ -92,13 +92,13 @@ export function PlaylistOwnerControls({
           className="rounded-full font-nepali"
         >
           <Copy aria-hidden="true" className="size-4" />
-          प्रतिलिपि
+          Duplicate
         </Button>
       </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
         <label className="font-nepali text-sm">
-          शीर्षक
+          Title
           <input
             value={title}
             minLength={2}
@@ -108,7 +108,7 @@ export function PlaylistOwnerControls({
           />
         </label>
         <label className="font-nepali text-sm">
-          दृश्यता
+          Visibility
           <select
             value={visibility}
             onChange={(event) =>
@@ -118,9 +118,9 @@ export function PlaylistOwnerControls({
             }
             className="mt-2 h-11 w-full rounded-lg border border-border bg-background/60 px-3"
           >
-            <option value="private">निजी</option>
-            <option value="unlisted">लिङ्क भएका मात्र</option>
-            <option value="public">सार्वजनिक</option>
+            <option value="private">Private</option>
+            <option value="unlisted">Unlisted</option>
+            <option value="public">Public</option>
           </select>
         </label>
         <Button
@@ -130,7 +130,7 @@ export function PlaylistOwnerControls({
           className="h-11 rounded-full font-nepali"
         >
           <Save aria-hidden="true" className="size-4" />
-          सुरक्षित
+          Saved
         </Button>
       </div>
 
@@ -151,7 +151,7 @@ export function PlaylistOwnerControls({
                 type="button"
                 disabled={index === 0 || reorder.isPending}
                 onClick={() => move(index, -1)}
-                aria-label={`${track.title} माथि सार्नुहोस्`}
+                aria-label={`${track.title} — move up`}
                 className="rounded-full p-2 disabled:opacity-30"
               >
                 <ArrowUp aria-hidden="true" className="size-4" />
@@ -162,7 +162,7 @@ export function PlaylistOwnerControls({
                   index === playlist.tracks.length - 1 || reorder.isPending
                 }
                 onClick={() => move(index, 1)}
-                aria-label={`${track.title} तल सार्नुहोस्`}
+                aria-label={`${track.title} — move down`}
                 className="rounded-full p-2 disabled:opacity-30"
               >
                 <ArrowDown aria-hidden="true" className="size-4" />
@@ -171,7 +171,7 @@ export function PlaylistOwnerControls({
                 type="button"
                 disabled={remove.isPending}
                 onClick={() => remove.mutate(track.id)}
-                aria-label={`${track.title} हटाउनुहोस्`}
+                aria-label={`${track.title} — remove`}
                 className="rounded-full p-2 text-destructive"
               >
                 <X aria-hidden="true" className="size-4" />
@@ -188,7 +188,7 @@ export function PlaylistOwnerControls({
           className="font-nepali text-sm text-muted-foreground"
         >
           {edit.isError || remove.isError || reorder.isError
-            ? "परिवर्तन सुरक्षित गर्न सकिएन।"
+            ? "Changes could not be saved."
             : message}
         </p>
         <Button
@@ -198,7 +198,7 @@ export function PlaylistOwnerControls({
           onClick={() => {
             if (
               window.confirm(
-                "यो प्लेलिस्ट स्थायी रूपमा हटाउने हो? यो कार्य फिर्ता लिन सकिँदैन।",
+                "Delete this playlist permanently? This action cannot be undone.",
               )
             ) {
               void deletePlaylist(playlist.slug).then(async () => {
@@ -209,7 +209,7 @@ export function PlaylistOwnerControls({
           }}
         >
           <Trash2 aria-hidden="true" className="size-4" />
-          प्लेलिस्ट हटाउनुहोस्
+          Playlist — remove
         </Button>
       </div>
     </section>

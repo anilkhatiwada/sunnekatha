@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { PlaylistDetailPageContent } from "@/features/playlist/playlist-detail-page";
 
 export const metadata: Metadata = {
-  title: "प्लेलिस्ट",
-  description: "SunneKatha को साहित्यिक प्लेलिस्ट सुन्नुहोस्।",
+  title: "Playlist",
+  description: "Listen to a literary playlist on SunneKatha.",
 };
 
 interface PlaylistPageProps {

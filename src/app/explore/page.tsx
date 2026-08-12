@@ -6,8 +6,8 @@ import {
 import { ExplorePageContent } from "@/features/explore/explore-page";
 
 export const metadata: Metadata = {
-  title: "अन्वेषण",
-  description: "विधा, मूड र सर्जकअनुसार नेपाली श्रव्य साहित्य अन्वेषण गर्नुहोस्।",
+  title: "Explore",
+  description: "Explore Nepali audio literature by category, mood, author, and narrator.",
 };
 
 interface ExplorePageProps {

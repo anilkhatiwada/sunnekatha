@@ -13,7 +13,7 @@ export function FilterChips({
   activeFilter,
 }: FilterChipsProps) {
   return (
-    <nav aria-label="सामग्री प्रकार" className="-mx-4 sm:mx-0">
+    <nav aria-label="Content type" className="-mx-4 sm:mx-0">
       <ul className="flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
         {filters.map((filter) => {
           const isActive = filter.value === activeFilter;

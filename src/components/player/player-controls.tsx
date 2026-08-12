@@ -65,7 +65,7 @@ export function PlayerControls({
           size="icon"
           disabled={!hasTrack}
           onClick={handleTogglePlay}
-          aria-label={isPlaying ? "पज गर्नुहोस्" : "प्ले गर्नुहोस्"}
+          aria-label={isPlaying ? "Pause" : "Play"}
           aria-keyshortcuts="Space"
           className="size-11 rounded-full"
         >
@@ -83,7 +83,7 @@ export function PlayerControls({
           size="icon"
           disabled={!hasTrack}
           onClick={next}
-          aria-label="अर्को ट्र्याक"
+          aria-label="Next track"
           aria-keyshortcuts="N"
           className="size-11 rounded-full"
         >
@@ -102,7 +102,7 @@ export function PlayerControls({
         disabled={!hasTrack}
         onClick={toggleShuffle}
         aria-label={
-          isShuffleEnabled ? "शफल बन्द गर्नुहोस्" : "शफल खोल्नुहोस्"
+          isShuffleEnabled ? "Disable shuffle" : "Enable shuffle"
         }
         aria-pressed={isShuffleEnabled}
         className={cn(
@@ -118,7 +118,7 @@ export function PlayerControls({
         size="icon"
         disabled={!hasTrack}
         onClick={previous}
-        aria-label="अघिल्लो ट्र्याक"
+        aria-label="Previous track"
         aria-keyshortcuts="P"
         className="size-8 rounded-full"
       >
@@ -129,7 +129,7 @@ export function PlayerControls({
         size="icon"
         disabled={!hasTrack}
         onClick={handleTogglePlay}
-        aria-label={isPlaying ? "पज गर्नुहोस्" : "प्ले गर्नुहोस्"}
+        aria-label={isPlaying ? "Pause" : "Play"}
         aria-keyshortcuts="Space"
         className="mx-1 size-10 rounded-full text-background shadow-lg shadow-primary/15"
       >
@@ -147,7 +147,7 @@ export function PlayerControls({
         size="icon"
         disabled={!hasTrack}
         onClick={next}
-        aria-label="अर्को ट्र्याक"
+        aria-label="Next track"
         aria-keyshortcuts="N"
         className="size-8 rounded-full"
       >
@@ -159,7 +159,7 @@ export function PlayerControls({
         size="icon"
         disabled={!hasTrack}
         onClick={cycleRepeatMode}
-        aria-label={`दोहोर्‍याउने मोड: ${repeatMode}`}
+        aria-label={`Repeat mode: ${repeatMode}`}
         aria-pressed={repeatMode !== "off"}
         className={cn("size-8 rounded-full", repeatMode !== "off" && "text-primary")}
       >

@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { AuthorDetailPageContent } from "@/features/author/author-detail-page";
 
 export const metadata: Metadata = {
-  title: "लेखक",
-  description: "SunneKatha का नेपाली लेखक र उनीहरूका श्रव्य रचना।",
+  title: "Author",
+  description: "Discover Nepali authors and their audio works on SunneKatha.",
 };
 
 interface AuthorPageProps {

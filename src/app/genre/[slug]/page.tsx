@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { TaxonomyDetailPage } from "@/features/catalog/taxonomy-detail-page";
 
-export const metadata: Metadata = { title: "विधा" };
+export const metadata: Metadata = { title: "Genre" };
 
 export default async function GenrePage({
   params,

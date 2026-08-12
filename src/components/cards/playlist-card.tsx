@@ -23,17 +23,17 @@ export function PlaylistCard<TPlaylist extends CatalogPlaylist | Playlist>({
     <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
       <MediaArtwork
         src={playlist.coverImage}
-        alt={`${playlist.title} प्लेलिस्टको आवरण`}
+        alt={`${playlist.title} Playlistcover`}
         sizes="(max-width: 640px) 44vw, (max-width: 1024px) 28vw, 240px"
         priority={priority}
         className="aspect-square rounded-lg shadow-[0_16px_42px_rgb(0_0_0_/_0.3)]"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background/65 via-transparent to-transparent" />
         <span className="absolute bottom-3 left-3 rounded-full border border-border/70 bg-background/75 px-2 py-1 font-nepali text-[0.68rem] text-foreground backdrop-blur">
-          {playlist.trackCount} रचना
+          {playlist.trackCount} Track
         </span>
         <CardPlayButton
-          label={`${playlist.title} प्लेलिस्ट बजाउनुहोस्`}
+          label={`${playlist.title} Playlist — play`}
           onPlay={() => onPlay(playlist)}
           className="absolute right-3 bottom-3 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
         />
@@ -57,7 +57,7 @@ export function PlaylistCard<TPlaylist extends CatalogPlaylist | Playlist>({
 
 export function PlaylistCardSkeleton() {
   return (
-    <div aria-label="प्लेलिस्ट लोड हुँदैछ" role="status" className="p-3">
+    <div aria-label="Loading playlist" role="status" className="p-3">
       <LoadingSkeleton className="aspect-square rounded-lg" />
       <LoadingSkeleton className="mt-4 h-5 w-4/5" />
       <LoadingSkeleton className="mt-2 h-4 w-full" />

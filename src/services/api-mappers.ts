@@ -43,7 +43,7 @@ export function mapAuthorSummary(value: ApiAuthorSummary): AuthorSummary {
   return {
     id: value.id,
     slug: value.slug,
-    name: value.name,
+    name: value.nameEnglish || value.name,
     nameEnglish: value.nameEnglish || undefined,
     image: value.image || DEFAULT_AVATAR_PATH,
   };

@@ -7,7 +7,7 @@ interface SectionErrorProps {
 }
 
 export function SectionError({
-  message = "यो सामग्री अहिले उपलब्ध हुन सकेन।",
+  message = "This content is currently unavailable.",
   onRetry,
   isRetrying,
 }: SectionErrorProps) {

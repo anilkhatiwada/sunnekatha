@@ -9,7 +9,7 @@ export function MobileNavigation() {
   const navigation = MAIN_NAVIGATION.filter((item) => !item.requiresAuth || user);
   return (
     <nav
-      aria-label="मोबाइल नेभिगेसन"
+      aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-surface/96 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       <ul className="mx-auto flex h-16 max-w-xl items-stretch px-1">

@@ -49,7 +49,7 @@ export function AddToPlaylistControl({
   });
 
   const finishAdding = async (playlist: { slug: string; title: string }) => {
-    onMessage(`“${playlist.title}” मा रचना थपियो।`);
+    onMessage(`“${playlist.title}” — track added.`);
     close();
     await Promise.all([
       queryClient.invalidateQueries({
@@ -93,7 +93,7 @@ export function AddToPlaylistControl({
         aria-expanded={isOpen}
         onClick={() => {
           if (!user) {
-            onMessage("प्लेलिस्टमा थप्न पहिले साइन इन गर्नुहोस्।");
+            onMessage("Sign in to add tracks to a playlist.");
             return;
           }
           addMutation.reset();
@@ -102,7 +102,7 @@ export function AddToPlaylistControl({
         }}
       >
         <ListPlus aria-hidden="true" className="size-4" />
-        प्लेलिस्टमा थप्नुहोस्
+        Add to playlist
       </Button>
 
       {isOpen
@@ -110,7 +110,7 @@ export function AddToPlaylistControl({
             <div data-modal-root className="fixed inset-0 z-[70]">
               <button
                 type="button"
-                aria-label="प्लेलिस्ट छनोट बन्द गर्नुहोस्"
+                aria-label="Close playlist picker"
                 tabIndex={-1}
                 onClick={close}
                 className="absolute inset-0 bg-black/65 backdrop-blur-[2px]"
@@ -131,13 +131,13 @@ export function AddToPlaylistControl({
                       id="playlist-picker-title"
                       className="font-literary text-xl font-semibold"
                     >
-                      प्लेलिस्टमा थप्नुहोस्
+                      Add to playlist
                     </h2>
                     <p
                       id="playlist-picker-description"
                       className="mt-1 font-nepali text-sm text-muted-foreground"
                     >
-                      एउटा प्लेलिस्ट छान्नुहोस् वा नयाँ बनाउनुहोस्।
+                      Choose a playlist or create a new one.
                     </p>
                   </div>
                   <Button
@@ -146,7 +146,7 @@ export function AddToPlaylistControl({
                     variant="ghost"
                     size="icon"
                     onClick={close}
-                    aria-label="बन्द गर्नुहोस्"
+                    aria-label="Close"
                     className="size-11 shrink-0 rounded-full"
                   >
                     <X aria-hidden="true" className="size-5" />
@@ -168,7 +168,7 @@ export function AddToPlaylistControl({
                         htmlFor="new-playlist-title"
                         className="font-nepali text-sm font-semibold"
                       >
-                        नयाँ निजी प्लेलिस्टको नाम
+                        New private playlist name
                       </label>
                       <input
                         id="new-playlist-title"
@@ -180,7 +180,7 @@ export function AddToPlaylistControl({
                         maxLength={250}
                         required
                         autoFocus
-                        placeholder="जस्तै: मेरा मनपर्ने कथा"
+                        placeholder="For example: Favorite stories"
                         className="mt-2 h-12 w-full rounded-lg border border-border bg-background px-3 font-nepali text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/25"
                       />
                       <div className="mt-3 flex gap-2">
@@ -193,8 +193,8 @@ export function AddToPlaylistControl({
                         >
                           <Check aria-hidden="true" className="size-4" />
                           {createMutation.isPending
-                            ? "बनाउँदै र थप्दै…"
-                            : "बनाएर थप्नुहोस्"}
+                            ? "Creating and adding…"
+                            : "Create and add"}
                         </Button>
                         <Button
                           type="button"
@@ -206,7 +206,7 @@ export function AddToPlaylistControl({
                           }}
                           className="min-h-11 rounded-full font-nepali"
                         >
-                          रद्द
+                          Cancel
                         </Button>
                       </div>
                     </form>
@@ -219,19 +219,19 @@ export function AddToPlaylistControl({
                       className="min-h-12 w-full justify-start rounded-xl font-nepali"
                     >
                       <Plus aria-hidden="true" className="size-5 text-primary" />
-                      नयाँ प्लेलिस्ट बनाएर थप्नुहोस्
+                      Create a new playlist and add
                     </Button>
                   )}
 
                   <div className="my-3 h-px bg-border" />
                   {playlists.isPending ? (
                     <p className="p-4 font-nepali text-sm text-muted-foreground">
-                      तपाईंका प्लेलिस्ट लोड हुँदैछन्…
+                      Loading your playlists…
                     </p>
                   ) : playlists.isError ? (
                     <div role="alert" className="p-3">
                       <p className="font-nepali text-sm text-destructive">
-                        प्लेलिस्ट लोड गर्न सकिएन।
+                        Playlists could not be loaded.
                       </p>
                       <Button
                         type="button"
@@ -239,11 +239,11 @@ export function AddToPlaylistControl({
                         onClick={() => void playlists.refetch()}
                         className="mt-2 min-h-11 rounded-full font-nepali"
                       >
-                        फेरि प्रयास गर्नुहोस्
+                        Try again
                       </Button>
                     </div>
                   ) : playlists.data?.length ? (
-                    <div className="space-y-1" aria-label="तपाईंका प्लेलिस्ट">
+                    <div className="space-y-1" aria-label="Your playlists">
                       {playlists.data.map((playlist) => (
                         <button
                           key={playlist.id}
@@ -260,16 +260,16 @@ export function AddToPlaylistControl({
                               {playlist.title}
                             </span>
                             <span className="block font-nepali text-xs text-muted-foreground">
-                              {playlist.trackCount} रचना
+                              {playlist.trackCount} {playlist.trackCount === 1 ? "track" : "tracks"}
                               {playlist.visibility === "private"
-                                ? " · निजी"
+                                ? " · Private"
                                 : ""}
                             </span>
                           </span>
                           {addMutation.isPending &&
                           addMutation.variables === playlist.slug ? (
                             <span className="font-nepali text-xs text-primary">
-                              थप्दै…
+                              Adding…
                             </span>
                           ) : null}
                         </button>
@@ -282,7 +282,7 @@ export function AddToPlaylistControl({
                         className="mx-auto size-8 text-muted-foreground"
                       />
                       <p className="mt-2 font-nepali text-sm text-muted-foreground">
-                        तपाईंको प्लेलिस्ट अझै छैन। माथिबाट नयाँ बनाउनुहोस्।
+                        You do not have a playlist yet. Create one above.
                       </p>
                     </div>
                   )}
@@ -292,8 +292,7 @@ export function AddToPlaylistControl({
                       role="alert"
                       className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 font-nepali text-sm text-destructive"
                     >
-                      रचना थप्न सकिएन। यो रचना पहिल्यै हुन सक्छ वा फेरि प्रयास
-                      गर्नुपर्छ।
+                      The track could not be added. It may already be in the playlist; otherwise, try again.
                     </p>
                   ) : null}
                 </div>

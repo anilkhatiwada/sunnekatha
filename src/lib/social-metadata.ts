@@ -37,15 +37,15 @@ export function buildTrackMetadata(
   const canonicalPath = `/track/${encodeURIComponent(slug)}`;
   if (!track) {
     return {
-      title: "रचना",
-      description: "SunneKatha मा नेपाली श्रव्य साहित्य सुन्नुहोस्।",
+      title: "Track",
+      description: "Listen to Nepali audio literature on SunneKatha.",
       alternates: { canonical: canonicalPath },
     };
   }
 
   const creator = track.author.name;
   const category = track.category?.name || track.literaryWork.category?.name;
-  const fallbackDescription = [creator, category, "SunneKatha मा सुन्नुहोस्"]
+  const fallbackDescription = [creator, category, "Listen on SunneKatha"]
     .filter(Boolean)
     .join(" · ");
   const description = truncateDescription(

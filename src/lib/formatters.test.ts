@@ -18,8 +18,8 @@ describe("time formatting", () => {
   });
 
   it("formats literary durations and clamps progress percentages", () => {
-    expect(formatDuration(59)).toBe("0 मिनेट");
-    expect(formatDuration(3660)).toBe("1 घण्टा 1 मिनेट");
+    expect(formatDuration(59)).toBe("0 min");
+    expect(formatDuration(3660)).toBe("1 hr 1 min");
     expect(getProgressPercentage(150, 100)).toBe(100);
     expect(getProgressPercentage(-10, 100)).toBe(0);
   });

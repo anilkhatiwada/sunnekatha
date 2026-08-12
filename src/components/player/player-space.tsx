@@ -48,13 +48,13 @@ export function PlayerSpace() {
   return (
     <>
       <section
-        aria-label="अडियो प्लेयर"
+        aria-label="Audio player"
         aria-describedby="player-keyboard-shortcuts"
         className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 h-20 border-y border-border/90 bg-surface/98 shadow-[0_-12px_40px_rgb(0_0_0_/_0.28)] backdrop-blur-xl lg:bottom-0 lg:left-64 lg:h-[5.5rem] lg:border-b-0"
       >
         <p id="player-keyboard-shortcuts" className="sr-only">
-          किबोर्ड सर्टकट: स्पेस प्ले वा पज, दायाँ र बायाँ एरो दस सेकेन्ड
-          अगाडि वा पछाडि, M आवाज बन्द वा खोल्ने, N अर्को र P अघिल्लो ट्र्याक।
+          Keyboard shortcuts: Space to play or pause; left and right arrows to seek ten seconds
+          back or forward; M to mute; N for next; P for previous.
         </p>
         <div className="relative mx-auto h-full max-w-[100rem]">
           <div className="flex h-full items-center gap-2 px-3 lg:hidden">
@@ -65,8 +65,8 @@ export function PlayerSpace() {
               className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition-colors hover:bg-surface-soft/70 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-default"
               aria-label={
                 currentTrack
-                  ? `${currentTrack.title} को पूर्ण प्लेयर खोल्नुहोस्`
-                  : "कुनै ट्र्याक छानिएको छैन"
+                  ? `${currentTrack.title} — open full player`
+                  : "No track selected"
               }
             >
               <TrackArtwork size="mobile" />
@@ -77,7 +77,7 @@ export function PlayerSpace() {
               variant="ghost"
               size="icon"
               onClick={() => setIsQueueOpen(true)}
-              aria-label="प्ले सूची खोल्नुहोस्"
+              aria-label="Open queue"
               aria-expanded={isQueueOpen}
               className="size-11 shrink-0 rounded-full"
             >
@@ -97,7 +97,7 @@ export function PlayerSpace() {
                 disabled={!currentTrack || favorite.isPending}
                 onClick={toggleFavorite}
                 aria-label={
-                  isFavorite ? "मनपर्नेबाट हटाउनुहोस्" : "मनपर्नेमा राख्नुहोस्"
+                  isFavorite ? "Remove from favorites" : "Add to favorites"
                 }
                 aria-pressed={isFavorite}
                 className={cn(
@@ -124,7 +124,7 @@ export function PlayerSpace() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsQueueOpen((isOpen) => !isOpen)}
-                aria-label="प्ले सूची खोल्नुहोस्"
+                aria-label="Open queue"
                 aria-expanded={isQueueOpen}
                 className={cn(
                   "size-9 rounded-full",
@@ -139,7 +139,7 @@ export function PlayerSpace() {
                 size="icon"
                 disabled={!currentTrack}
                 onClick={() => setIsFullPlayerOpen(true)}
-                aria-label="पूर्ण प्लेयर खोल्नुहोस्"
+                aria-label="Open full player"
                 className="size-9 rounded-full"
               >
                 <Maximize2 aria-hidden="true" className="size-4" />
@@ -155,7 +155,7 @@ export function PlayerSpace() {
         <div className="fixed right-3 bottom-[calc(9.5rem+env(safe-area-inset-bottom))] z-50 w-[calc(100%-1.5rem)] max-w-sm shadow-xl lg:right-6 lg:bottom-24">
           <ErrorState
             compact
-            title="अडियो उपलब्ध छैन"
+            title="Audio unavailable"
             message={playbackError.message}
             onRetry={
               currentTrack
@@ -212,7 +212,7 @@ function TrackArtwork({ size }: { size: "mobile" | "desktop" }) {
   return (
     <Image
       src={currentTrack.coverImage}
-      alt={`${currentTrack.title} को आवरण`}
+      alt={`${currentTrack.title} cover`}
       width={56}
       height={56}
       className={cn("shrink-0 rounded-lg object-cover", sizeClass)}
@@ -226,12 +226,12 @@ function TrackText() {
   return (
     <div className="min-w-0 flex-1" aria-live="polite">
       <p className="truncate font-nepali text-sm font-medium text-foreground">
-        {currentTrack?.title ?? "सुन्नका लागि कथा छान्नुहोस्"}
+        {currentTrack?.title ?? "Choose something to listen to"}
       </p>
       <p className="truncate font-nepali text-xs text-muted-foreground">
         {currentTrack
           ? `${currentTrack.author.name} · ${currentTrack.narrator.name}`
-          : "तपाईंको मनपर्ने साहित्य यहाँ बज्नेछ"}
+          : "Your selected literature will play here"}
       </p>
     </div>
   );

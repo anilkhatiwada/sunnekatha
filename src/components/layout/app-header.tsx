@@ -24,7 +24,7 @@ export function AppHeader() {
 
         <div className="hidden min-w-0 lg:block">
           <p className="font-nepali text-sm text-muted-foreground">
-            नेपाली श्रव्य साहित्य
+            Nepali audio literature
           </p>
           <p className="truncate text-xs text-muted-foreground/65">
             Stories that stay with you
@@ -36,7 +36,7 @@ export function AppHeader() {
           {user ? (
             <Link
               href="/notifications"
-              aria-label={`सूचनाहरू${unreadQuery.data?.unreadCount ? `, ${unreadQuery.data.unreadCount} नपढिएका` : ""}`}
+              aria-label={`Notifications${unreadQuery.data?.unreadCount ? `, ${unreadQuery.data.unreadCount} unread` : ""}`}
               className="relative inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
             >
               <Bell aria-hidden="true" className="size-[1.1rem]" />
@@ -50,7 +50,7 @@ export function AppHeader() {
           <Link
             href={user ? "/profile" : "/login"}
             aria-label={
-              user ? `${user.displayName} को प्रोफाइल` : "साइन इन गर्नुहोस्"
+              user ? `${user.displayName} profile` : "Sign in"
             }
             className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           >
@@ -62,12 +62,12 @@ export function AppHeader() {
           </Link>
           <Link
             href="/search"
-            aria-label="सामग्री खोज्नुहोस्"
+            aria-label="Search content"
             className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary sm:w-auto sm:gap-2 sm:px-4"
           >
             <Search aria-hidden="true" className="size-[1.1rem]" />
             <span className="hidden font-nepali text-sm sm:inline">
-              खोज्नुहोस्
+              Search
             </span>
           </Link>
         </div>

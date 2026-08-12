@@ -155,12 +155,12 @@ export function SearchPageContent({
   return (
     <div className="space-y-9 pb-8">
       <header className="max-w-3xl pt-2">
-        <p className="font-nepali text-sm font-medium text-primary">खोज</p>
+        <p className="font-nepali text-sm font-medium text-primary">Search</p>
         <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-          मनपर्ने आवाज खोज्नुहोस्
+          Find a favorite voice
         </h1>
         <p className="mt-3 font-nepali text-base leading-7 text-muted-foreground">
-          नेपाली वा Romanized शब्दमा रचना, सर्जक, वाचक र सङ्ग्रह खोज्नुहोस्।
+          Search tracks, creators, narrators, and collections in Nepali or Romanized text.
         </p>
       </header>
 
@@ -170,7 +170,7 @@ export function SearchPageContent({
         className="relative max-w-4xl"
       >
         <label htmlFor="catalog-search" className="sr-only">
-          SunneKatha मा खोज्नुहोस्
+          Search SunneKatha
         </label>
         <Search
           aria-hidden="true"
@@ -191,7 +191,7 @@ export function SearchPageContent({
             Boolean(autocompleteQuery.data?.length)
           }
           aria-controls="catalog-search-suggestions"
-          placeholder="उदाहरण: वर्षाको साँझ वा barshako saanjh"
+          placeholder="Example: वर्षाको साँझ वा barshako saanjh"
           className="h-14 w-full rounded-xl border border-border bg-surface/90 pr-12 pl-12 font-nepali text-base text-foreground shadow-lg shadow-black/10 transition-colors placeholder:text-muted-foreground/70 hover:border-primary/30 focus:border-primary/60 focus:outline-2 focus:outline-primary sm:h-16"
         />
         {query ? (
@@ -200,7 +200,7 @@ export function SearchPageContent({
             variant="ghost"
             size="icon"
             onClick={() => setQuery("")}
-            aria-label="खोज खाली गर्नुहोस्"
+            aria-label="Clear search"
             className="absolute top-1/2 right-2 size-11 -translate-y-1/2 rounded-full"
           >
             <X aria-hidden="true" className="size-4" />
@@ -210,7 +210,7 @@ export function SearchPageContent({
           <ul
             id="catalog-search-suggestions"
             role="listbox"
-            aria-label="खोज सुझावहरू"
+            aria-label="Search suggestions"
             className="absolute top-full z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-border bg-surface p-2 shadow-2xl shadow-black/30"
           >
             {autocompleteQuery.data.map((suggestion) => (
@@ -242,7 +242,7 @@ export function SearchPageContent({
 
       {hasQuery ? (
         <>
-          <nav aria-label="खोज परिणाम प्रकार">
+          <nav aria-label="Search result type">
             <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
               {SEARCH_FILTERS.map((filter) => (
                 <li key={filter.value} className="shrink-0">
@@ -268,7 +268,7 @@ export function SearchPageContent({
               <SearchResultsSkeleton />
             ) : isResultsError ? (
               <SectionError
-                message="खोज परिणाम ल्याउन सकिएन।"
+                message="Search results could not be loaded."
                 onRetry={() =>
                   void (activeFilter === "tracks"
                     ? trackResultsQuery.refetch()
@@ -301,8 +301,8 @@ export function SearchPageContent({
                       }
                     >
                       {trackResultsQuery.isFetchingNextPage
-                        ? "थप परिणाम लोड हुँदैछ…"
-                        : "थप परिणाम देखाउनुहोस्"}
+                        ? "Loading more results…"
+                        : "Show more results"}
                     </Button>
                   </div>
                 ) : null}
@@ -314,9 +314,9 @@ export function SearchPageContent({
         <div className="grid gap-8 lg:grid-cols-2">
           <SearchSuggestions
             icon={Clock3}
-            title="हालै खोजिएका"
+            title="Recent searches"
             items={searches}
-            emptyText="तपाईंले खोजेका शब्दहरू यहाँ सुरक्षित हुन्छन्।"
+            emptyText="Your recent searches will appear here."
             onSelect={chooseSearch}
             action={
               searches.length > 0 ? (
@@ -325,7 +325,7 @@ export function SearchPageContent({
                   onClick={clearHistory}
                   className="font-nepali text-xs text-muted-foreground hover:text-destructive focus-visible:outline-2 focus-visible:outline-primary"
                 >
-                  इतिहास हटाउनुहोस्
+                  Remove from history
                 </button>
               ) : null
             }
@@ -340,9 +340,9 @@ export function SearchPageContent({
           ) : (
             <SearchSuggestions
               icon={TrendingUp}
-              title="अहिले लोकप्रिय खोज"
+              title="Trending searches"
               items={trendingQuery.data}
-              emptyText="लोकप्रिय खोज उपलब्ध छैन।"
+              emptyText="Trending searches are unavailable."
               onSelect={chooseSearch}
             />
           )}
@@ -366,7 +366,7 @@ function GroupedSearchResults({
   return (
     <div className="space-y-12">
       {results.tracks.length > 0 && (
-        <ResultGroup title="रचनाहरू" count={results.tracks.length}>
+        <ResultGroup title="Tracks" count={results.tracks.length}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
             {results.tracks.map((track) => (
               <TrackCard
@@ -379,7 +379,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.works.length > 0 && (
-        <ResultGroup title="साहित्यिक कृति" count={results.works.length}>
+        <ResultGroup title="Literary Work" count={results.works.length}>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {results.works.map((work) => (
               <SearchCatalogCard key={work.id} item={work} kind="work" />
@@ -388,7 +388,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.albums.length > 0 && (
-        <ResultGroup title="एल्बमहरू" count={results.albums.length}>
+        <ResultGroup title="Albums" count={results.albums.length}>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {results.albums.map((album) => (
               <SearchCatalogCard key={album.id} item={album} kind="album" />
@@ -397,7 +397,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.playlists.length > 0 && (
-        <ResultGroup title="प्लेलिस्टहरू" count={results.playlists.length}>
+        <ResultGroup title="Playlists" count={results.playlists.length}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
             {results.playlists.map((playlist) => (
               <PlaylistCard
@@ -410,7 +410,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.authors.length > 0 && (
-        <ResultGroup title="लेखकहरू" count={results.authors.length}>
+        <ResultGroup title="Authors" count={results.authors.length}>
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {results.authors.map((author) => (
               <AuthorCard
@@ -423,7 +423,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.narrators.length > 0 && (
-        <ResultGroup title="वाचकहरू" count={results.narrators.length}>
+        <ResultGroup title="Narrators" count={results.narrators.length}>
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {results.narrators.map((narrator) => (
               <NarratorCard
@@ -436,7 +436,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.genres.length > 0 && (
-        <ResultGroup title="विधाहरू" count={results.genres.length}>
+        <ResultGroup title="Genres" count={results.genres.length}>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {results.genres.map((genre) => (
               <ExploreCollectionCard
@@ -449,7 +449,7 @@ function GroupedSearchResults({
         </ResultGroup>
       )}
       {results.moods.length > 0 && (
-        <ResultGroup title="मूडहरू" count={results.moods.length}>
+        <ResultGroup title="Moods" count={results.moods.length}>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {results.moods.map((mood) => (
               <ExploreCollectionCard
@@ -478,7 +478,7 @@ function SearchCatalogCard({
         <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-soft">
           <Image
             src={item.coverImage}
-            alt={`${item.title} को आवरण`}
+            alt={`${item.title} cover`}
             fill
             sizes="(max-width: 640px) 45vw, 220px"
             className="object-cover transition-transform group-hover:scale-[1.025]"
@@ -587,8 +587,8 @@ function SearchEmptyState({ query }: { query: string }) {
   return (
     <EmptyState
       icon={Search}
-      title={`“${query}” का लागि परिणाम भेटिएन`}
-      description="अर्को हिज्जे, Romanized शब्द वा छोटो खोज प्रयोग गर्नुहोस्।"
+      title={`“${query}” — no results found`}
+      description="Try another spelling, a Romanized term, or a shorter query."
     />
   );
 }

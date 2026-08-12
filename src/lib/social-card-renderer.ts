@@ -42,7 +42,7 @@ export async function renderSocialCard(input: SocialCardInput): Promise<Buffer> 
   const author = escapeSvgText(truncate(input.author, 38));
   const category = escapeSvgText(truncate(input.category, 20));
   const details = escapeSvgText(
-    [input.narrator ? `वाचन: ${input.narrator}` : undefined, input.duration]
+    [input.narrator ? `Narrated by: ${input.narrator}` : undefined, input.duration]
       .filter(Boolean)
       .join("  ·  "),
   );
@@ -92,7 +92,7 @@ export async function renderSocialCard(input: SocialCardInput): Promise<Buffer> 
       <rect x="540" y="55" width="54" height="56" rx="15" fill="#e58a52"/>
       <text x="567" y="94" text-anchor="middle" font-size="32" font-weight="700" fill="#0b0a09">S</text>
       <text x="609" y="84" font-size="28" font-weight="700" fill="#f5eee7">SunneKatha</text>
-      <text x="609" y="106" font-size="15" fill="#b7aaa0">सुन्ने कथा, सम्झिने शब्द</text>
+      <text x="609" y="106" font-size="15" fill="#b7aaa0">Stories to hear, words to remember</text>
 
       <rect x="1075" y="62" width="63" height="41" rx="21" fill="none" stroke="#d7ad63" stroke-opacity=".45"/>
       <text x="1106.5" y="89" text-anchor="middle" font-size="17" fill="#d7ad63">${category}</text>
@@ -103,7 +103,7 @@ export async function renderSocialCard(input: SocialCardInput): Promise<Buffer> 
 
       ${bars}
       <rect x="955" y="511" width="183" height="64" rx="32" fill="#e58a52" fill-opacity=".14"/>
-      <text x="1046.5" y="551" text-anchor="middle" font-size="19" fill="#e58a52">अहिले सुन्नुहोस् →</text>
+      <text x="1046.5" y="551" text-anchor="middle" font-size="19" fill="#e58a52">Listen now →</text>
     </svg>`;
 
   return sharp(Buffer.from(svg))

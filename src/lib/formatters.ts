@@ -4,10 +4,10 @@ export function formatDuration(durationSeconds: number) {
   const minutes = totalMinutes % 60;
 
   if (hours > 0) {
-    return `${hours} घण्टा ${minutes} मिनेट`;
+    return `${hours} hr ${minutes} min`;
   }
 
-  return `${minutes} मिनेट`;
+  return `${minutes} min`;
 }
 
 export function formatPlayerTime(durationSeconds: number) {
@@ -31,11 +31,11 @@ export function formatCompactNumber(value: number) {
   const absoluteValue = Math.abs(value);
 
   if (absoluteValue >= 1_000_000) {
-    return `${formatSingleDecimal(value / 1_000_000)} मिलियन`;
+    return `${formatSingleDecimal(value / 1_000_000)}M`;
   }
 
   if (absoluteValue >= 1_000) {
-    return `${formatSingleDecimal(value / 1_000)} हजार`;
+    return `${formatSingleDecimal(value / 1_000)}K`;
   }
 
   return Math.round(value).toString();

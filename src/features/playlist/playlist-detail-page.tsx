@@ -51,7 +51,7 @@ export function PlaylistDetailPageContent({
   if (playlistQuery.isError) {
     return (
       <ErrorState
-        message="प्लेलिस्ट लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The playlist could not be loaded. Please try again."
         onRetry={() => void playlistQuery.refetch()}
         isRetrying={playlistQuery.isFetching}
       />
@@ -63,14 +63,14 @@ export function PlaylistDetailPageContent({
     return (
       <EmptyState
         icon={ListMusic}
-        title="प्लेलिस्ट भेटिएन"
-        description="यो प्लेलिस्ट हटाइएको वा उपलब्ध नभएको हुन सक्छ।"
+        title="Playlist not found"
+        description="This playlist may have been removed or is unavailable."
         action={
           <Link
             href="/explore"
             className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2 font-nepali text-sm font-semibold text-background"
           >
-            अन्वेषणमा फर्कनुहोस्
+            Back to Explore
           </Link>
         }
       />
@@ -93,7 +93,7 @@ export function PlaylistDetailPageContent({
         <div className="relative grid gap-7 md:grid-cols-[15rem_minmax(0,1fr)] lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
           <Image
             src={playlist.coverImage}
-            alt={`${playlist.title} प्लेलिस्टको आवरण`}
+            alt={`${playlist.title} Playlistcover`}
             width={640}
             height={640}
             preload
@@ -101,7 +101,7 @@ export function PlaylistDetailPageContent({
           />
           <div className="flex min-w-0 flex-col justify-end">
             <p className="font-nepali text-xs font-medium tracking-wide text-primary">
-              विशेष प्लेलिस्ट
+              Featured playlist
             </p>
             <h1 className="mt-2 font-literary text-4xl leading-tight font-semibold sm:text-5xl lg:text-6xl">
               {playlist.title}
@@ -114,7 +114,7 @@ export function PlaylistDetailPageContent({
                 {playlist.curatorName}
               </span>
               <span aria-hidden="true">•</span>
-              <span>{playlist.trackCount} रचना</span>
+              <span>{playlist.trackCount} Track</span>
               <span aria-hidden="true">•</span>
               <span>{formatDuration(playlist.totalDuration)}</span>
             </div>
@@ -127,7 +127,7 @@ export function PlaylistDetailPageContent({
                 className="rounded-full px-5 font-nepali"
               >
                 <Play aria-hidden="true" className="size-4 fill-current" />
-                सबै बजाउनुहोस्
+                All — play
               </Button>
               <Button
                 type="button"
@@ -137,7 +137,7 @@ export function PlaylistDetailPageContent({
                 className="rounded-full font-nepali"
               >
                 <Shuffle aria-hidden="true" className="size-4" />
-                शफल
+                Shuffle
               </Button>
               <Button
                 type="button"
@@ -146,7 +146,7 @@ export function PlaylistDetailPageContent({
                 onClick={() => {
                   if (!saved.toggle()) {
                     setStatusMessage(
-                      "प्लेलिस्ट सुरक्षित गर्न पहिले साइन इन गर्नुहोस्।",
+                      "Sign in to save this playlist.",
                     );
                   }
                 }}
@@ -160,7 +160,7 @@ export function PlaylistDetailPageContent({
                   aria-hidden="true"
                   className={cn("size-4", isSaved && "fill-current")}
                 />
-                {isSaved ? "सुरक्षित" : "सुरक्षित गर्नुहोस्"}
+                {isSaved ? "Saved" : "Save"}
               </Button>
               <Button
                 type="button"
@@ -173,8 +173,8 @@ export function PlaylistDetailPageContent({
                     .then((result) =>
                       setStatusMessage(
                         result === "copied"
-                          ? "प्लेलिस्टको लिङ्क प्रतिलिपि भयो।"
-                          : "प्लेलिस्ट साझा भयो।",
+                          ? "Playlist link copied."
+                          : "Playlist shared.",
                       ),
                     )
                     .catch(() => undefined);
@@ -182,7 +182,7 @@ export function PlaylistDetailPageContent({
                 className="rounded-full font-nepali"
               >
                 <Share2 aria-hidden="true" className="size-4" />
-                साझा
+                Share
               </Button>
             </div>
             <p
@@ -191,7 +191,7 @@ export function PlaylistDetailPageContent({
               className="mt-2 min-h-5 font-nepali text-xs text-muted-foreground"
             >
               {saved.error
-                ? "प्लेलिस्ट सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।"
+                ? "The playlist could not be saved. Please try again."
                 : statusMessage}
             </p>
           </div>
@@ -208,20 +208,20 @@ export function PlaylistDetailPageContent({
             id="playlist-tracks-heading"
             className="font-literary text-2xl font-semibold sm:text-3xl"
           >
-            रचनाहरू
+            Tracks
           </h2>
           <span className="font-nepali text-xs text-muted-foreground">
-            {playlist.tracks.length} रचना
+            {playlist.tracks.length} Track
           </span>
         </div>
         <div className="hidden grid-cols-[2.5rem_minmax(0,1.4fr)_minmax(8rem,0.8fr)_minmax(8rem,0.8fr)_6rem_4rem_auto] gap-3 border-b border-border px-3 py-2 font-nepali text-[0.7rem] text-muted-foreground sm:grid">
           <span className="text-center">#</span>
-          <span>शीर्षक</span>
-          <span>लेखक</span>
-          <span>वाचक</span>
-          <span>प्रकार</span>
-          <span className="text-right">समय</span>
-          <span className="sr-only">विकल्प</span>
+          <span>Title</span>
+          <span>Author</span>
+          <span>Narrator</span>
+          <span>Type</span>
+          <span className="text-right">Duration</span>
+          <span className="sr-only">Options</span>
         </div>
         {hasTracks ? (
           <ol className="mt-1 space-y-1">
@@ -234,7 +234,7 @@ export function PlaylistDetailPageContent({
                 onPlay={() => playFromTrack(index)}
                 onMoreActions={() =>
                   setStatusMessage(
-                    `${track.title} का थप विकल्प चाँडै उपलब्ध हुनेछन्।`,
+                    `${track.title} — more options will be available soon.`,
                   )
                 }
               />
@@ -242,7 +242,7 @@ export function PlaylistDetailPageContent({
           </ol>
         ) : (
           <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center font-nepali text-sm text-muted-foreground">
-            यस प्लेलिस्टमा कुनै रचना छैन।
+            This playlist has no tracks.
           </div>
         )}
       </section>
@@ -266,7 +266,7 @@ function shuffleTracks(tracks: CatalogTrack[]) {
 
 function PlaylistDetailSkeleton() {
   return (
-    <div className="space-y-10" aria-label="प्लेलिस्ट लोड हुँदैछ" role="status">
+    <div className="space-y-10" aria-label="Loading playlist" role="status">
       <div className="grid gap-7 rounded-2xl border border-border bg-surface/60 p-5 md:grid-cols-[15rem_minmax(0,1fr)]">
         <LoadingSkeleton className="aspect-square w-full rounded-xl" />
         <div className="flex flex-col justify-end gap-4">

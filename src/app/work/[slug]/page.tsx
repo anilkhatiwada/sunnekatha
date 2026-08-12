@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { CatalogDetailPage } from "@/features/catalog/catalog-detail-page";
 
-export const metadata: Metadata = { title: "साहित्यिक कृति" };
+export const metadata: Metadata = { title: "Literary Work" };
 
 export default async function WorkPage({
   params,

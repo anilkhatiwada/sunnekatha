@@ -54,14 +54,14 @@ export function HorizontalSection({
             href={viewAllHref}
             className="inline-flex min-h-11 shrink-0 items-center rounded-sm font-nepali text-sm font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary"
           >
-            सबै हेर्नुहोस्
+            View all
           </Link>
         )}
       </div>
 
       <div
         tabIndex={0}
-        aria-label={`${title} सामग्री`}
+        aria-label={`${title} content`}
         className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] focus-visible:rounded-lg focus-visible:outline-2 focus-visible:outline-primary sm:-mx-6 sm:gap-4 sm:px-6 lg:-mx-8 lg:px-8 [&::-webkit-scrollbar]:hidden"
       >
         {children}

@@ -193,7 +193,7 @@ describe("homepage response adapter", () => {
         {
           id: "category-id",
           slug: "story",
-          name: "कथा",
+          name: "Story",
         },
       ],
     });
@@ -251,7 +251,7 @@ describe("homepage response adapter", () => {
 
   it("rejects malformed top-level responses", () => {
     expect(() => mapHomeResponse({ hero: null })).toThrow(
-      "गृहपृष्ठको उत्तर बुझ्न सकिएन।",
+      "The homepage response could not be processed.",
     );
   });
 });

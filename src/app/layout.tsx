@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s · SunneKatha",
   },
   description:
-    "नेपाली कथा, कविता र साहित्य सुन्ने शान्त र आत्मीय डिजिटल मञ्च।",
+    "A calm, intimate digital home for Nepali stories, poetry, and literature.",
   applicationName: "SunneKatha",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -33,13 +33,13 @@ export const metadata: Metadata = {
     locale: "ne_NP",
     title: "SunneKatha",
     description:
-      "नेपाली कथा, कविता र साहित्य सुन्ने शान्त र आत्मीय डिजिटल मञ्च।",
+      "A calm, intimate digital home for Nepali stories, poetry, and literature.",
   },
   twitter: {
     card: "summary_large_image",
     title: "SunneKatha",
     description:
-      "नेपाली कथा, कविता र साहित्य सुन्ने शान्त र आत्मीय डिजिटल मञ्च।",
+      "A calm, intimate digital home for Nepali stories, poetry, and literature.",
   },
 };
 

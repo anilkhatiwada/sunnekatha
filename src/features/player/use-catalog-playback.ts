@@ -36,7 +36,7 @@ export function useCatalogPlayback() {
         setLoading(false);
         setPlaybackError({
           code: "stream-unavailable",
-          message: "यो रचना अहिले बजाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+          message: "This track cannot be played right now. Please try again.",
         });
       }
     },
@@ -67,7 +67,7 @@ export function useCatalogPlayback() {
         setPlaybackError({
           code: "stream-unavailable",
           message:
-            "प्लेलिस्टका केही रचना अहिले बजाउन सकिएनन्। फेरि प्रयास गर्नुहोस्।",
+            "Some playlist tracks cannot be played right now. Please try again.",
         });
       }
     },
@@ -92,7 +92,7 @@ export function useCatalogPlayback() {
         setLoading(false);
         setPlaybackError({
           code: "playlist-unavailable",
-          message: "यो प्लेलिस्ट अहिले बजाउन सकिएन।",
+          message: "This playlist cannot be played right now.",
         });
       }
     },

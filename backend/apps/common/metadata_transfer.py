@@ -253,7 +253,8 @@ def _build(kind, row):
     values = {
         key: value
         for key, value in row.items()
-        if key not in {
+        if key
+        not in {
             "author_slug",
             "language_slug",
             "category_slug",

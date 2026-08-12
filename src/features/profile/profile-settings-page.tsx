@@ -112,9 +112,9 @@ export function ProfileSettingsPage() {
       updatePreferences(values);
       await refreshUser();
       reset(values);
-      setStatusMessage("तपाईंका प्राथमिकताहरू सुरक्षित भए।");
+      setStatusMessage("Your preferences were saved.");
     } catch {
-      setStatusMessage("परिवर्तन सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।");
+      setStatusMessage("Changes could not be saved. Please try again.");
     }
   };
 
@@ -128,7 +128,7 @@ export function ProfileSettingsPage() {
           </div>
           <div>
             <p className="font-nepali text-xs font-semibold text-primary">
-              तपाईंको स्थान
+              Your space
             </p>
             <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
               {user?.displayName}
@@ -147,12 +147,12 @@ export function ProfileSettingsPage() {
       >
         <SettingsSection
           icon={UserRound}
-          title="प्रोफाइल"
-          description="SunneKatha मा देखिने तपाईंको आधारभूत जानकारी"
+          title="Profile"
+          description="Your basic information shown on SunneKatha"
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField
-              label="नाम"
+              label="Name"
               error={errors.displayName?.message}
             >
               <input
@@ -161,7 +161,7 @@ export function ProfileSettingsPage() {
                 className={inputClassName}
               />
             </FormField>
-            <FormField label="इमेल" error={errors.email?.message}>
+            <FormField label="Email" error={errors.email?.message}>
               <input
                 {...register("email")}
                 type="email"
@@ -174,20 +174,20 @@ export function ProfileSettingsPage() {
 
         <SettingsSection
           icon={Headphones}
-          title="श्रवण प्राथमिकता"
-          description="भाषा, गति र प्लेब्याक व्यवहार"
+          title="Listening preferences"
+          description="Language, speed, and playback behavior"
         >
           <div className="grid gap-5 sm:grid-cols-2">
-            <FormField label="प्राथमिक भाषा">
+            <FormField label="Preferred language">
               <select
                 {...register("preferredLanguage")}
                 className={inputClassName}
               >
-                <option value="ne">नेपाली</option>
+                <option value="ne">Nepali</option>
                 <option value="en">English</option>
               </select>
             </FormField>
-            <FormField label="पूर्वनिर्धारित प्लेब्याक गति">
+            <FormField label="Default playback speed">
               <select
                 {...register("defaultPlaybackSpeed", {
                   valueAsNumber: true,
@@ -205,13 +205,13 @@ export function ProfileSettingsPage() {
 
           <div className="mt-6 space-y-3">
             <ToggleField
-              label="अटोप्ले"
-              description="एउटा रचना सकिएपछि अर्को रचना स्वतः बजाउनुहोस्।"
+              label="Autoplay"
+              description="Automatically play the next track."
               registration={register("autoplay")}
             />
             <ToggleField
-              label="स्पष्ट सामग्री अनुमति"
-              description="स्पष्ट भनेर चिन्ह लगाइएका सामग्री देखाउनुहोस्।"
+              label="Allow explicit content"
+              description="Show content marked as explicit."
               registration={register("allowExplicitContent")}
             />
           </div>
@@ -219,59 +219,59 @@ export function ProfileSettingsPage() {
 
         <SettingsSection
           icon={Settings2}
-          title="देखावट"
-          description="SunneKatha को रङ र प्रणालीसँगको मिलान"
+          title="Appearance"
+          description="SunneKatha colors and system appearance"
         >
-          <FormField label="थिम प्राथमिकता">
+          <FormField label="Theme preference">
             <select
               {...register("themePreference")}
               className={cn(inputClassName, "max-w-md")}
             >
-              <option value="dark">गाढा</option>
-              <option value="light">उज्यालो</option>
-              <option value="system">प्रणालीअनुसार</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
             </select>
           </FormField>
         </SettingsSection>
 
         <SettingsSection
           icon={Headphones}
-          title="अडियो गुणस्तर"
-          description="स्ट्रिमिङ गुणस्तर चयन भविष्यमा उपलब्ध हुनेछ।"
+          title="Audio quality"
+          description="Streaming quality selection will be available in a future release."
         >
-          <FormField label="गुणस्तर">
+          <FormField label="Quality">
             <select
               disabled
               aria-describedby="audio-quality-note"
               className={cn(inputClassName, "max-w-md")}
               defaultValue="automatic"
             >
-              <option value="automatic">स्वचालित · चाँडै उपलब्ध</option>
+              <option value="automatic">Automatic · coming soon</option>
             </select>
           </FormField>
           <p
             id="audio-quality-note"
             className="mt-2 font-nepali text-xs text-muted-foreground"
           >
-            हाल ब्राउजर र उपलब्ध स्रोतअनुसार गुणस्तर स्वतः चयन हुन्छ।
+            Quality is currently selected automatically for your browser and available source.
           </p>
         </SettingsSection>
 
         <SettingsSection
           icon={Bell}
-          title="सूचना"
-          description="नयाँ रचना र सिफारिसका सूचना विकल्पहरू"
+          title="Notifications"
+          description="Notifications for new tracks and recommendations"
         >
           <div className="space-y-3">
             <PlaceholderPreference
               icon={Mail}
-              label="इमेल सूचना"
-              description="नयाँ रिलिजको साप्ताहिक सारांश · चाँडै उपलब्ध"
+              label="Email Notifications"
+              description="Weekly new-release summary · coming soon"
             />
             <PlaceholderPreference
               icon={Bell}
-              label="पुश सूचना"
-              description="मनपर्ने सर्जकका नयाँ रचना · चाँडै उपलब्ध"
+              label="Push notifications"
+              description="New tracks from favorite creators · coming soon"
             />
           </div>
         </SettingsSection>
@@ -290,15 +290,15 @@ export function ProfileSettingsPage() {
             className="rounded-full font-nepali"
           >
             <Save aria-hidden="true" className="size-4" />
-            प्राथमिकता सुरक्षित गर्नुहोस्
+            Save preferences
           </Button>
         </div>
       </form>
 
       <SettingsSection
         icon={KeyRound}
-        title="पासवर्ड सुरक्षा"
-        description="इमेलबाट साइन इन गर्ने खाताको पासवर्ड परिवर्तन गर्नुहोस्।"
+        title="Password security"
+        description="Change the password for an email sign-in account."
       >
         <form
           className="grid gap-4 sm:grid-cols-3"
@@ -318,24 +318,24 @@ export function ProfileSettingsPage() {
               .then(() => {
                 form.reset();
                 setPasswordMessage(
-                  "पासवर्ड परिवर्तन भयो। अन्य सत्रहरू सुरक्षित रूपमा बन्द गरिएका छन्।",
+                  "Password changed. Other sessions were securely signed out.",
                 );
               })
               .catch((error: unknown) => {
                 setPasswordMessage(
                   error instanceof ApiError
                     ? error.message
-                    : "पासवर्ड परिवर्तन गर्न सकिएन।",
+                    : "Password could not be changed.",
                 );
               })
               .finally(() => setIsChangingPassword(false));
           }}
         >
-          <PasswordField name="currentPassword" label="हालको पासवर्ड" />
-          <PasswordField name="newPassword" label="नयाँ पासवर्ड" />
+          <PasswordField name="currentPassword" label="Current password" />
+          <PasswordField name="newPassword" label="New password" />
           <PasswordField
             name="newPasswordConfirm"
-            label="नयाँ पासवर्ड पुनः"
+            label="Confirm new password"
           />
           <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
             <Button
@@ -345,7 +345,7 @@ export function ProfileSettingsPage() {
               className="rounded-full font-nepali"
             >
               <KeyRound aria-hidden="true" className="size-4" />
-              {isChangingPassword ? "परिवर्तन हुँदैछ…" : "पासवर्ड परिवर्तन"}
+              {isChangingPassword ? "Saving…" : "Change password"}
             </Button>
             <p
               role="status"
@@ -360,36 +360,36 @@ export function ProfileSettingsPage() {
 
       {user?.isCreator ? (
         <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
-          <h2 className="font-literary text-2xl font-semibold">सर्जक केन्द्र</h2>
+          <h2 className="font-literary text-2xl font-semibold">Creator Center</h2>
           <p className="mt-2 font-nepali text-sm text-muted-foreground">
-            मूल अडियो र सम्पादकीय तस्बिर सिधै सुरक्षित भण्डारणमा पठाउनुहोस्।
+            Upload original audio and editorial images directly to secure storage.
           </p>
           <Link
             href="/creator"
             className="mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2 font-nepali text-sm font-semibold text-background"
           >
-            सर्जक केन्द्र खोल्नुहोस्
+            Open Creator Center
           </Link>
         </section>
       ) : null}
 
       <section className="rounded-2xl border border-border bg-surface/55 p-6">
-        <h2 className="font-literary text-2xl font-semibold">श्रवण गतिविधि</h2>
+        <h2 className="font-literary text-2xl font-semibold">Listening activity</h2>
         <p className="mt-2 font-nepali text-sm text-muted-foreground">
-          हालै सुनेका रचना, पटक र जम्मा सुनेको समय हेर्नुहोस्।
+          View recently played tracks, play counts, and total listening time.
         </p>
         <Link
           href="/history"
           className="mt-4 inline-flex min-h-11 items-center rounded-full border border-border px-5 py-2 font-nepali text-sm font-semibold hover:border-primary/50"
         >
-          सुन्ने इतिहास खोल्नुहोस्
+          Open listening history
         </Link>
       </section>
 
       <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
-        <h2 className="font-literary text-2xl font-semibold">खाता</h2>
+        <h2 className="font-literary text-2xl font-semibold">Account</h2>
         <p className="mt-2 font-nepali text-sm text-muted-foreground">
-          यो उपकरणबाट सुरक्षित रूपमा साइन आउट गर्नुहोस्।
+          Sign out securely from this device.
         </p>
         <Button
           type="button"
@@ -400,7 +400,7 @@ export function ProfileSettingsPage() {
           className="mt-4 rounded-full font-nepali text-destructive"
         >
           <LogOut aria-hidden="true" className="size-4" />
-          लगआउट
+          Sign out
         </Button>
       </section>
     </div>
@@ -554,7 +554,7 @@ function PlaceholderPreference({
       <input
         type="checkbox"
         disabled
-        aria-label={`${label} चाँडै उपलब्ध`}
+        aria-label={`${label} coming soon`}
         className="size-5 shrink-0"
       />
     </div>

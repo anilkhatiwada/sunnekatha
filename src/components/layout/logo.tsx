@@ -12,7 +12,7 @@ export function Logo({ compact = false, className }: LogoProps) {
   return (
     <Link
       href="/"
-      aria-label="SunneKatha गृहपृष्ठ"
+      aria-label="SunneKatha Home"
       className={cn(
         "group inline-flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-primary",
         className,

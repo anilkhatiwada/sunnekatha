@@ -31,7 +31,7 @@ export function ListeningHistoryPage() {
   if (history.isError) {
     return (
       <ErrorState
-        message="सुन्ने इतिहास लोड गर्न सकिएन।"
+        message="Listening history could not be loaded."
         onRetry={() => void history.refetch()}
       />
     );
@@ -41,10 +41,10 @@ export function ListeningHistoryPage() {
     <div className="space-y-7 pb-8">
       <header>
         <p className="font-nepali text-sm font-semibold text-primary">
-          तपाईंको गतिविधि
+          Your activity
         </p>
         <h1 className="mt-2 font-literary text-4xl font-semibold">
-          सुन्ने इतिहास
+          Listening History
         </h1>
       </header>
       {history.data.length ? (
@@ -58,7 +58,7 @@ export function ListeningHistoryPage() {
                 type="button"
                 size="icon"
                 onClick={() => void playTrack(item.track)}
-                aria-label={`${item.track.title} बजाउनुहोस्`}
+                aria-label={`${item.track.title} — play`}
                 className="shrink-0 rounded-full"
               >
                 <Play aria-hidden="true" className="size-4 fill-current" />
@@ -71,7 +71,7 @@ export function ListeningHistoryPage() {
                   {item.track.title}
                 </Link>
                 <p className="mt-1 font-nepali text-xs text-muted-foreground">
-                  {item.playCount} पटक · जम्मा{" "}
+                  {item.playCount} plays · total{" "}
                   {formatDuration(item.totalListenedSeconds)}
                 </p>
               </div>
@@ -90,8 +90,8 @@ export function ListeningHistoryPage() {
       ) : (
         <EmptyState
           icon={Clock3}
-          title="सुन्ने इतिहास खाली छ"
-          description="रचना सुन्न थालेपछि गतिविधि यहाँ देखिनेछ।"
+          title="Listening history is empty"
+          description="Your activity will appear here after you start listening."
         />
       )}
     </div>

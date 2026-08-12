@@ -13,7 +13,7 @@ export function ListSkeleton({
   return (
     <div
       role="status"
-      aria-label="सूची लोड हुँदैछ"
+      aria-label="Loading list"
       className={cn("space-y-2", className)}
     >
       {Array.from({ length: count }, (_, index) => (

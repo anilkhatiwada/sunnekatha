@@ -14,9 +14,9 @@ export function DesktopSidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border/80 bg-surface/94 px-4 py-5 backdrop-blur-xl lg:flex">
       <Logo className="px-2" />
 
-      <nav aria-label="मुख्य नेभिगेसन" className="mt-10">
+      <nav aria-label="Main navigation" className="mt-10">
         <p className="px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          मेनु
+          Menu
         </p>
         <ul className="mt-3 space-y-1">
           {navigation.map((item) => (
@@ -34,7 +34,7 @@ export function DesktopSidebar() {
           strokeWidth={1.7}
         />
         <p className="mt-3 font-literary text-sm leading-6 text-foreground">
-          शब्दबाट आवाजसम्मको आत्मीय यात्रा
+          Literature, brought to life through audio
         </p>
       </div>
     </aside>

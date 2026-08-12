@@ -17,12 +17,12 @@ interface PlaylistTrackRowProps {
 }
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  poem: "कविता",
-  story: "कथा",
-  essay: "निबन्ध",
-  novel_chapter: "उपन्यास अध्याय",
-  folk_tale: "लोककथा",
-  drama: "नाटक",
+  poem: "Poetry",
+  story: "Story",
+  essay: "Essay",
+  novel_chapter: "Novel Chapter",
+  folk_tale: "Folk Tale",
+  drama: "Drama",
 };
 
 export function PlaylistTrackRow({
@@ -43,7 +43,7 @@ export function PlaylistTrackRow({
       <button
         type="button"
         onClick={onPlay}
-        aria-label={`${track.title} बजाउनुहोस्`}
+        aria-label={`${track.title} — play`}
         className="grid size-11 place-items-center rounded-full text-xs tabular-nums text-muted-foreground transition-colors hover:bg-primary hover:text-background focus-visible:outline-2 focus-visible:outline-primary sm:size-8"
       >
         <span className="group-hover:hidden group-focus-within:hidden">
@@ -94,7 +94,7 @@ export function PlaylistTrackRow({
         variant="ghost"
         size="icon"
         onClick={onMoreActions}
-        aria-label={`${track.title} का थप विकल्प`}
+        aria-label={`${track.title} — more options`}
         className="size-11 rounded-full text-muted-foreground sm:size-9"
       >
         <Ellipsis aria-hidden="true" className="size-4" />

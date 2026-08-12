@@ -35,7 +35,7 @@ export function CompactTrackRow<TTrack extends CatalogTrack>({
       <div className="relative size-12 overflow-hidden rounded-md bg-surface-soft">
         <Image
           src={track.coverImage}
-          alt={`${track.title} को आवरण`}
+          alt={`${track.title} cover`}
           fill
           sizes="48px"
           className="object-cover"
@@ -53,7 +53,7 @@ export function CompactTrackRow<TTrack extends CatalogTrack>({
         </p>
       </div>
       <CardPlayButton
-        label={`${track.title} बजाउनुहोस्`}
+        label={`${track.title} — play`}
         onPlay={() => onPlay(track)}
         size="sm"
         className="shadow-none"
@@ -65,7 +65,7 @@ export function CompactTrackRow<TTrack extends CatalogTrack>({
 export function CompactTrackRowSkeleton() {
   return (
     <div
-      aria-label="रचना लोड हुँदैछ"
+      aria-label="Loading track"
       role="status"
       className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-2 py-2 sm:grid-cols-[2rem_auto_minmax(0,1fr)_auto]"
     >

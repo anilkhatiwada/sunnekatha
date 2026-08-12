@@ -58,13 +58,13 @@ export function TaxonomyDetailPage({
       <header className="rounded-2xl border border-border bg-[radial-gradient(circle_at_top_left,rgb(229_138_82_/_0.18),transparent_34rem)] p-7 sm:p-10">
         <Icon aria-hidden="true" className="size-8 text-primary" />
         <p className="mt-5 font-nepali text-xs font-semibold text-primary">
-          {kind === "genre" ? "साहित्यिक विधा" : "मनस्थितिअनुसार सङ्ग्रह"}
+          {kind === "genre" ? "Literary category" : "Mood collection"}
         </p>
         <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-          {collection?.name ?? "सङ्ग्रह"}
+          {collection?.name ?? "Collection"}
         </h1>
         <p className="mt-3 max-w-2xl font-nepali text-sm leading-7 text-muted-foreground">
-          {collection?.description || "यस छनोटका श्रव्य रचना।"}
+          {collection?.description || "Audio tracks in this selection."}
         </p>
       </header>
 
@@ -86,8 +86,8 @@ export function TaxonomyDetailPage({
         </div>
       ) : (
         <EmptyState
-          title="रचना भेटिएन"
-          description="यो सङ्ग्रहमा प्रकाशनयोग्य श्रव्य रचना थपिएपछि यहाँ देखिनेछन्।"
+          title="Track not found"
+          description="Published audio tracks will appear here when available."
         />
       )}
     </div>

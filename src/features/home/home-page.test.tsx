@@ -89,7 +89,7 @@ describe("remote homepage", () => {
     expect(screen.queryByText("खाली खण्ड")).not.toBeInTheDocument();
     const headings = screen.getAllByRole("heading", { level: 2 });
     expect(headings.map((heading) => heading.textContent)).toEqual([
-      "विशेष प्रस्तुति आउँदैछ",
+      "Featured content is coming",
       "पहिलो खण्ड",
       "दोस्रो खण्ड",
     ]);
@@ -105,7 +105,7 @@ describe("remote homepage", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toBeInTheDocument(),
     );
-    expect(screen.getByText("फेरि प्रयास गर्नुहोस्")).toBeInTheDocument();
+    expect(screen.getByText("Try again")).toBeInTheDocument();
     expect(screen.queryByText("प्रेमका कविता")).not.toBeInTheDocument();
   });
 
@@ -136,11 +136,11 @@ describe("remote homepage", () => {
     renderHomepage();
 
     expect(await screen.findByText("विधाअनुसार अन्वेषण")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "सबै हेर्नुहोस्" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
       "href",
       "/explore",
     );
-    expect(screen.getByRole("link", { name: /कथा/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Story/ })).toHaveAttribute(
       "href",
       "/explore?type=story",
     );

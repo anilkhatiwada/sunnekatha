@@ -11,25 +11,25 @@ import type { ApiUploadSession } from "@/types";
 const uploadOptions = [
   {
     value: "audio_master",
-    label: "मूल अडियो",
+    label: "Original audio",
     accept: "audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/mp4,audio/x-m4a",
     icon: FileAudio,
   },
   {
     value: "cover_image",
-    label: "कभर तस्बिर",
+    label: "Cover image",
     accept: "image/jpeg,image/png,image/webp",
     icon: FileImage,
   },
   {
     value: "author_image",
-    label: "लेखक तस्बिर",
+    label: "Author image",
     accept: "image/jpeg,image/png,image/webp",
     icon: FileImage,
   },
   {
     value: "narrator_image",
-    label: "वाचक तस्बिर",
+    label: "Narrator image",
     accept: "image/jpeg,image/png,image/webp",
     icon: FileImage,
   },
@@ -47,10 +47,10 @@ export function CreatorUploadPage() {
   if (!user?.isCreator) {
     return (
       <section className="rounded-2xl border border-border bg-surface p-7">
-        <h1 className="font-literary text-3xl font-semibold">सर्जक अपलोड</h1>
+        <h1 className="font-literary text-3xl font-semibold">Creator upload</h1>
         <p className="mt-3 font-nepali leading-7 text-muted-foreground">
-          यो सुविधा प्रमाणित सर्जक र कर्मचारीका लागि मात्र हो। सर्जक पहुँचका
-          लागि SunneKatha सम्पादकीय टोलीसँग सम्पर्क गर्नुहोस्।
+          Uploads are limited to approved creators and staff. Contact the
+          SunneKatha editorial team for access.
         </p>
       </section>
     );
@@ -60,14 +60,13 @@ export function CreatorUploadPage() {
     <div className="mx-auto max-w-3xl space-y-7">
       <header>
         <p className="font-nepali text-sm font-semibold text-primary">
-          सर्जक केन्द्र
+          Creator Center
         </p>
         <h1 className="mt-2 font-literary text-4xl font-semibold">
-          सुरक्षित फाइल अपलोड
+          Secure file upload
         </h1>
         <p className="mt-3 max-w-2xl font-nepali leading-7 text-muted-foreground">
-          फाइल सिधै सुरक्षित भण्डारणमा जान्छ। अपलोड पूरा भएपछि सम्पादकीय
-          समीक्षा र प्रशोधन छुट्टै सुरु हुन्छ।
+          Files go directly to secure storage. Editorial review and processing start separately after upload.
         </p>
       </header>
 
@@ -83,7 +82,7 @@ export function CreatorUploadPage() {
           void uploadCreatorFile(file, uploadType)
             .then((session) => {
               setCompleted(session);
-              setMessage("फाइल सफलतापूर्वक अपलोड र पुष्टि भयो।");
+              setMessage("The file was uploaded and confirmed.");
               setFile(null);
               form.reset();
             })
@@ -91,7 +90,7 @@ export function CreatorUploadPage() {
               setMessage(
                 error instanceof ApiError
                   ? error.message
-                  : "अपलोड पूरा हुन सकेन। फाइलको प्रकार र आकार जाँच्नुहोस्।",
+                  : "Upload failed. Check the file type and size.",
               );
             })
             .finally(() => setIsUploading(false));
@@ -99,7 +98,7 @@ export function CreatorUploadPage() {
       >
         <fieldset>
           <legend className="font-nepali text-sm font-semibold">
-            फाइलको प्रकार
+            File type
           </legend>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {uploadOptions.map(({ value, label, icon: Icon }) => (
@@ -129,7 +128,7 @@ export function CreatorUploadPage() {
         </fieldset>
 
         <label className="block font-nepali text-sm font-semibold">
-          {option.label} छान्नुहोस्
+          {option.label} — choose file
           <input
             key={uploadType}
             type="file"
@@ -152,7 +151,7 @@ export function CreatorUploadPage() {
           className="rounded-full font-nepali"
         >
           <UploadCloud aria-hidden="true" className="size-4" />
-          {isUploading ? "अपलोड हुँदैछ…" : "सुरक्षित अपलोड सुरु गर्नुहोस्"}
+          {isUploading ? "Uploading…" : "Start secure upload"}
         </Button>
 
         <p
@@ -166,7 +165,7 @@ export function CreatorUploadPage() {
 
       {completed ? (
         <section className="rounded-xl border border-primary/25 bg-primary/5 p-5">
-          <h2 className="font-nepali font-semibold">अपलोड पुष्टि भयो</h2>
+          <h2 className="font-nepali font-semibold">Upload confirmed</h2>
           <p className="mt-2 font-nepali text-sm text-muted-foreground">
             {completed.originalFilename} · {completed.status}
           </p>

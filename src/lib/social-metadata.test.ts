@@ -37,7 +37,7 @@ describe("track social metadata", () => {
 
   it("returns safe fallback metadata when the API is unavailable", () => {
     expect(buildTrackMetadata("missing", null)).toMatchObject({
-      title: "रचना",
+      title: "Track",
       alternates: { canonical: "/track/missing" },
     });
   });

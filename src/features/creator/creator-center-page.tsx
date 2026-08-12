@@ -46,15 +46,15 @@ export function CreatorCenterPage() {
     return (
       <EmptyState
         icon={FileAudio}
-        title="सर्जक पहुँच आवश्यक छ"
-        description="यो केन्द्र प्रमाणित सर्जक र सम्पादकीय कर्मचारीका लागि हो।"
+        title="Creator access required"
+        description="This area is for approved creators and editorial staff."
       />
     );
   }
   if (profile.isError || drafts.isError || uploads.isError) {
     return (
       <ErrorState
-        message="सर्जक केन्द्र लोड गर्न सकिएन।"
+        message="Creator Center could not be loaded."
         onRetry={() => {
           void profile.refetch();
           void drafts.refetch();
@@ -72,13 +72,13 @@ export function CreatorCenterPage() {
       <header className="flex flex-wrap items-end justify-between gap-5 rounded-2xl border border-border bg-surface/70 p-6 sm:p-8">
         <div>
           <p className="font-nepali text-sm font-semibold text-primary">
-            सर्जक केन्द्र
+            Creator Center
           </p>
           <h1 className="mt-2 font-literary text-4xl font-semibold">
             {profile.data?.displayName ?? user.displayName}
           </h1>
           <p className="mt-2 font-nepali text-sm text-muted-foreground">
-            {profile.data?.isApproved ? "प्रमाणित सर्जक" : "स्वीकृति प्रतीक्षामा"}
+            {profile.data?.isApproved ? "Approved creator" : "Awaiting approval"}
           </p>
         </div>
         <Link
@@ -86,12 +86,12 @@ export function CreatorCenterPage() {
           className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2 font-nepali text-sm font-semibold text-background"
         >
           <UploadCloud aria-hidden="true" className="size-4" />
-          नयाँ फाइल अपलोड
+          Upload new file
         </Link>
       </header>
 
       <section>
-        <h2 className="font-literary text-3xl font-semibold">मस्यौदा रचना</h2>
+        <h2 className="font-literary text-3xl font-semibold">Draft tracks</h2>
         {drafts.isPending ? (
           <LoadingSkeleton className="mt-4 h-32 rounded-xl" />
         ) : draftItems.length ? (
@@ -109,7 +109,7 @@ export function CreatorCenterPage() {
                     {track.title}
                   </Link>
                   <p className="mt-1 font-nepali text-xs text-muted-foreground">
-                    प्रशोधन: {track.processingStatus} · समीक्षा:{" "}
+                    Processing: {track.processingStatus} · Review:{" "}
                     {track.reviewStatus}
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export function CreatorCenterPage() {
                   className="rounded-full font-nepali"
                 >
                   <Send aria-hidden="true" className="size-4" />
-                  समीक्षामा पठाउनुहोस्
+                  Submit for review
                 </Button>
               </article>
             ))}
@@ -135,21 +135,20 @@ export function CreatorCenterPage() {
           <EmptyState
             compact
             icon={FileAudio}
-            title="मस्यौदा छैन"
-            description="सम्पादकीय टोलीले अपलोडलाई रचनासँग जोडेपछि यहाँ देखिनेछ।"
+            title="No drafts"
+            description="Tracks will appear here after the editorial team links an upload."
             className="mt-4"
           />
         )}
         {submit.isError ? (
           <p role="alert" className="mt-3 font-nepali text-sm text-destructive">
-            रचना समीक्षामा पठाउन सकिएन। आवश्यक मेटाडाटा, अधिकार र अडियो स्थिति
-            जाँच्नुहोस्।
+            The track could not be submitted. Check required metadata, rights, and audio status.
           </p>
         ) : null}
       </section>
 
       <section>
-        <h2 className="font-literary text-3xl font-semibold">हालैका अपलोड</h2>
+        <h2 className="font-literary text-3xl font-semibold">Recent uploads</h2>
         {uploads.isPending ? (
           <LoadingSkeleton className="mt-4 h-28 rounded-xl" />
         ) : uploadItems.length ? (
@@ -170,7 +169,7 @@ export function CreatorCenterPage() {
           </ul>
         ) : (
           <p className="mt-4 font-nepali text-sm text-muted-foreground">
-            अहिलेसम्म कुनै अपलोड छैन।
+            No uploads yet.
           </p>
         )}
       </section>

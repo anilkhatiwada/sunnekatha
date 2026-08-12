@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SunneKatha — नेपाली श्रव्य साहित्य",
+    name: "SunneKatha — Nepali audio literature",
     short_name: "SunneKatha",
-    description: "नेपाली कथा, कविता र साहित्य सुन्ने शान्त डिजिटल मञ्च।",
+    description: "A calm digital home for Nepali stories, poetry, and literature.",
     start_url: "/",
     display: "standalone",
     background_color: "#0b0a09",

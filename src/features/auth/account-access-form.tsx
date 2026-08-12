@@ -31,7 +31,7 @@ export function AccountAccessForm() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {value === "login" ? "इमेलबाट साइन इन" : "नयाँ खाता"}
+            {value === "login" ? "Sign in with email" : "New account"}
           </button>
         ))}
       </div>
@@ -64,7 +64,7 @@ export function AccountAccessForm() {
               setError(
                 requestError instanceof ApiError
                   ? requestError.message
-                  : "खाता अनुरोध पूरा गर्न सकिएन। फेरि प्रयास गर्नुहोस्।",
+                  : "The account request failed. Please try again.",
               );
             })
             .finally(() => setIsSubmitting(false));
@@ -73,7 +73,7 @@ export function AccountAccessForm() {
         {mode === "register" ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="font-nepali text-sm">
-              देखिने नाम
+              Display name
               <input
                 name="displayName"
                 minLength={2}
@@ -84,7 +84,7 @@ export function AccountAccessForm() {
               />
             </label>
             <label className="font-nepali text-sm">
-              प्रयोगकर्ता नाम
+              Username
               <input
                 name="username"
                 maxLength={150}
@@ -96,7 +96,7 @@ export function AccountAccessForm() {
           </div>
         ) : null}
         <label className="block font-nepali text-sm">
-          इमेल
+          Email
           <input
             name="email"
             type="email"
@@ -106,7 +106,7 @@ export function AccountAccessForm() {
           />
         </label>
         <label className="block font-nepali text-sm">
-          पासवर्ड
+          Password
           <input
             name="password"
             type="password"
@@ -120,7 +120,7 @@ export function AccountAccessForm() {
         </label>
         {mode === "register" ? (
           <label className="block font-nepali text-sm">
-            पासवर्ड पुनः लेख्नुहोस्
+            Confirm password
             <input
               name="passwordConfirm"
               type="password"
@@ -142,10 +142,10 @@ export function AccountAccessForm() {
           className="w-full rounded-full font-nepali"
         >
           {isSubmitting
-            ? "प्रक्रिया हुँदैछ…"
+            ? "Please wait…"
             : mode === "login"
-              ? "साइन इन गर्नुहोस्"
-              : "खाता बनाउनुहोस्"}
+              ? "Sign in"
+              : "Create account"}
         </Button>
       </form>
     </div>

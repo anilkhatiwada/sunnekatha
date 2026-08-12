@@ -938,9 +938,10 @@ run does not replace PostgreSQL migration and query-plan validation.
 
 ## Frontend integration
 
-The Next.js application is still mock-backed. The backend contract comparison,
+The production Next.js application uses the remote Django API. Mock fixtures are
+retained only for local UI development. The contract comparison,
 method-by-method mappings, pagination adapters, authentication behavior, secure
-player handshake, and known gaps are documented in
+player handshake, and remaining gaps are documented in
 [`../docs/frontend-backend-integration-report.md`](../docs/frontend-backend-integration-report.md).
 
 The essential playback rule is:

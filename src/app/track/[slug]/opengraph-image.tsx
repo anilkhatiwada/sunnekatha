@@ -8,7 +8,7 @@ import {
   getSocialTrack,
 } from "@/lib/social-metadata";
 
-export const alt = "SunneKatha श्रव्य साहित्य";
+export const alt = "SunneKatha audio literature";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/jpeg";
 export const runtime = "nodejs";
@@ -51,13 +51,13 @@ export default async function OpenGraphImage({
   ]);
 
   const image = await renderSocialCard({
-    title: track?.title || "नेपाली साहित्य अब कानसम्म",
+    title: track?.title || "Nepali literature, now in audio",
     author: track?.author.name || "SunneKatha",
     narrator: track?.narrator.name,
     category:
       track?.category?.name ||
       track?.literaryWork.category?.name ||
-      "श्रव्य साहित्य",
+      "Audio literature",
     duration: track ? formatDuration(track.duration) : undefined,
     artwork,
     font,

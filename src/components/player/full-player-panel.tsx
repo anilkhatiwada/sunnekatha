@@ -73,7 +73,7 @@ export function FullPlayerPanel({
   };
 
   const showPlaceholderNotice = (label: string) => {
-    setPlaceholderNotice(`${label} सुविधा चाँडै उपलब्ध हुनेछ।`);
+    setPlaceholderNotice(`${label} will be available soon.`);
   };
   const selectTabFromKeyboard = (
     event: React.KeyboardEvent<HTMLButtonElement>,
@@ -120,14 +120,14 @@ export function FullPlayerPanel({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            aria-label="पूर्ण प्लेयर बन्द गर्नुहोस्"
+            aria-label="Close full player"
             className="rounded-full bg-surface/45 backdrop-blur-md"
           >
             <ChevronDown aria-hidden="true" className="size-6" />
           </Button>
           <div className="text-center">
             <p className="font-nepali text-xs font-medium tracking-wide text-primary">
-              अहिले बज्दैछ
+              Now playing
             </p>
             <p className="mt-0.5 hidden font-nepali text-xs text-muted-foreground sm:block">
               SunneKatha
@@ -139,7 +139,7 @@ export function FullPlayerPanel({
             size="icon"
             onClick={onToggleFavorite}
             aria-label={
-              isFavorite ? "मनपर्नेबाट हटाउनुहोस्" : "मनपर्नेमा राख्नुहोस्"
+              isFavorite ? "Remove from favorites" : "Add to favorites"
             }
             aria-pressed={isFavorite}
             className={cn(
@@ -158,7 +158,7 @@ export function FullPlayerPanel({
           <div className="mx-auto w-full max-w-[28rem] lg:max-w-none">
             <Image
               src={track.coverImage}
-              alt={`${track.title} को आवरण`}
+              alt={`${track.title} cover`}
               width={800}
               height={800}
               className="aspect-square w-full rounded-2xl object-cover shadow-[0_32px_100px_rgb(0_0_0_/_0.58)] ring-1 ring-white/10"
@@ -178,11 +178,11 @@ export function FullPlayerPanel({
                 className="mt-3 grid gap-1 font-nepali text-sm sm:grid-cols-2"
               >
                 <p className="text-muted-foreground">
-                  लेखक{" "}
+                  Author{" "}
                   <span className="text-foreground">{track.author.name}</span>
                 </p>
                 <p className="text-muted-foreground sm:text-right">
-                  वाचक{" "}
+                  Narrator{" "}
                   <span className="text-foreground">
                     {track.narrator.name}
                   </span>
@@ -196,12 +196,12 @@ export function FullPlayerPanel({
             <div className="mt-6 grid grid-cols-5 gap-1 rounded-xl border border-border/80 bg-surface/55 p-2 backdrop-blur-md">
               <UtilityButton
                 icon={Download}
-                label="डाउनलोड"
-                onClick={() => showPlaceholderNotice("डाउनलोड")}
+                label="Download"
+                onClick={() => showPlaceholderNotice("Download")}
               />
               <UtilityButton
                 icon={Share2}
-                label="साझा"
+                label="Share"
                 onClick={() => {
                   void sharePage({
                     title: track.title,
@@ -211,8 +211,8 @@ export function FullPlayerPanel({
                     .then((result) =>
                       setPlaceholderNotice(
                         result === "copied"
-                          ? "रचनाको लिङ्क प्रतिलिपि भयो।"
-                          : "रचना साझा भयो।",
+                          ? "Track link copied."
+                          : "Track shared.",
                       ),
                     )
                     .catch(() => undefined);
@@ -220,18 +220,18 @@ export function FullPlayerPanel({
               />
               <UtilityButton
                 icon={ListMusic}
-                label="प्ले सूची"
+                label="Queue"
                 onClick={onOpenQueue}
               />
               <UtilityButton
                 icon={Gauge}
                 label={`${playbackSpeed}×`}
                 onClick={cyclePlaybackSpeed}
-                ariaLabel={`प्लेब्याक गति ${playbackSpeed} गुणा। परिवर्तन गर्नुहोस्`}
+                ariaLabel={`Playback speed ${playbackSpeed}×. Change speed`}
               />
               <UtilityButton
                 icon={Timer}
-                label={sleepMinutes ? `${sleepMinutes} मिनेट` : "निद्रा टाइमर"}
+                label={sleepMinutes ? `${sleepMinutes} min` : "Sleep timer"}
                 onClick={() => {
                   const next =
                     sleepMinutes === 0
@@ -244,8 +244,8 @@ export function FullPlayerPanel({
                   setSleepTimer(next);
                   setPlaceholderNotice(
                     next
-                      ? `निद्रा टाइमर ${next} मिनेटमा सेट भयो।`
-                      : "निद्रा टाइमर बन्द भयो।",
+                      ? `Sleep timer ${next} minutes set.`
+                      : "Sleep timer turned off.",
                   );
                 }}
               />
@@ -262,19 +262,19 @@ export function FullPlayerPanel({
             <div className="mt-5 overflow-hidden rounded-xl border border-border/80 bg-surface/45 backdrop-blur-md">
               <div
                 role="tablist"
-                aria-label="ट्र्याक विवरण"
+                aria-label="Track details"
                 className="grid grid-cols-2 border-b border-border"
               >
                 <DetailTabButton
                   id="transcript"
-                  label="पाठ"
+                  label="Transcript"
                   isActive={activeTab === "transcript"}
                   onSelect={setActiveTab}
                   onKeyDown={selectTabFromKeyboard}
                 />
                 <DetailTabButton
                   id="description"
-                  label="विवरण"
+                  label="Description"
                   isActive={activeTab === "description"}
                   onSelect={setActiveTab}
                   onKeyDown={selectTabFromKeyboard}
@@ -295,18 +295,18 @@ export function FullPlayerPanel({
                   ) : (
                     <div className="py-3 text-center">
                       <p className="font-nepali text-sm text-foreground">
-                        यस रचनाको पाठ तयार हुँदैछ
+                        A transcript is being prepared for this track
                       </p>
                       <p className="mt-1 font-nepali text-xs leading-5 text-muted-foreground">
-                        समयसँग मिल्ने साहित्यिक पाठ भविष्यको संस्करणमा यहाँ
-                        देखिनेछ।
+                        A synchronized literary transcript will appear here in
+                        a future release
                       </p>
                     </div>
                   )
                 ) : (
                   <p className="font-nepali text-sm leading-7 text-foreground/85">
                     {track.description ??
-                      "यस रचनाको विस्तृत विवरण चाँडै उपलब्ध हुनेछ।"}
+                      "A detailed description will be available soon."}
                   </p>
                 )}
               </div>

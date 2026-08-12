@@ -87,7 +87,7 @@ export function PwaInstallButton() {
         variant="secondary"
         size="icon"
         onClick={() => void handleInstall()}
-        aria-label="SunneKatha एप इन्स्टल गर्नुहोस्"
+        aria-label="Install the SunneKatha app"
         className="size-11 shrink-0 rounded-full lg:hidden"
       >
         <Download aria-hidden="true" className="size-[1.1rem]" />
@@ -109,7 +109,7 @@ export function PwaInstallButton() {
             variant="ghost"
             size="icon"
             onClick={() => helpDialogRef.current?.close()}
-            aria-label="इन्स्टल निर्देशन बन्द गर्नुहोस्"
+            aria-label="Close installation instructions"
             className="absolute top-3 right-3 size-11 rounded-full"
           >
             <X aria-hidden="true" className="size-5" />
@@ -119,19 +119,19 @@ export function PwaInstallButton() {
             id="pwa-install-title"
             className="mt-4 pr-10 font-literary text-2xl font-semibold"
           >
-            मोबाइलमा SunneKatha राख्नुहोस्
+            Add SunneKatha to your phone
           </h2>
           <ol className="mt-4 space-y-3 font-nepali text-sm leading-6 text-muted-foreground">
-            <li>१. Safari को Share बटन थिच्नुहोस्।</li>
-            <li>२. “Add to Home Screen” छान्नुहोस्।</li>
-            <li>३. माथिल्लो दायाँपट्टि “Add” थिच्नुहोस्।</li>
+            <li>1. Tap Share in Safari.</li>
+            <li>2. Choose “Add to Home Screen”.</li>
+            <li>3. Tap “Add” in the top-right corner.</li>
           </ol>
           <Button
             type="button"
             onClick={() => helpDialogRef.current?.close()}
             className="mt-6 w-full rounded-full font-nepali"
           >
-            बुझें
+            Got it
           </Button>
         </div>
       </dialog>

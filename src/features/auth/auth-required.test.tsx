@@ -30,7 +30,7 @@ describe("AuthRequired", () => {
 
     expect(screen.queryByText("Private library")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "साइन इन गर्नुहोस्" }),
+      screen.getByRole("link", { name: "Sign in" }),
     ).toHaveAttribute("href", "/login");
   });
 

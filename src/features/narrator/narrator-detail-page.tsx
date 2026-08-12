@@ -60,7 +60,7 @@ export function NarratorDetailPageContent({
   if (narratorQuery.isError) {
     return (
       <SectionError
-        message="वाचकको परिचय लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The narrator profile could not be loaded. Please try again."
         onRetry={() => void narratorQuery.refetch()}
         isRetrying={narratorQuery.isFetching}
       />
@@ -87,7 +87,7 @@ export function NarratorDetailPageContent({
           <div className="relative">
             <Image
               src={narrator.image}
-              alt={`${narrator.name} को तस्बिर`}
+              alt={`${narrator.name} photo`}
               width={720}
               height={720}
               preload
@@ -95,13 +95,13 @@ export function NarratorDetailPageContent({
             />
             <span className="absolute right-3 bottom-3 inline-flex size-12 items-center justify-center rounded-full border border-primary/25 bg-background/85 text-primary shadow-xl backdrop-blur">
               <Mic2 aria-hidden="true" className="size-5" />
-              <span className="sr-only">वाचक</span>
+              <span className="sr-only">Narrator</span>
             </span>
           </div>
 
           <div className="min-w-0">
             <p className="font-nepali text-xs font-semibold tracking-wide text-primary">
-              वाचक · स्वर कलाकार
+              Narrator · Voice artist
             </p>
             <h1 className="mt-2 font-literary text-4xl leading-tight font-semibold sm:text-5xl lg:text-6xl">
               {narrator.name}
@@ -116,10 +116,10 @@ export function NarratorDetailPageContent({
                   aria-hidden="true"
                   className="size-4 text-primary"
                 />
-                {formatCompactNumber(narrator.followerCount)} फलोअर
+                {formatCompactNumber(narrator.followerCount)} followers
               </span>
               <span>
-                {allTracks.length || fallbackTracks.length} वाचन
+                {allTracks.length || fallbackTracks.length} narrations
               </span>
             </div>
 
@@ -132,7 +132,7 @@ export function NarratorDetailPageContent({
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
-                सबै बजाउनुहोस्
+                All — play
               </Button>
               <Button
                 type="button"
@@ -153,14 +153,14 @@ export function NarratorDetailPageContent({
                   aria-hidden="true"
                   className={cn("size-4", isFollowing && "fill-current")}
                 />
-                {isFollowing ? "फलो गर्दै" : "फलो गर्नुहोस्"}
+                {isFollowing ? "Following" : "Follow"}
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <HorizontalSection title="लोकप्रिय वाचन" eyebrow="धेरै सुनिएका">
+      <HorizontalSection title="Popular narrations" eyebrow="Most listened">
         {tracksQuery.isPending
           ? Array.from({ length: 5 }, (_, index) => (
               <CardWidth key={index}>
@@ -178,18 +178,18 @@ export function NarratorDetailPageContent({
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
-              स्वरमा उपलब्ध
+              Available in this voice
             </p>
             <h2
               id="all-narrated-tracks"
               className="mt-1 font-literary text-2xl font-semibold sm:text-3xl"
             >
-              सबै वाचन
+              All narrations
             </h2>
           </div>
           {!tracksQuery.isPending && (
             <span className="font-nepali text-xs text-muted-foreground">
-              {allTracks.length} रचना
+              {allTracks.length} Track
             </span>
           )}
         </div>
@@ -210,8 +210,8 @@ export function NarratorDetailPageContent({
 
       {(playlistsQuery.isPending || Boolean(playlistsQuery.data?.length)) && (
         <HorizontalSection
-          title="वाचक समेटिएका प्लेलिस्ट"
-          eyebrow="विशेष सङ्ग्रह"
+          title="Playlists featuring this narrator"
+          eyebrow="Featured collections"
         >
           {playlistsQuery.isPending
             ? Array.from({ length: 4 }, (_, index) => (
@@ -246,13 +246,13 @@ function NarratorNotFound() {
     <div className="rounded-2xl border border-dashed border-border bg-surface/45 px-6 py-16 text-center">
       <Mic2 aria-hidden="true" className="mx-auto size-8 text-primary" />
       <h1 className="mt-4 font-literary text-2xl font-semibold">
-        वाचक भेटिएन
+        Narrator not found
       </h1>
       <Link
         href="/explore"
         className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 font-nepali text-sm font-semibold text-background focus-visible:outline-2 focus-visible:outline-primary"
       >
-        अन्वेषणमा फर्कनुहोस्
+        Back to Explore
       </Link>
     </div>
   );
@@ -260,7 +260,7 @@ function NarratorNotFound() {
 
 function NarratorDetailSkeleton() {
   return (
-    <div aria-label="वाचक लोड हुँदैछ" role="status" className="space-y-12">
+    <div aria-label="Loading narrator" role="status" className="space-y-12">
       <div className="grid gap-8 rounded-2xl border border-border bg-surface/55 p-5 md:grid-cols-[16rem_minmax(0,1fr)] lg:p-10">
         <LoadingSkeleton className="aspect-square w-full rounded-full" />
         <div className="flex flex-col justify-end">

@@ -33,12 +33,12 @@ import {
 import type { ContentType } from "@/types";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  poem: "कविता",
-  story: "कथा",
-  essay: "निबन्ध",
-  novel_chapter: "उपन्यास अध्याय",
-  folk_tale: "लोककथा",
-  drama: "नाटक",
+  poem: "Poetry",
+  story: "Story",
+  essay: "Essay",
+  novel_chapter: "Novel Chapter",
+  folk_tale: "Folk Tale",
+  drama: "Drama",
 };
 
 interface TrackDetailPageContentProps {
@@ -79,7 +79,7 @@ export function TrackDetailPageContent({
   if (trackQuery.isError) {
     return (
       <SectionError
-        message="रचना लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The track could not be loaded. Please try again."
         onRetry={() => void trackQuery.refetch()}
         isRetrying={trackQuery.isFetching}
       />
@@ -101,7 +101,7 @@ export function TrackDetailPageContent({
         <div className="relative grid gap-8 md:grid-cols-[16rem_minmax(0,1fr)] lg:grid-cols-[21rem_minmax(0,1fr)] lg:gap-12">
           <Image
             src={track.coverImage}
-            alt={`${track.title} को आवरण`}
+            alt={`${track.title} cover`}
             width={720}
             height={720}
             preload
@@ -134,7 +134,7 @@ export function TrackDetailPageContent({
                 href={`/narrator/${track.narrator.slug}`}
                 className="text-muted-foreground hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
               >
-                वाचन: {track.narrator.name}
+                Narrated by: {track.narrator.name}
               </Link>
               <span aria-hidden="true" className="text-muted-foreground">
                 •
@@ -144,7 +144,7 @@ export function TrackDetailPageContent({
               </span>
             </div>
             <p className="mt-5 max-w-2xl font-nepali text-sm leading-7 text-muted-foreground sm:text-base">
-              {track.description ?? "यस रचनाको विवरण चाँडै उपलब्ध हुनेछ।"}
+              {track.description ?? "A description will be available soon."}
             </p>
 
             {track.literaryWork && (
@@ -158,8 +158,8 @@ export function TrackDetailPageContent({
                     {track.literaryWork.title}
                   </span>
                   {track.literaryWork.chapterNumber
-                    ? ` · अध्याय ${track.literaryWork.chapterNumber}`
-                    : " सङ्ग्रहको अंश"}
+                    ? ` · Chapter ${track.literaryWork.chapterNumber}`
+                    : " collection"}
                 </p>
               </div>
             )}
@@ -172,7 +172,7 @@ export function TrackDetailPageContent({
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
-                बजाउनुहोस्
+                — play
               </Button>
               <Button
                 type="button"
@@ -182,7 +182,7 @@ export function TrackDetailPageContent({
                 onClick={() => {
                   if (!favorite.toggle()) {
                     setStatusMessage(
-                      "मनपर्नेमा राख्न पहिले साइन इन गर्नुहोस्।",
+                      "Sign in to add this track to your favorites.",
                     );
                   }
                 }}
@@ -195,7 +195,7 @@ export function TrackDetailPageContent({
                   aria-hidden="true"
                   className={cn("size-4", isFavorite && "fill-current")}
                 />
-                {isFavorite ? "मनपर्ने" : "मनपर्नेमा"}
+                {isFavorite ? "Favorite" : "Add to favorites"}
               </Button>
               <AddToPlaylistControl
                 trackId={track.id}
@@ -213,15 +213,15 @@ export function TrackDetailPageContent({
                     .then((result) =>
                       setStatusMessage(
                         result === "copied"
-                          ? "रचनाको लिङ्क प्रतिलिपि भयो।"
-                          : "रचना साझा भयो।",
+                          ? "Track link copied."
+                          : "Track shared.",
                       ),
                     )
                     .catch(() => undefined);
                 }}
               >
                 <Share2 aria-hidden="true" className="size-4" />
-                साझा
+                Share
               </Button>
             </div>
             <p
@@ -231,7 +231,7 @@ export function TrackDetailPageContent({
             >
               {statusMessage}
               {favorite.error
-                ? "मनपर्ने स्थिति सुरक्षित गर्न सकिएन। फेरि प्रयास गर्नुहोस्।"
+                ? "Your favorite could not be saved. Please try again."
                 : null}
             </p>
           </div>
@@ -243,13 +243,13 @@ export function TrackDetailPageContent({
         className="rounded-2xl border border-border bg-surface/55 p-5 sm:p-8"
       >
         <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
-          सुन्दै पढ्नुहोस्
+          Read along
         </p>
         <h2
           id="transcript-heading"
           className="mt-2 font-literary text-3xl font-semibold"
         >
-          लेखोट
+          Transcript
         </h2>
         {track.transcript ? (
           <p className="mt-5 max-w-4xl whitespace-pre-line font-nepali text-base leading-9 text-muted-foreground">
@@ -257,40 +257,40 @@ export function TrackDetailPageContent({
           </p>
         ) : (
           <div className="mt-5 rounded-xl border border-dashed border-border px-5 py-8 font-nepali text-sm text-muted-foreground">
-            यस रचनाको लेखोट तयार हुँदैछ।
+            A transcript is being prepared for this track.
           </div>
         )}
       </section>
 
       <section
-        aria-label="सर्जक र वाचकको जानकारी"
+        aria-label="Author and narrator information"
         className="grid gap-4 md:grid-cols-2"
       >
         <PersonInformation
-          eyebrow="लेखक"
+          eyebrow="Author"
           name={author?.name ?? track.author.name}
           image={author?.image ?? track.author.image}
           href={`/author/${track.author.slug}`}
           biography={
             authorQuery.isPending
               ? undefined
-              : author?.biography ?? "लेखकको परिचय चाँडै उपलब्ध हुनेछ।"
+              : author?.biography ?? "The author biography will be available soon."
           }
         />
         <PersonInformation
-          eyebrow="वाचक"
+          eyebrow="Narrator"
           name={narrator?.name ?? track.narrator.name}
           image={narrator?.image ?? track.narrator.image}
           href={`/narrator/${track.narrator.slug}`}
           biography={
             narratorQuery.isPending
               ? undefined
-              : narrator?.biography ?? "वाचकको परिचय चाँडै उपलब्ध हुनेछ।"
+              : narrator?.biography ?? "The narrator biography will be available soon."
           }
         />
       </section>
 
-      <HorizontalSection title="मिल्दोजुल्दो रचना" eyebrow="अर्को के सुन्ने?">
+      <HorizontalSection title="Related tracks" eyebrow="What should you listen to next?">
         {similarQuery.isPending
           ? Array.from({ length: 5 }, (_, index) => (
               <div
@@ -333,7 +333,7 @@ function PersonInformation({
     <article className="flex gap-4 rounded-2xl border border-border bg-surface/55 p-5 sm:p-6">
       <Image
         src={image}
-        alt={`${name} को तस्बिर`}
+        alt={`${name} photo`}
         width={96}
         height={96}
         className="size-20 shrink-0 rounded-full object-cover ring-1 ring-white/10 sm:size-24"
@@ -355,7 +355,7 @@ function PersonInformation({
           className="mt-3 inline-flex items-center gap-1 rounded-sm font-nepali text-xs font-semibold text-primary hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary"
         >
           <UserRound aria-hidden="true" className="size-3.5" />
-          पूरा परिचय
+          Full biography
         </Link>
       </div>
     </article>
@@ -367,13 +367,13 @@ function TrackNotFound() {
     <div className="rounded-2xl border border-dashed border-border bg-surface/45 px-6 py-16 text-center">
       <BookOpen aria-hidden="true" className="mx-auto size-8 text-primary" />
       <h1 className="mt-4 font-literary text-2xl font-semibold">
-        रचना भेटिएन
+        Track not found
       </h1>
       <Link
         href="/explore"
         className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 font-nepali text-sm font-semibold text-background focus-visible:outline-2 focus-visible:outline-primary"
       >
-        अन्वेषणमा फर्कनुहोस्
+        Back to Explore
       </Link>
     </div>
   );
@@ -381,7 +381,7 @@ function TrackNotFound() {
 
 function TrackDetailSkeleton() {
   return (
-    <div aria-label="रचना लोड हुँदैछ" role="status" className="space-y-12">
+    <div aria-label="Loading track" role="status" className="space-y-12">
       <div className="grid gap-8 rounded-2xl border border-border bg-surface/55 p-5 md:grid-cols-[16rem_minmax(0,1fr)] lg:p-10">
         <LoadingSkeleton className="aspect-square w-full rounded-xl" />
         <div className="flex flex-col justify-end">

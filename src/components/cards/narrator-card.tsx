@@ -18,8 +18,8 @@ export function NarratorCard({ narrator, onPlay }: NarratorCardProps) {
       href={`/narrator/${narrator.slug}`}
       image={narrator.image}
       name={narrator.name}
-      description={`${formatCompactNumber(narrator.followerCount)} श्रोता`}
-      playLabel={`${narrator.name} ले वाचन गरेका रचना बजाउनुहोस्`}
+      description={`${formatCompactNumber(narrator.followerCount)} listeners`}
+      playLabel={`${narrator.name}  — play narrated tracks`}
       isPlayDisabled={!firstTrack}
       onPlay={() => {
         if (firstTrack) {
@@ -33,7 +33,7 @@ export function NarratorCard({ narrator, onPlay }: NarratorCardProps) {
 export function NarratorCardSkeleton() {
   return (
     <div
-      aria-label="वाचक लोड हुँदैछ"
+      aria-label="Loading narrator"
       role="status"
       className="p-3 text-center"
     >

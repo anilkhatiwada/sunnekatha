@@ -1,6 +1,6 @@
 # SunneKatha frontend integration status
 
-**Last updated:** 2026-08-10
+**Last updated:** 2026-08-12
 
 **Frontend:** `https://sunnekatha.com`
 
@@ -82,10 +82,10 @@ Production verification completed on 2026-08-10:
 - premium audio supports HTTP 206 only with a 300-second signed URL;
 - unsigned premium and restricted paths return HTTP 403.
 
-The production `npm ci` audit reported 11 high-severity dependency findings.
-No automatic force-upgrade was applied during deployment because it could make
-breaking dependency changes. Review with `npm audit` in a dedicated dependency
-hardening change.
+The first-public-release audit upgraded Next.js and Sharp to patched releases
+and pinned patched PostCSS and nanoid transitive versions. The production npm
+dependency audit now reports zero known vulnerabilities. One high advisory
+remains in a nested ESLint-only dependency and is not included in production.
 
 ## Added frontend routes
 
@@ -116,11 +116,11 @@ Most recent completed validation:
 
 - TypeScript: passed
 - ESLint: passed with zero warnings
-- Vitest: **69 passed**
+- Vitest: **89 passed**
 - Next.js production build: passed
 - Django checks: passed
 - Django migration drift check: passed
-- Full Django pytest suite: **608 passed**
+- Full Django pytest suite: **628 passed** with **86.9% coverage**
 - `git diff --check`: passed
 
 Run the full commands before deployment:

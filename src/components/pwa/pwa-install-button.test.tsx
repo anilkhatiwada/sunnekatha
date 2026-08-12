@@ -31,7 +31,7 @@ describe("PwaInstallButton", () => {
     });
 
     const installButton = await screen.findByRole("button", {
-      name: "SunneKatha एप इन्स्टल गर्नुहोस्",
+      name: "Install the SunneKatha app",
     });
     fireEvent.click(installButton);
 
@@ -44,7 +44,7 @@ describe("PwaInstallButton", () => {
 
     expect(
       screen.queryByRole("button", {
-        name: "SunneKatha एप इन्स्टल गर्नुहोस्",
+        name: "Install the SunneKatha app",
       }),
     ).not.toBeInTheDocument();
   });

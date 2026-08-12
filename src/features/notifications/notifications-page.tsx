@@ -43,7 +43,7 @@ export function NotificationsPageContent() {
   if (notifications.isError) {
     return (
       <SectionError
-        message="सूचनाहरू लोड गर्न सकिएन।"
+        message="Notifications could not be loaded."
         onRetry={() => void notifications.refetch()}
         isRetrying={notifications.isFetching}
       />
@@ -55,10 +55,10 @@ export function NotificationsPageContent() {
       <header className="flex flex-wrap items-end justify-between gap-5 rounded-2xl border border-border bg-surface/70 p-7 sm:p-9">
         <div>
           <p className="font-nepali text-xs font-semibold text-primary">
-            तपाईंका अपडेट
+            Your updates
           </p>
           <h1 className="mt-2 font-literary text-4xl font-semibold">
-            सूचनाहरू
+            Notifications
           </h1>
         </div>
         <Button
@@ -72,7 +72,7 @@ export function NotificationsPageContent() {
           className="rounded-full font-nepali"
         >
           <CheckCheck aria-hidden="true" className="size-4" />
-          सबै पढिएको चिन्ह लगाउनुहोस्
+          Mark all as read
         </Button>
       </header>
 
@@ -114,7 +114,7 @@ export function NotificationsPageContent() {
                 <div className="flex shrink-0 flex-col gap-2">
                   {notification.actionUrl ? (
                     <Button asChild size="sm" variant="ghost">
-                      <Link href={notification.actionUrl}>हेर्नुहोस्</Link>
+                      <Link href={notification.actionUrl}>View</Link>
                     </Button>
                   ) : null}
                   {!notification.isRead ? (
@@ -126,7 +126,7 @@ export function NotificationsPageContent() {
                       onClick={() => readMutation.mutate(notification.id)}
                       className="font-nepali"
                     >
-                      पढियो
+                      Read
                     </Button>
                   ) : null}
                 </div>
@@ -137,8 +137,8 @@ export function NotificationsPageContent() {
       ) : (
         <EmptyState
           icon={Bell}
-          title="नयाँ सूचना छैन"
-          description="सर्जक, प्लेलिस्ट र खातासम्बन्धी अपडेट यहाँ देखिनेछन्।"
+          title="No new notifications"
+          description="Creator, playlist, and account updates will appear here."
         />
       )}
     </div>

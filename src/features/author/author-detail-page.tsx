@@ -68,7 +68,7 @@ export function AuthorDetailPageContent({
   if (authorQuery.isError) {
     return (
       <SectionError
-        message="लेखकको परिचय लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="The author profile could not be loaded. Please try again."
         onRetry={() => void authorQuery.refetch()}
         isRetrying={authorQuery.isFetching}
       />
@@ -93,7 +93,7 @@ export function AuthorDetailPageContent({
         <div className="relative grid items-end gap-8 md:grid-cols-[16rem_minmax(0,1fr)] lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-12">
           <Image
             src={author.image}
-            alt={`${author.name} को तस्बिर`}
+            alt={`${author.name} photo`}
             width={720}
             height={720}
             preload
@@ -102,7 +102,7 @@ export function AuthorDetailPageContent({
 
           <div className="min-w-0">
             <p className="font-nepali text-xs font-semibold tracking-wide text-primary">
-              लेखक परिचय
+              Author profile
             </p>
             <h1 className="mt-2 font-literary text-4xl leading-tight font-semibold sm:text-5xl lg:text-6xl">
               {author.name}
@@ -127,7 +127,7 @@ export function AuthorDetailPageContent({
                 </span>
               )}
               <span>
-                {allTracks.length || author.popularTracks.length} श्रव्य रचना
+                {allTracks.length || author.popularTracks.length} audio tracks
               </span>
             </div>
 
@@ -151,7 +151,7 @@ export function AuthorDetailPageContent({
                 className="rounded-full px-6 font-nepali"
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
-                लोकप्रिय रचना बजाउनुहोस्
+                Popular Track — play
               </Button>
               <Button
                 type="button"
@@ -172,14 +172,14 @@ export function AuthorDetailPageContent({
                   aria-hidden="true"
                   className={cn("size-4", isFollowing && "fill-current")}
                 />
-                {isFollowing ? "फलो गर्दै" : "फलो गर्नुहोस्"}
+                {isFollowing ? "Following" : "Follow"}
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <HorizontalSection title="लोकप्रिय रचना" eyebrow="धेरै सुनिएका">
+      <HorizontalSection title="Popular Track" eyebrow="Most listened">
         {popularTracks.map((track) => (
           <CardWidth key={track.id}>
             <TrackCard track={track} onPlay={(item) => void playTrack(item)} />
@@ -191,18 +191,18 @@ export function AuthorDetailPageContent({
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
-              पूर्ण सूची
+              Full list
             </p>
             <h2
               id="all-author-tracks"
               className="mt-1 font-literary text-2xl font-semibold sm:text-3xl"
             >
-              सबै श्रव्य रचना
+              All audio tracks
             </h2>
           </div>
           {!tracksQuery.isPending && (
             <span className="font-nepali text-xs text-muted-foreground">
-              {allTracks.length} रचना
+              {allTracks.length} Track
             </span>
           )}
         </div>
@@ -224,8 +224,8 @@ export function AuthorDetailPageContent({
       {(collectionsQuery.isPending ||
         Boolean(collectionsQuery.data?.length)) && (
         <HorizontalSection
-          title="विशेष सङ्ग्रह"
-          eyebrow="यी रचना समेटिएका"
+          title="Featured collections"
+          eyebrow="Featured in"
         >
           {collectionsQuery.isPending
             ? Array.from({ length: 4 }, (_, index) => (
@@ -246,7 +246,7 @@ export function AuthorDetailPageContent({
 
       {(relatedAuthorsQuery.isPending ||
         Boolean(relatedAuthorsQuery.data?.length)) && (
-        <HorizontalSection title="सम्बन्धित लेखक" eyebrow="अर्को परिचय">
+        <HorizontalSection title="Related authors" eyebrow="More about the author">
           {relatedAuthorsQuery.isPending
             ? Array.from({ length: 4 }, (_, index) => (
                 <CardWidth key={index}>
@@ -281,10 +281,10 @@ function formatLifeYears(birthYear?: number, deathYear?: number) {
   }
 
   if (birthYear) {
-    return `जन्म ${birthYear}`;
+    return `Born ${birthYear}`;
   }
 
-  return `निधन ${deathYear}`;
+  return `Died ${deathYear}`;
 }
 
 function AuthorNotFound() {
@@ -292,13 +292,13 @@ function AuthorNotFound() {
     <div className="rounded-2xl border border-dashed border-border bg-surface/45 px-6 py-16 text-center">
       <BookOpen aria-hidden="true" className="mx-auto size-8 text-primary" />
       <h1 className="mt-4 font-literary text-2xl font-semibold">
-        लेखक भेटिएन
+        No authors found
       </h1>
       <Link
         href="/explore"
         className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 font-nepali text-sm font-semibold text-background focus-visible:outline-2 focus-visible:outline-primary"
       >
-        अन्वेषणमा फर्कनुहोस्
+        Back to Explore
       </Link>
     </div>
   );
@@ -306,7 +306,7 @@ function AuthorNotFound() {
 
 function AuthorDetailSkeleton() {
   return (
-    <div aria-label="लेखक लोड हुँदैछ" role="status" className="space-y-12">
+    <div aria-label="Loading author" role="status" className="space-y-12">
       <div className="grid gap-8 rounded-2xl border border-border bg-surface/55 p-5 md:grid-cols-[16rem_minmax(0,1fr)] lg:p-10">
         <LoadingSkeleton className="aspect-square w-full rounded-2xl" />
         <div className="flex flex-col justify-end">

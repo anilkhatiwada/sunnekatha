@@ -64,7 +64,7 @@ export function PlaylistsPageContent() {
   if (publicQuery.isError) {
     return (
       <SectionError
-        message="प्लेलिस्टहरू लोड गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।"
+        message="Playlists could not be loaded. Please try again."
         onRetry={() => void publicQuery.refetch()}
         isRetrying={publicQuery.isFetching}
       />
@@ -78,13 +78,13 @@ export function PlaylistsPageContent() {
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="font-nepali text-xs font-semibold text-primary">
-              सुन्नका लागि तयार सङ्ग्रह
+              Collections ready to play
             </p>
             <h1 className="mt-2 font-literary text-4xl font-semibold sm:text-5xl">
-              प्लेलिस्ट
+              Playlist
             </h1>
             <p className="mt-3 max-w-2xl font-nepali text-sm leading-7 text-muted-foreground">
-              सम्पादकले छानेका र आफ्नै रुचिअनुसार बनाएका रचनाहरू एउटै ठाउँमा।
+              Editorial picks and your personal collections in one place.
             </p>
           </div>
           {user ? (
@@ -98,7 +98,7 @@ export function PlaylistsPageContent() {
               ) : (
                 <Plus aria-hidden="true" className="size-4" />
               )}
-              {isCreating ? "बन्द गर्नुहोस्" : "नयाँ प्लेलिस्ट"}
+              {isCreating ? "Close" : "New playlist"}
             </Button>
           ) : null}
         </div>
@@ -113,11 +113,11 @@ export function PlaylistsPageContent() {
           className="rounded-2xl border border-primary/25 bg-surface p-5 sm:p-7"
         >
           <h2 className="font-literary text-2xl font-semibold">
-            नयाँ प्लेलिस्ट
+            New playlist
           </h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
             <label className="font-nepali text-sm">
-              शीर्षक
+              Title
               <input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -128,7 +128,7 @@ export function PlaylistsPageContent() {
               />
             </label>
             <label className="font-nepali text-sm">
-              दृश्यता
+              Visibility
               <select
                 value={visibility}
                 onChange={(event) =>
@@ -141,9 +141,9 @@ export function PlaylistsPageContent() {
                 }
                 className={`${inputClassName} mt-2`}
               >
-                <option value="private">निजी</option>
-                <option value="unlisted">लिङ्क भएका मात्र</option>
-                <option value="public">सार्वजनिक</option>
+                <option value="private">Private</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="public">Public</option>
               </select>
             </label>
             <Button
@@ -151,13 +151,12 @@ export function PlaylistsPageContent() {
               disabled={title.trim().length < 2 || createMutation.isPending}
               className="h-11 rounded-full font-nepali"
             >
-              {createMutation.isPending ? "बनाउँदै…" : "बनाउनुहोस्"}
+              {createMutation.isPending ? "Creating…" : "Create"}
             </Button>
           </div>
           {createMutation.isError ? (
             <p role="alert" className="mt-3 font-nepali text-sm text-destructive">
-              प्लेलिस्ट बनाउन सकिएन। शीर्षक र अनुमति जाँच गरी फेरि प्रयास
-              गर्नुहोस्।
+              The playlist could not be created. Check the title and permissions, then try again.
             </p>
           ) : null}
         </form>
@@ -165,37 +164,37 @@ export function PlaylistsPageContent() {
 
       {user ? (
         <PlaylistGrid
-          title="मेरा प्लेलिस्ट"
-          eyebrow="व्यक्तिगत सङ्ग्रह"
+          title="My playlists"
+          eyebrow="Personal collections"
           isPending={mineQuery.isPending}
           playlists={mineQuery.data ?? []}
-          emptyDescription="पहिलो प्लेलिस्ट बनाएर मनपर्ने रचना थप्नुहोस्।"
+          emptyDescription="Create your first playlist and add a favorite track."
           onPlay={(playlist) => void playPlaylist(playlist)}
         />
       ) : (
         <section className="rounded-2xl border border-dashed border-border bg-surface/40 p-6">
           <h2 className="font-literary text-2xl font-semibold">
-            आफ्नै प्लेलिस्ट बनाउनुहोस्
+            Create your own playlist
           </h2>
           <p className="mt-2 font-nepali text-sm text-muted-foreground">
-            निजी सङ्ग्रह बनाउन र उपकरणहरूबीच सुरक्षित राख्न साइन इन गर्नुहोस्।
+            Sign in to create private collections and keep them across devices.
           </p>
           <Button
             type="button"
             onClick={() => window.location.assign("/login")}
             className="mt-5 rounded-full font-nepali"
           >
-            साइन इन गर्नुहोस्
+            Sign in
           </Button>
         </section>
       )}
 
       <PlaylistGrid
-        title="सार्वजनिक प्लेलिस्ट"
-        eyebrow="सम्पादकीय र समुदाय"
+        title="Public Playlist"
+        eyebrow="Editorial and community"
         isPending={publicQuery.isPending}
         playlists={publicQuery.data ?? []}
-        emptyDescription="सार्वजनिक प्लेलिस्ट तयार भएपछि यहाँ देखिनेछन्।"
+        emptyDescription="Public playlists will appear here."
         onPlay={(playlist) => void playPlaylist(playlist)}
       />
     </div>
@@ -243,7 +242,7 @@ function PlaylistGrid({
         <EmptyState
           compact
           icon={ListMusic}
-          title="अहिलेसम्म खाली छ"
+          title="Nothing here yet"
           description={emptyDescription}
           className="mt-5"
         />

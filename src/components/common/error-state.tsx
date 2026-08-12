@@ -13,8 +13,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = "केही समस्या भयो",
-  message = "यो सामग्री अहिले ल्याउन सकिएन। केही बेरपछि फेरि प्रयास गर्नुहोस्।",
+  title = "Something went wrong",
+  message = "This content could not be loaded. Please try again shortly.",
   onRetry,
   isRetrying = false,
   compact = false,
@@ -52,7 +52,7 @@ export function ErrorState({
               aria-hidden="true"
               className={cn("size-4", isRetrying && "animate-spin")}
             />
-            {isRetrying ? "फेरि प्रयास हुँदैछ…" : "फेरि प्रयास गर्नुहोस्"}
+            {isRetrying ? "Retrying…" : "Try again"}
           </Button>
         ) : null}
       </div>

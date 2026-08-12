@@ -10,7 +10,7 @@ export function AlbumCard({ album }: { album: HomeAlbum }) {
       <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-soft shadow-[0_16px_42px_rgb(0_0_0_/_0.3)]">
         <Image
           src={album.coverImage || DEFAULT_ARTWORK_PATH}
-          alt={`${album.title} एल्बमको आवरण`}
+          alt={`${album.title} Albumcover`}
           fill
           sizes="(max-width: 640px) 44vw, (max-width: 1024px) 28vw, 240px"
           className="object-cover transition duration-500 group-hover:scale-[1.025]"

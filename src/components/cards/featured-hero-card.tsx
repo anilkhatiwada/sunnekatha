@@ -39,7 +39,7 @@ export function FeaturedHeroCard<
 
       <div className="relative flex min-h-[24rem] max-w-2xl flex-col justify-end p-6 sm:min-h-[28rem] sm:p-9 lg:min-h-[30rem] lg:p-12">
         <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-          विशेष प्रस्तुति
+          Featured
         </p>
         <h2 className="mt-4 font-literary text-4xl leading-tight font-semibold text-foreground sm:text-5xl lg:text-6xl">
           <Link
@@ -56,7 +56,7 @@ export function FeaturedHeroCard<
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 font-nepali text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2">
             <ListMusic aria-hidden="true" className="size-4 text-gold" />
-            {playlist.trackCount} रचना
+            {playlist.trackCount} Track
           </span>
           <span className="inline-flex items-center gap-2">
             <Headphones aria-hidden="true" className="size-4 text-gold" />
@@ -66,7 +66,7 @@ export function FeaturedHeroCard<
 
         <div className="mt-8 flex items-center gap-4">
           <CardPlayButton
-            label={`${playlist.title} प्लेलिस्ट बजाउनुहोस्`}
+            label={`${playlist.title} Playlist — play`}
             onPlay={() => onPlay(playlist)}
             size="lg"
             disabled={playlist.tracks.length === 0}
@@ -75,7 +75,7 @@ export function FeaturedHeroCard<
             href={`/playlist/${playlist.slug}`}
             className="inline-flex h-11 items-center rounded-full border border-border bg-background/60 px-5 font-nepali text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/40 hover:bg-surface focus-visible:outline-2 focus-visible:outline-primary"
           >
-            सबै हेर्नुहोस्
+            View all
           </Link>
         </div>
       </div>
@@ -86,7 +86,7 @@ export function FeaturedHeroCard<
 export function FeaturedHeroCardSkeleton() {
   return (
     <div
-      aria-label="विशेष प्रस्तुति लोड हुँदैछ"
+      aria-label="Loading featured content"
       role="status"
       className="flex min-h-[24rem] flex-col justify-end rounded-2xl border border-border/80 bg-surface p-6 sm:min-h-[28rem] sm:p-9 lg:min-h-[30rem] lg:p-12"
     >
