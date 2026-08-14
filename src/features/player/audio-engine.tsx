@@ -73,6 +73,7 @@ function isExpectedPlayInterruption(error: unknown) {
 
 export function AudioEngine() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const playbackPhase = usePlayerStore((state) => state.playbackPhase);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const volume = usePlayerStore((state) => state.volume);
@@ -139,7 +140,10 @@ export function AudioEngine() {
       setPlaybackError(null);
     };
     const handleDurationChange = () => {
-      if (Number.isFinite(audio.duration)) {
+      if (
+        usePlayerStore.getState().playbackPhase === "content" &&
+        Number.isFinite(audio.duration)
+      ) {
         setDuration(audio.duration);
       }
     };
@@ -156,6 +160,7 @@ export function AudioEngine() {
       pendingResumeTime.current = 0;
     };
     const handleTimeUpdate = () => {
+      if (usePlayerStore.getState().playbackPhase === "introduction") return;
       setCurrentTime(audio.currentTime);
 
       const track = activeTrack.current;
@@ -176,6 +181,10 @@ export function AudioEngine() {
     };
     const handleEnded = async () => {
       const state = usePlayerStore.getState();
+      if (state.playbackPhase === "introduction") {
+        state.finishIntroduction();
+        return;
+      }
       const track = activeTrack.current;
 
       if (track) {
@@ -218,7 +227,7 @@ export function AudioEngine() {
           );
           if (!recommendation) throw new Error("No recommendation available.");
 
-          const stream = await getTrackStream(recommendation.slug);
+          const stream = await getTrackStream(recommendation.slug, "auto", true);
           const latestState = usePlayerStore.getState();
           if (
             latestState.currentTrack?.id !== track?.id ||
@@ -227,7 +236,7 @@ export function AudioEngine() {
             latestState.setLoading(false);
             return;
           }
-          latestState.play(mapPlayableTrack(stream));
+          latestState.play(mapPlayableTrack(stream), "autoplay");
         } catch {
           const latestState = usePlayerStore.getState();
           if (latestState.currentTrack?.id === track?.id) {
@@ -243,6 +252,10 @@ export function AudioEngine() {
     };
     const handleError = async () => {
       const state = usePlayerStore.getState();
+      if (state.playbackPhase === "introduction") {
+        state.finishIntroduction();
+        return;
+      }
       const track = state.currentTrack;
       if (track && refreshedTrackId.current !== track.id) {
         refreshedTrackId.current = track.id;
@@ -307,18 +320,22 @@ export function AudioEngine() {
         const audio = getAudioInstance();
         const trackChanged =
           state.currentTrack?.id !== previousState.currentTrack?.id;
+        const phaseChanged = state.playbackPhase !== previousState.playbackPhase;
 
-        if (trackChanged && state.currentTrack) {
+        if ((trackChanged || phaseChanged) && state.currentTrack) {
           refreshedTrackId.current = null;
           const previousTrack = activeTrack.current;
 
-          if (previousTrack) {
+          if (previousTrack && previousState.playbackPhase === "content") {
             flushProgress(previousTrack, audio.currentTime, audio.duration);
           }
 
-          activeTrack.current = state.currentTrack;
-          recordRecentlyPlayed(state.currentTrack.id);
-          const resumeTime = getResumePosition(state.currentTrack.id);
+          const isIntroduction = state.playbackPhase === "introduction";
+          activeTrack.current = isIntroduction ? null : state.currentTrack;
+          if (!isIntroduction) recordRecentlyPlayed(state.currentTrack.id);
+          const resumeTime = isIntroduction
+            ? 0
+            : getResumePosition(state.currentTrack.id);
           pendingResumeTime.current = resumeTime;
           lastRecordedProgress.current =
             resumeTime > 0
@@ -329,7 +346,9 @@ export function AudioEngine() {
               : null;
           setLoading(true);
           setPlaybackError(null);
-          audio.src = state.currentTrack.audioUrl;
+          audio.src = isIntroduction
+            ? state.currentTrack.introduction?.url ?? state.currentTrack.audioUrl
+            : state.currentTrack.audioUrl;
           audio.load();
           setCurrentTime(resumeTime);
         }
@@ -337,7 +356,7 @@ export function AudioEngine() {
         if (
           state.currentTrack &&
           state.isPlaying &&
-          (!previousState.isPlaying || trackChanged)
+          (!previousState.isPlaying || trackChanged || phaseChanged)
         ) {
           void audio.play().catch((error: unknown) => {
             if (isExpectedPlayInterruption(error)) return;
@@ -381,15 +400,19 @@ export function AudioEngine() {
       return;
     }
 
-    if (previousTrack?.id === currentTrack.id) return;
+    const isIntroduction = playbackPhase === "introduction";
+    const expectedSource = isIntroduction
+      ? currentTrack.introduction?.url
+      : currentTrack.audioUrl;
+    if (previousTrack?.id === currentTrack.id && audio.src === expectedSource) return;
 
     if (previousTrack) {
       flushProgress(previousTrack, audio.currentTime, audio.duration);
     }
 
-    activeTrack.current = currentTrack;
-    recordRecentlyPlayed(currentTrack.id);
-    const resumeTime = getResumePosition(currentTrack.id);
+    activeTrack.current = isIntroduction ? null : currentTrack;
+    if (!isIntroduction) recordRecentlyPlayed(currentTrack.id);
+    const resumeTime = isIntroduction ? 0 : getResumePosition(currentTrack.id);
     pendingResumeTime.current = resumeTime;
     lastRecordedProgress.current =
       resumeTime > 0
@@ -397,11 +420,12 @@ export function AudioEngine() {
         : null;
     setLoading(true);
     setPlaybackError(null);
-    audio.src = currentTrack.audioUrl;
+    audio.src = expectedSource ?? currentTrack.audioUrl;
     audio.load();
     setCurrentTime(resumeTime);
   }, [
     currentTrack,
+    playbackPhase,
     flushProgress,
     setCurrentTime,
     setLoading,
@@ -430,17 +454,19 @@ export function AudioEngine() {
             : "Audio could not be played. Please try again.",
       });
     });
-  }, [currentTrack, isPlaying, setPlaybackError]);
+  }, [currentTrack, isPlaying, playbackPhase, setPlaybackError]);
 
   useEffect(() => {
     if (wasPlaying.current && !isPlaying) {
-      flushProgress();
+      if (playbackPhase === "content") flushProgress();
     }
     wasPlaying.current = isPlaying;
-  }, [flushProgress, isPlaying]);
+  }, [flushProgress, isPlaying, playbackPhase]);
 
   useEffect(() => {
-    const handlePageExit = () => flushProgress();
+    const handlePageExit = () => {
+      if (usePlayerStore.getState().playbackPhase === "content") flushProgress();
+    };
 
     window.addEventListener("pagehide", handlePageExit);
     window.addEventListener("beforeunload", handlePageExit);
@@ -456,6 +482,7 @@ export function AudioEngine() {
     const audio = getAudioInstance();
     if (
       currentTrack &&
+      playbackPhase === "content" &&
       Number.isFinite(currentTime) &&
       Math.abs(audio.currentTime - currentTime) > 0.1
     ) {
@@ -465,7 +492,7 @@ export function AudioEngine() {
         pendingResumeTime.current = currentTime;
       }
     }
-  }, [currentTime, currentTrack]);
+  }, [currentTime, currentTrack, playbackPhase]);
 
   useEffect(() => {
     const audio = getAudioInstance();

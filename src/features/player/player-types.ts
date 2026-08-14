@@ -1,6 +1,13 @@
 import type { QueueItem, Track } from "@/types";
 
 export type RepeatMode = "off" | "one" | "all";
+export type PlaybackPhase = "introduction" | "content";
+export type PlaybackSource =
+  | "manual"
+  | "playlist"
+  | "queue"
+  | "play_all"
+  | "autoplay";
 
 export interface PlayerError {
   code: string;
@@ -22,10 +29,12 @@ export interface PlayerState {
   sleepTimerMinutes: number;
   isLoading: boolean;
   playbackError: PlayerError | null;
+  playbackPhase: PlaybackPhase;
+  playbackSource: PlaybackSource;
 }
 
 export interface PlayerActions {
-  play: (track?: Track) => void;
+  play: (track?: Track, source?: PlaybackSource) => void;
   pause: () => void;
   togglePlay: () => void;
   next: () => void;
@@ -46,8 +55,13 @@ export interface PlayerActions {
   moveQueueItem: (queueItemId: string, targetIndex: number) => void;
   removeFromQueue: (queueItemId: string) => void;
   clearQueue: () => void;
-  replaceQueue: (tracks: Track[], startIndex?: number) => void;
+  replaceQueue: (
+    tracks: Track[],
+    startIndex?: number,
+    source?: PlaybackSource,
+  ) => void;
   updateTrackSource: (track: Track) => void;
+  finishIntroduction: () => void;
   setLoading: (isLoading: boolean) => void;
   setPlaybackError: (error: PlayerError | null) => void;
 }

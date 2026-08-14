@@ -49,13 +49,13 @@ export function QueueSyncController() {
         if (isCancelled || serverQueue.items.length === 0) return;
         const playableTracks = await Promise.all(
           serverQueue.items.map(async ({ track }) =>
-            mapPlayableTrack(await getTrackStream(track.slug)),
+            mapPlayableTrack(await getTrackStream(track.slug, "auto", true)),
           ),
         );
         if (isCancelled) return;
         usePlayerStore
           .getState()
-          .replaceQueue(playableTracks, serverQueue.currentIndex);
+          .replaceQueue(playableTracks, serverQueue.currentIndex, "queue");
         usePlayerStore.getState().pause();
         usePlayerStore
           .getState()

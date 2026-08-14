@@ -19,6 +19,8 @@ function resetPlayerStore() {
     sleepTimerMinutes: 0,
     isLoading: false,
     playbackError: null,
+    playbackPhase: "content",
+    playbackSource: "manual",
   });
 }
 
@@ -34,6 +36,27 @@ describe("player store", () => {
 
     usePlayerStore.getState().togglePlay();
     expect(usePlayerStore.getState().isPlaying).toBe(true);
+  });
+
+  it("plays introductions for sequenced playback but skips them for direct playback", () => {
+    const track = {
+      ...tracks[0],
+      introduction: {
+        url: "https://media.example/introduction.mp3",
+        duration: 12,
+        expiresAt: null,
+      },
+    };
+
+    usePlayerStore.getState().play(track, "manual");
+    expect(usePlayerStore.getState().playbackPhase).toBe("content");
+
+    usePlayerStore.getState().replaceQueue([track], 0, "playlist");
+    expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
+
+    usePlayerStore.getState().finishIntroduction();
+    expect(usePlayerStore.getState().playbackPhase).toBe("content");
+    expect(usePlayerStore.getState().currentTrack?.id).toBe(track.id);
   });
 
   it("clamps seeking, volume, and playback speed to safe ranges", () => {

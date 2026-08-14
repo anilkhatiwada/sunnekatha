@@ -206,6 +206,11 @@ class TrackStreamView(APIView):
             quality=query.validated_data["quality"],
             request=request,
         )
+        payload["introduction"] = (
+            cloudfront_media_service.deliver_introduction(track, request=request)
+            if query.validated_data["includeIntroduction"]
+            else None
+        )
         payload["track"] = track
         return Response(
             StreamResponseSerializer(

@@ -1736,6 +1736,22 @@ class AudioTrackAdmin(
             },
         ),
         (
+            "Spoken Introduction",
+            {
+                "fields": (
+                    "introduction_enabled",
+                    "introduction_audio_file",
+                    "introduction_duration_seconds",
+                    "introduction_notes",
+                ),
+                "description": (
+                    "Optional prepared introduction played before this track in "
+                    "playlists, queues, play-all, and automatic transitions. Direct "
+                    "playback skips it."
+                ),
+            },
+        ),
+        (
             "Transcript",
             {
                 "classes": ("collapse",),

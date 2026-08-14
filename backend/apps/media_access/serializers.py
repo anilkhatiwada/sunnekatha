@@ -9,6 +9,13 @@ class StreamQuerySerializer(serializers.Serializer):
         default="auto",
         required=False,
     )
+    includeIntroduction = serializers.BooleanField(default=False, required=False)
+
+
+class StreamIntroductionSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    expiresAt = serializers.DateTimeField(allow_null=True)
+    duration = serializers.IntegerField(min_value=0)
 
 
 class StreamAuthorizationSerializer(serializers.Serializer):
@@ -24,3 +31,4 @@ class StreamResponseSerializer(serializers.Serializer):
     expiresAt = serializers.DateTimeField(allow_null=True)
     track = CompactTrackSerializer()
     authorization = StreamAuthorizationSerializer()
+    introduction = StreamIntroductionSerializer(allow_null=True)

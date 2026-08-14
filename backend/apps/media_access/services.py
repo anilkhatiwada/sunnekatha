@@ -84,6 +84,40 @@ class CloudFrontMediaService:
             },
         }
 
+    def deliver_introduction(self, track, *, request):
+        """Deliver an optional spoken introduction under the track's access rules."""
+        if not track.introduction_enabled or not track.introduction_audio_file:
+            return None
+        is_public = track.is_published and track.published_at <= timezone.now()
+        self.authorize(
+            track,
+            user=getattr(request, "user", None),
+            is_public=is_public,
+        )
+        file_field = track.introduction_audio_file
+        if not self._cloudfront_enabled():
+            expires_at = self._signed_expiration()
+            return {
+                "url": self._s3_signed_url(file_field.name),
+                "expiresAt": expires_at,
+                "duration": track.introduction_duration_seconds,
+            }
+        access_class = (
+            "premium" if track.is_premium else "restricted" if not is_public else "free"
+        )
+        resource_url = self._resource_url(file_field.name, access_class)
+        requires_signature = track.is_premium or not is_public
+        expires_at = self._signed_expiration() if requires_signature else None
+        return {
+            "url": (
+                self._signed_url(resource_url, expires_at)
+                if requires_signature
+                else resource_url
+            ),
+            "expiresAt": expires_at,
+            "duration": track.introduction_duration_seconds,
+        }
+
     def deliver_admin_object(self, *, object_key, quality, user):
         """Return signed CloudFront access for a server-controlled private key."""
         is_staff = bool(

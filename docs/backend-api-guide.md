@@ -211,17 +211,19 @@ Fetch display/player metadata first, then request media authorization immediatel
 before playback:
 
 ```http
-GET /api/v1/tracks/{slug}/stream/?quality=auto
+GET /api/v1/tracks/{slug}/stream/?quality=auto&includeIntroduction=false
 ```
 
 The response contains the selected `quality`, a CloudFront `url`, optional
-`expiresAt`, compact track metadata, and authorization information:
+`expiresAt`, compact track metadata, authorization information, and an optional
+`introduction` object:
 
 ```json
 {
   "quality": "high",
   "url": "https://media.example.com/opaque/audio.m4a?Policy=...",
   "expiresAt": "2026-07-23T17:05:00Z",
+  "introduction": null,
   "authorization": {
     "status": "authorized",
     "accessType": "premium",
@@ -230,6 +232,14 @@ The response contains the selected `quality`, a CloudFront `url`, optional
   }
 }
 ```
+
+Set `includeIntroduction=true` only when a track is reached through a playlist,
+queue, play-all action, or automatic transition. When the track has an enabled
+spoken introduction, the response includes its protected `url`, `expiresAt`, and
+duration. Direct/manual track playback must leave this parameter false so the
+main literary audio begins immediately. If the introduction cannot be loaded,
+the player should continue with the main track. Listening progress, completion,
+history duration, and play counts apply only to the main track.
 
 Free published tracks work anonymously. Premium tracks require a valid
 subscription or content entitlement. Unpublished content is limited to

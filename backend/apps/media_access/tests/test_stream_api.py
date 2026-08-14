@@ -31,6 +31,10 @@ PRIVATE_FIELDS = {
     "audioMasterFile",
     "streamFileHigh",
     "streamFileLow",
+    "introduction_audio_file",
+    "introductionAudioFile",
+    "introduction_notes",
+    "introductionNotes",
 }
 
 
@@ -211,6 +215,47 @@ def test_anonymous_free_track_receives_stable_cloudfront_url():
     }
     assert first.data["track"]["id"] == str(track.id)
     assert PRIVATE_FIELDS.isdisjoint(first.data["track"])
+    assert first.data["introduction"] is None
+
+
+def test_introduction_is_returned_only_when_sequenced_playback_requests_it():
+    track = AudioTrackFactory(
+        stream_file_high="processed/audio/track/high.mp3",
+        introduction_audio_file="processed/audio/track/introduction.mp3",
+        introduction_duration_seconds=14,
+        introduction_enabled=True,
+    )
+    url = reverse("catalog:track-stream", kwargs={"slug": track.slug})
+
+    direct = APIClient().get(url)
+    sequenced = APIClient().get(url, {"includeIntroduction": "true"})
+
+    assert direct.status_code == status.HTTP_200_OK
+    assert direct.data["introduction"] is None
+    assert sequenced.status_code == status.HTTP_200_OK
+    assert sequenced.data["introduction"] == {
+        "url": (
+            "https://audio.example.com/free/processed/audio/track/introduction.mp3"
+        ),
+        "expiresAt": None,
+        "duration": 14,
+    }
+
+
+def test_disabled_or_missing_introduction_is_not_returned():
+    track = AudioTrackFactory(
+        stream_file_high="processed/audio/track/high.mp3",
+        introduction_audio_file="processed/audio/track/introduction.mp3",
+        introduction_enabled=False,
+    )
+
+    response = APIClient().get(
+        reverse("catalog:track-stream", kwargs={"slug": track.slug}),
+        {"includeIntroduction": "true"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["introduction"] is None
 
 
 @patch("apps.media_access.services.boto3.client")

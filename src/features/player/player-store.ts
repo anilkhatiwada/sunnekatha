@@ -34,14 +34,25 @@ const initialState: PlayerState = {
   sleepTimerMinutes: 0,
   isLoading: false,
   playbackError: null,
+  playbackPhase: "content",
+  playbackSource: "manual",
 };
+
+function phaseForTrack(
+  track: PlayerState["currentTrack"],
+  source: PlayerState["playbackSource"],
+) {
+  return track?.introduction && source !== "manual"
+    ? ("introduction" as const)
+    : ("content" as const);
+}
 
 export const usePlayerStore = create<PlayerStore>()(
   persist(
     (set, get) => ({
       ...initialState,
 
-      play: (track) => {
+      play: (track, source = "manual") => {
         if (!track) {
           if (get().currentTrack) {
             set({ isPlaying: true, playbackError: null });
@@ -66,6 +77,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: true,
           isLoading: false,
           playbackError: null,
+          playbackSource: source,
+          playbackPhase: phaseForTrack(track, source),
         });
       },
 
@@ -104,6 +117,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: true,
           isLoading: false,
           playbackError: null,
+          playbackSource: "queue",
+          playbackPhase: phaseForTrack(currentTrack, "queue"),
         });
       },
 
@@ -129,6 +144,8 @@ export const usePlayerStore = create<PlayerStore>()(
           duration: currentTrack?.duration ?? 0,
           isPlaying: currentTrack ? state.isPlaying : false,
           playbackError: null,
+          playbackSource: "queue",
+          playbackPhase: phaseForTrack(currentTrack, "queue"),
         });
       },
 
@@ -197,6 +214,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: true,
           isLoading: false,
           playbackError: null,
+          playbackSource: "queue",
+          playbackPhase: phaseForTrack(currentTrack, "queue"),
         });
       },
       moveQueueItem: (queueItemId, targetIndex) =>
@@ -264,8 +283,10 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: false,
           isLoading: false,
           playbackError: null,
+          playbackPhase: "content",
+          playbackSource: "manual",
         }),
-      replaceQueue: (tracks, startIndex = 0) => {
+      replaceQueue: (tracks, startIndex = 0, source = "playlist") => {
         const queue = tracks.map(createQueueItem);
         const currentQueueIndex = clampQueueIndex(startIndex, queue.length);
         const currentTrack = getTrackAtIndex(queue, currentQueueIndex);
@@ -279,6 +300,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: Boolean(currentTrack),
           isLoading: false,
           playbackError: null,
+          playbackSource: source,
+          playbackPhase: phaseForTrack(currentTrack, source),
         });
       },
       updateTrackSource: (track) =>
@@ -288,6 +311,14 @@ export const usePlayerStore = create<PlayerStore>()(
           ),
           currentTrack:
             state.currentTrack?.id === track.id ? track : state.currentTrack,
+        })),
+      finishIntroduction: () =>
+        set((state) => ({
+          playbackPhase: "content",
+          currentTime: 0,
+          duration: state.currentTrack?.duration ?? 0,
+          isLoading: true,
+          playbackError: null,
         })),
 
       setLoading: (isLoading) => set({ isLoading }),
@@ -302,7 +333,10 @@ export const usePlayerStore = create<PlayerStore>()(
       name: "sunnekatha-player",
       version: 1,
       partialize: (state): PersistedPlayerState => ({
-        queue: state.queue,
+        queue: state.queue.map((item) => ({
+          ...item,
+          track: { ...item.track, introduction: undefined },
+        })),
         currentQueueIndex: state.currentQueueIndex,
         volume: state.volume,
         playbackSpeed: state.playbackSpeed,
@@ -333,6 +367,8 @@ export const usePlayerStore = create<PlayerStore>()(
             persisted.repeatMode === "one" || persisted.repeatMode === "all"
               ? persisted.repeatMode
               : "off",
+          playbackPhase: "content",
+          playbackSource: "manual",
         };
       },
     },

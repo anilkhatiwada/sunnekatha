@@ -205,6 +205,11 @@ export interface ApiStreamResponse {
     isEntitled: boolean;
     isPrivileged: boolean;
   };
+  introduction: {
+    url: string;
+    expiresAt: string | null;
+    duration: number;
+  } | null;
 }
 
 export interface ApiListeningProgress {

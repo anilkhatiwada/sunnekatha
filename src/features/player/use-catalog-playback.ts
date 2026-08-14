@@ -23,7 +23,7 @@ export function useCatalogPlayback() {
   const playTrack = useCallback(
     async (track: CatalogTrack) => {
       if (isPlayableTrack(track)) {
-        play(track);
+        play(track, "manual");
         return;
       }
 
@@ -31,7 +31,7 @@ export function useCatalogPlayback() {
       setPlaybackError(null);
       try {
         const stream = await getTrackStream(track.slug);
-        play(mapPlayableTrack(stream));
+        play(mapPlayableTrack(stream), "manual");
       } catch {
         setLoading(false);
         setPlaybackError({
@@ -48,7 +48,7 @@ export function useCatalogPlayback() {
       const selected = tracks.slice(startIndex);
       if (selected.length === 0) return;
       if (selected.every(isPlayableTrack)) {
-        replaceQueue(selected);
+        replaceQueue(selected, 0, "playlist");
         return;
       }
       setLoading(true);
@@ -58,10 +58,10 @@ export function useCatalogPlayback() {
           selected.map(async (track) =>
             isPlayableTrack(track)
               ? track
-              : mapPlayableTrack(await getTrackStream(track.slug)),
+              : mapPlayableTrack(await getTrackStream(track.slug, "auto", true)),
           ),
         );
-        replaceQueue(playable);
+        replaceQueue(playable, 0, "playlist");
       } catch {
         setLoading(false);
         setPlaybackError({

@@ -120,6 +120,7 @@ export function mapPlayableTrack(value: ApiStreamResponse): Track {
   return {
     ...mapCompactTrack(value.track),
     audioUrl: value.url,
+    introduction: value.introduction ?? undefined,
   };
 }
 

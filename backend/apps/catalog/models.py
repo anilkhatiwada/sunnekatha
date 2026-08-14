@@ -317,6 +317,22 @@ class AudioTrack(UUIDTimeStampedModel):
         validators=[validate_audio_upload],
         blank=True,
     )
+    introduction_audio_file = models.FileField(
+        upload_to=processed_audio_upload_path,
+        storage=processed_audio_storage,
+        validators=[validate_audio_upload],
+        blank=True,
+        help_text=(
+            "Optional prepared spoken introduction. It is used for playlist, queue, "
+            "play-all, and automatic playback, but not direct track playback."
+        ),
+    )
+    introduction_duration_seconds = models.PositiveIntegerField(default=0)
+    introduction_enabled = models.BooleanField(default=True)
+    introduction_notes = models.TextField(
+        blank=True,
+        help_text="Internal editorial notes; never returned by the public API.",
+    )
     waveform_data = models.JSONField(default=list, blank=True)
     transcript = models.TextField(blank=True)
     is_explicit = models.BooleanField(default=False)

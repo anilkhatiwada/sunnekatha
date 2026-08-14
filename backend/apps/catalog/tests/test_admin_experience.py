@@ -86,6 +86,7 @@ def test_track_admin_has_requested_columns_filters_search_and_sections():
         "Literary Relationships",
         "Narration",
         "Audio Files",
+        "Spoken Introduction",
         "Transcript",
         "Processing",
         "Access and Monetization",

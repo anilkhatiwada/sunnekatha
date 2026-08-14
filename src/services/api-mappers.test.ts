@@ -65,8 +65,14 @@ describe("backend API mappers", () => {
         isEntitled: false,
         isPrivileged: false,
       },
+      introduction: {
+        url: "https://audio.example.com/free/test-introduction.mp3",
+        expiresAt: null,
+        duration: 9,
+      },
     };
 
     expect(mapPlayableTrack(response).audioUrl).toBe(response.url);
+    expect(mapPlayableTrack(response).introduction?.duration).toBe(9);
   });
 });

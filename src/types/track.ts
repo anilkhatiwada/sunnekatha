@@ -21,6 +21,11 @@ export interface Track {
   narrator: NarratorSummary;
   coverImage: string;
   audioUrl: string;
+  introduction?: {
+    url: string;
+    duration: number;
+    expiresAt: string | null;
+  };
   duration: number;
   publishedAt: string;
   language: Language;

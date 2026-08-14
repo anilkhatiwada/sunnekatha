@@ -35,11 +35,15 @@ export function PlayerControls({
     (state) => state.isShuffleEnabled,
   );
   const repeatMode = usePlayerStore((state) => state.repeatMode);
+  const playbackPhase = usePlayerStore((state) => state.playbackPhase);
   const togglePlay = usePlayerStore((state) => state.togglePlay);
   const next = usePlayerStore((state) => state.next);
   const previous = usePlayerStore((state) => state.previous);
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
+  const finishIntroduction = usePlayerStore(
+    (state) => state.finishIntroduction,
+  );
 
   const cycleRepeatMode = () => {
     setRepeatMode(
@@ -59,6 +63,18 @@ export function PlayerControls({
   if (compact) {
     return (
       <div className={cn("flex shrink-0 items-center gap-1", className)}>
+        {playbackPhase === "introduction" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={finishIntroduction}
+            aria-label="Skip spoken introduction"
+            className="h-9 rounded-full px-2 text-xs"
+          >
+            Skip intro
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="ghost"
@@ -95,6 +111,18 @@ export function PlayerControls({
 
   return (
     <div className={cn("flex items-center justify-center gap-1", className)}>
+      {playbackPhase === "introduction" ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={finishIntroduction}
+          aria-label="Skip spoken introduction"
+          className="mr-1 h-8 rounded-full px-2 text-xs text-primary"
+        >
+          Skip intro
+        </Button>
+      ) : null}
       <Button
         type="button"
         variant="ghost"
