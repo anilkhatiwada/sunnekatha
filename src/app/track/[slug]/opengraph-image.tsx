@@ -50,7 +50,7 @@ export default async function OpenGraphImage({
     fetchArtwork(artworkUrl),
   ]);
 
-  const image = await renderSocialCard({
+  const card = {
     title: track?.title || "Nepali literature, now in audio",
     author: track?.author.name || "SunneKatha",
     narrator: track?.narrator.name,
@@ -61,7 +61,15 @@ export default async function OpenGraphImage({
     duration: track ? formatDuration(track.duration) : undefined,
     artwork,
     font,
-  });
+  };
+  let image: Buffer;
+
+  try {
+    image = await renderSocialCard(card);
+  } catch (error) {
+    if (!artwork) throw error;
+    image = await renderSocialCard({ ...card, artwork: undefined });
+  }
 
   return new Response(new Uint8Array(image), {
     headers: {
