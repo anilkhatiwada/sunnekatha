@@ -137,22 +137,22 @@ function mapSection(value: unknown): HomeSection[] {
   ) {
     return [];
   }
-  const titleEnglish = isString(value.titleEnglish)
-    ? value.titleEnglish
-    : undefined;
-  const subtitle =
-    isString(value.subtitle) && value.subtitle ? value.subtitle : undefined;
+  const titleEnglish =
+    isString(value.titleEnglish) && value.titleEnglish
+      ? value.titleEnglish
+      : undefined;
   const subtitleEnglish =
     isString(value.subtitleEnglish) && value.subtitleEnglish
       ? value.subtitleEnglish
       : undefined;
   const layout = value.layout === "grid" ? ("grid" as const) : ("rail" as const);
   const kind = classifySection(value.id, value.items, value.sectionType);
+  const presentation = englishSectionPresentation(kind, value.id);
   const base = {
     id: value.id,
-    title: titleEnglish || value.title,
+    title: titleEnglish || presentation.title,
     titleEnglish,
-    subtitle: subtitleEnglish || subtitle,
+    subtitle: subtitleEnglish || presentation.subtitle,
     subtitleEnglish,
     layout,
     viewAllHref: mapSectionViewAllHref(value, kind),
@@ -452,19 +452,60 @@ function mapHomeCollection(value: unknown): Mood | null {
   if (!isRecord(value) || !hasStrings(value, ["id", "slug", "title"])) {
     return null;
   }
+  const englishName =
+    isString(value.titleEnglish) && value.titleEnglish
+      ? value.titleEnglish
+      : humanizeSlug(value.slug as string);
   return {
     id: value.id as string,
     slug: value.slug as string,
-    name:
-      isString(value.titleEnglish) && value.titleEnglish
-        ? value.titleEnglish
-        : (value.title as string),
-    nameEnglish: isString(value.titleEnglish)
-      ? value.titleEnglish
-      : undefined,
+    name: englishName,
+    nameEnglish: englishName,
     description: isString(value.description) ? value.description : "",
     image: isString(value.coverImage) ? value.coverImage : undefined,
   };
+}
+
+function englishSectionPresentation(
+  kind: HomeSection["kind"] | "unknown",
+  identifier: string,
+) {
+  if (identifier.includes("trending")) {
+    return { title: "Popular This Week", subtitle: "What listeners are enjoying now." };
+  }
+  if (identifier.includes("recent")) {
+    return { title: "Recently Added", subtitle: "Fresh audio literature on SunneKatha." };
+  }
+  const presentations = {
+    "continue-listening": {
+      title: "Continue Listening",
+      subtitle: "Pick up where you left off.",
+    },
+    tracks: {
+      title: "Featured Audio",
+      subtitle: "Editorial selections from this category.",
+    },
+    playlists: {
+      title: "Featured Playlists",
+      subtitle: "Curated listening from SunneKatha.",
+    },
+    albums: { title: "Featured Albums", subtitle: "Explore complete collections." },
+    authors: { title: "Writers", subtitle: "Discover voices behind the literature." },
+    narrators: { title: "Narrators", subtitle: "Meet the voices behind the audio." },
+    genres: { title: "Browse Genres", subtitle: "Find literature by genre." },
+    moods: { title: "Browse by Mood", subtitle: "Choose audio for your moment." },
+    categories: { title: "Browse Categories", subtitle: "Explore every literary category." },
+    unknown: { title: "Discover", subtitle: "Explore more from SunneKatha." },
+  } as const;
+  return presentations[kind];
+}
+
+function humanizeSlug(slug: string) {
+  return slug
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function malformedHomeResponse() {

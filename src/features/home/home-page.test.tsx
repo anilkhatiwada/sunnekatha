@@ -115,7 +115,7 @@ describe("remote homepage", () => {
       sections: [
         {
           id: "browse-categories",
-          title: "विधाअनुसार अन्वेषण",
+          title: "Browse Categories",
           layout: "grid",
           kind: "categories",
           viewAllHref: "/explore",
@@ -135,7 +135,7 @@ describe("remote homepage", () => {
 
     renderHomepage();
 
-    expect(await screen.findByText("विधाअनुसार अन्वेषण")).toBeInTheDocument();
+    expect(await screen.findByText("Browse Categories")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
       "href",
       "/explore",

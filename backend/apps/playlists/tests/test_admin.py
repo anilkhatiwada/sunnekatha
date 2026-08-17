@@ -8,7 +8,7 @@ from apps.accounts.tests.factories import UserFactory
 from apps.catalog.models import TrackProcessingStatus
 from apps.catalog.tests.factories import AudioTrackFactory
 from apps.playlists.admin import PlaylistAdmin, PlaylistItemInline
-from apps.playlists.models import Playlist
+from apps.playlists.models import Playlist, PlaylistItem
 from apps.playlists.tests.factories import PlaylistFactory, PlaylistItemFactory
 
 pytestmark = pytest.mark.django_db
@@ -63,7 +63,7 @@ def test_playlist_admin_has_requested_columns_sections_actions_and_track_fields(
 
 
 def test_playlist_admin_annotates_count_and_duration(rf):
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     PlaylistItemFactory(
         playlist=playlist,
         position=1,
@@ -84,8 +84,35 @@ def test_playlist_admin_annotates_count_and_duration(rf):
     assert model_admin.total_duration(result) == "3:10"
 
 
+def test_playlist_admin_hides_user_playlists_and_allows_confirmed_deletion(rf):
+    user_playlist = PlaylistFactory()
+    editorial = PlaylistFactory(editorial=True)
+    request = rf.get("/")
+    request.user = UserFactory(is_staff=True, is_superuser=True)
+    model_admin = admin.site._registry[Playlist]
+
+    visible_ids = set(model_admin.get_queryset(request).values_list("id", flat=True))
+
+    assert editorial.id in visible_ids
+    assert user_playlist.id not in visible_ids
+    assert model_admin.has_delete_permission(request, editorial) is True
+
+
+def test_playlist_item_admin_hides_items_from_user_playlists(rf):
+    user_item = PlaylistItemFactory(playlist=PlaylistFactory())
+    editorial_item = PlaylistItemFactory(playlist=PlaylistFactory(editorial=True))
+    request = rf.get("/")
+    request.user = UserFactory(is_staff=True, is_superuser=True)
+    model_admin = admin.site._registry[PlaylistItem]
+
+    visible_ids = set(model_admin.get_queryset(request).values_list("id", flat=True))
+
+    assert editorial_item.id in visible_ids
+    assert user_item.id not in visible_ids
+
+
 def test_large_playlist_uses_bounded_relationship_interface(rf):
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     model_admin = admin.site._registry[Playlist]
     playlist._track_count = model_admin.inline_track_limit + 1
     request = rf.get("/")
@@ -97,7 +124,7 @@ def test_large_playlist_uses_bounded_relationship_interface(rf):
 
 def test_unfold_drag_markup_keeps_visible_keyboard_position_input(client):
     user = UserFactory(is_staff=True, is_superuser=True)
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     PlaylistItemFactory(playlist=playlist, position=1)
     client.force_login(user)
 
@@ -113,7 +140,7 @@ def test_unfold_drag_markup_keeps_visible_keyboard_position_input(client):
 
 def test_playlist_preview_is_lazy_and_follows_item_position(client, monkeypatch):
     user = UserFactory(is_staff=True, is_superuser=True)
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     second = PlaylistItemFactory(
         playlist=playlist,
         position=2,
@@ -143,7 +170,7 @@ def test_playlist_preview_is_lazy_and_follows_item_position(client, monkeypatch)
 
 
 def test_publication_readiness_identifies_unready_tracks():
-    playlist = PlaylistFactory(is_published=False)
+    playlist = PlaylistFactory(editorial=True, is_published=False)
     PlaylistItemFactory(
         playlist=playlist,
         position=1,
@@ -158,7 +185,7 @@ def test_publication_readiness_identifies_unready_tracks():
 
 def test_inline_reorder_delegates_to_transactional_service(client):
     user = UserFactory(is_staff=True, is_superuser=True)
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     first = PlaylistItemFactory(playlist=playlist, position=1)
     second = PlaylistItemFactory(playlist=playlist, position=2)
     client.force_login(user)
@@ -169,7 +196,7 @@ def test_inline_reorder_delegates_to_transactional_service(client):
             "title_ne": playlist.title_ne,
             "title_en": playlist.title_en,
             "playlist_type": playlist.playlist_type,
-            "owner": str(playlist.owner_id),
+            "owner": "",
             "description_ne": playlist.description_ne,
             "description_en": playlist.description_en,
             "visibility": playlist.visibility,
@@ -206,7 +233,7 @@ def test_inline_reorder_delegates_to_transactional_service(client):
 
 def test_inline_rejects_duplicate_server_positions_without_mutation(client):
     user = UserFactory(is_staff=True, is_superuser=True)
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     first = PlaylistItemFactory(playlist=playlist, position=1)
     second = PlaylistItemFactory(playlist=playlist, position=2)
     client.force_login(user)
@@ -217,7 +244,7 @@ def test_inline_rejects_duplicate_server_positions_without_mutation(client):
             "title_ne": playlist.title_ne,
             "title_en": playlist.title_en,
             "playlist_type": playlist.playlist_type,
-            "owner": str(playlist.owner_id),
+            "owner": "",
             "description_ne": playlist.description_ne,
             "description_en": playlist.description_en,
             "visibility": playlist.visibility,
@@ -244,7 +271,7 @@ def test_inline_rejects_duplicate_server_positions_without_mutation(client):
 
 def test_preview_delivery_rejects_track_outside_playlist(client, monkeypatch):
     user = UserFactory(is_staff=True, is_superuser=True)
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     unrelated = AudioTrackFactory(stream_file_low="processed/audio/unrelated-low.mp3")
     deliver = Mock()
     monkeypatch.setattr(

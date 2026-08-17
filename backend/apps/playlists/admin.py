@@ -37,7 +37,7 @@ from apps.common.admin_performance import (
 from apps.common.admin_search import RomanizedAliasAdminSearchMixin
 from apps.home.editorial_services import home_editorial_service
 from apps.media_access.services import cloudfront_media_service
-from apps.playlists.models import Playlist, PlaylistItem
+from apps.playlists.models import Playlist, PlaylistItem, PlaylistType
 from apps.playlists.services import playlist_item_service
 from apps.search.models import SearchEntityType
 
@@ -227,7 +227,6 @@ class PlaylistItemInline(TabularInline):
 class PlaylistAdmin(
     RomanizedAliasAdminSearchMixin,
     ServiceManagedFeaturedAdminMixin,
-    ProtectedDeleteAdminMixin,
     CoverPreviewAdminMixin,
     ModelAdmin,
 ):
@@ -339,7 +338,9 @@ class PlaylistAdmin(
         ] + super().get_urls()
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        queryset = super().get_queryset(request).exclude(
+            playlist_type=PlaylistType.USER
+        )
         if is_admin_autocomplete_request(request):
             return queryset.only("id", "slug", "title_ne", "title_en")
         queryset = queryset.select_related("owner").annotate(
@@ -682,6 +683,11 @@ class PlaylistItemAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
         "added_by",
     )
     ordering = ("playlist", "position", "created_at", "id")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).exclude(
+            playlist__playlist_type=PlaylistType.USER
+        )
 
     @admin.display(description="Duration")
     def track_duration(self, obj):

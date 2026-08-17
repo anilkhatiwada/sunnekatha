@@ -87,11 +87,11 @@ describe("homepage response adapter", () => {
       "playlists",
     ]);
     expect(result.sections.map((section) => section.title)).toEqual([
-      "सम्पादकको रोजाइ",
-      "प्लेलिस्ट",
+      "Featured Audio",
+      "Featured Playlists",
     ]);
     expect(result.sections[0]).toMatchObject({
-      subtitle: "आजका उत्कृष्ट रचना",
+      subtitle: "Editorial selections from this category.",
       layout: "grid",
     });
   });
@@ -220,7 +220,7 @@ describe("homepage response adapter", () => {
     });
 
     expect(result.sections[0]?.items[0]).toMatchObject({
-      name: "कविता",
+      name: "Poetry",
       image: "https://media.sunnekatha.com/covers/poetry.jpg",
     });
   });
