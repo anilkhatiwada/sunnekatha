@@ -227,17 +227,25 @@ def test_editing_section_invalidates_public_cache():
     assert second.data["sections"][0]["title"] == "नयाँ शीर्षक"
 
 
-def test_editorial_category_section_returns_only_active_categories():
+def test_editorial_category_section_returns_up_to_six_active_categories():
     section = HomeSectionFactory(
         identifier="browse-categories",
         title_ne="विधाअनुसार अन्वेषण",
         section_type=HomeSectionType.CATEGORIES,
         layout="grid",
+        max_items=12,
     )
-    active = ContentCategoryFactory(name_ne="कथा", name_en="Story", is_active=True)
+    categories = [
+        ContentCategoryFactory(
+            name_ne=f"विधा {index}",
+            name_en=f"Category {index}",
+            sort_order=index,
+            is_active=True,
+        )
+        for index in range(7)
+    ]
     inactive = ContentCategoryFactory(is_active=False)
-    HomeSectionItem.objects.create(section=section, category=active, position=1)
-    HomeSectionItem.objects.create(section=section, category=inactive, position=2)
+    HomeSectionItem.objects.create(section=section, category=inactive, position=1)
 
     response = APIClient().get(reverse("home:detail"))
 
@@ -245,13 +253,7 @@ def test_editorial_category_section_returns_only_active_categories():
     payload = response.data["sections"][0]
     assert payload["sectionType"] == "categories"
     assert payload["layout"] == "grid"
-    assert payload["items"] == [
-        {
-            "id": str(active.id),
-            "slug": active.slug,
-            "title": "कथा",
-            "titleEnglish": "Story",
-            "coverImage": None,
-            "description": active.description,
-        }
+    assert [item["id"] for item in payload["items"]] == [
+        str(category.id) for category in categories[:6]
     ]
+    assert str(inactive.id) not in {item["id"] for item in payload["items"]}

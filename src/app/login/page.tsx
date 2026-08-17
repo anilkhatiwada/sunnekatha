@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { GoogleSignIn } from "@/features/auth/google-sign-in";
-import { AccountAccessForm } from "@/features/auth/account-access-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -19,7 +18,6 @@ export default function LoginPage() {
           Use your Google account to keep your library, listening progress, and playlists in sync.
         </p>
         <GoogleSignIn />
-        <AccountAccessForm />
       </section>
     </div>
   );

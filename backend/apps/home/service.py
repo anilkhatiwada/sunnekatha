@@ -136,7 +136,16 @@ class HomeService:
                     "layout": configured.layout,
                 }
                 continue
-            if configured.content_source == HomeSectionSource.RECENT_RELEASES:
+            if configured.section_type == HomeSectionType.CATEGORIES:
+                category_limit = min(configured.max_items, SECTION_LIMIT)
+                categories = ContentCategory.objects.filter(is_active=True).order_by(
+                    "sort_order", "name_ne", "id"
+                )[:category_limit]
+                items = [
+                    ("category", item)
+                    for item in HomeCategorySerializer(categories, many=True).data
+                ]
+            elif configured.content_source == HomeSectionSource.RECENT_RELEASES:
                 items = [
                     ("track", item)
                     for item in CompactTrackSerializer(
