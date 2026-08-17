@@ -10,6 +10,7 @@ from apps.library.progress import listening_progress_service
 from apps.narrators.tests.factories import NarratorFactory
 from apps.playlists.models import PlaylistType, PlaylistVisibility
 from apps.playlists.tests.factories import PlaylistFactory, PlaylistItemFactory
+from apps.taxonomy.models import ContentCategory
 from apps.taxonomy.tests.factories import ContentCategoryFactory, MoodFactory
 
 pytestmark = pytest.mark.django_db
@@ -137,6 +138,23 @@ def test_public_home_payload_is_reused_from_cache(django_assert_num_queries):
         second = APIClient().get(reverse("home:detail"))
 
     assert second.data == first.data
+
+
+def test_updating_category_image_invalidates_cached_homepage():
+    seed_public_home()
+    category = ContentCategory.objects.first()
+    category.image = "covers/contentcategory/old.jpg"
+    category.save(update_fields=("image", "updated_at"))
+    first = APIClient().get(reverse("home:detail"))
+
+    category.image = "covers/contentcategory/new.jpg"
+    category.save(update_fields=("image", "updated_at"))
+    second = APIClient().get(reverse("home:detail"))
+
+    first_category = section_by_id(first, "categories")["items"][0]
+    second_category = section_by_id(second, "categories")["items"][0]
+    assert first_category["coverImage"].endswith("old.jpg")
+    assert second_category["coverImage"].endswith("new.jpg")
 
 
 def test_uncached_public_home_has_bounded_queries(django_assert_num_queries):

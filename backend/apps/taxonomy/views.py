@@ -44,6 +44,8 @@ class LanguageListView(TaxonomyListView):
     serializer_class = LanguageSerializer
 
 
-class ContentCategoryListView(TaxonomyListView):
+class ContentCategoryListView(PublicListCacheMixin, TaxonomyListView):
+    cache_namespace = "content-categories"
+    cache_timeout = settings.TAXONOMY_CACHE_TIMEOUT
     queryset = ContentCategory.objects.all()
     serializer_class = ContentCategorySerializer

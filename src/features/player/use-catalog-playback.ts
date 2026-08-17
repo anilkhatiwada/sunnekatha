@@ -74,6 +74,28 @@ export function useCatalogPlayback() {
     [replaceQueue, setLoading, setPlaybackError],
   );
 
+  const continueTrack = useCallback(
+    async (track: CatalogTrack, startPosition: number) => {
+      setLoading(true);
+      setPlaybackError(null);
+      try {
+        const playable = isPlayableTrack(track)
+          ? track
+          : mapPlayableTrack(
+              await getTrackStream(track.slug, "auto", true),
+            );
+        play(playable, "continue", startPosition);
+      } catch {
+        setLoading(false);
+        setPlaybackError({
+          code: "stream-unavailable",
+          message: "This track cannot be resumed right now. Please try again.",
+        });
+      }
+    },
+    [play, setLoading, setPlaybackError],
+  );
+
   const playPlaylist = useCallback(
     async (playlist: CatalogPlaylist) => {
       if (playlist.tracks.length > 0) {
@@ -99,5 +121,5 @@ export function useCatalogPlayback() {
     [playCollection, setLoading, setPlaybackError],
   );
 
-  return { playTrack, playCollection, playPlaylist };
+  return { playTrack, continueTrack, playCollection, playPlaylist };
 }

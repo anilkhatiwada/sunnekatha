@@ -21,6 +21,7 @@ function resetPlayerStore() {
     playbackError: null,
     playbackPhase: "content",
     playbackSource: "manual",
+    playbackStartPosition: 0,
   });
 }
 
@@ -50,6 +51,7 @@ describe("player store", () => {
 
     usePlayerStore.getState().play(track, "manual");
     expect(usePlayerStore.getState().playbackPhase).toBe("content");
+    expect(usePlayerStore.getState().playbackStartPosition).toBe(0);
 
     usePlayerStore.getState().replaceQueue([track], 0, "playlist");
     expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
@@ -57,6 +59,28 @@ describe("player store", () => {
     usePlayerStore.getState().finishIntroduction();
     expect(usePlayerStore.getState().playbackPhase).toBe("content");
     expect(usePlayerStore.getState().currentTrack?.id).toBe(track.id);
+  });
+
+  it("resumes only continue playback after an optional introduction", () => {
+    const track = {
+      ...tracks[0],
+      introduction: {
+        url: "https://media.example/introduction.mp3",
+        duration: 12,
+        expiresAt: null,
+      },
+    };
+
+    usePlayerStore.getState().play(track, "continue", 47);
+    expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
+    expect(usePlayerStore.getState().playbackStartPosition).toBe(47);
+
+    usePlayerStore.getState().finishIntroduction();
+    expect(usePlayerStore.getState().playbackPhase).toBe("content");
+    expect(usePlayerStore.getState().playbackStartPosition).toBe(47);
+
+    usePlayerStore.getState().play(track, "autoplay", 47);
+    expect(usePlayerStore.getState().playbackStartPosition).toBe(0);
   });
 
   it("clamps seeking, volume, and playback speed to safe ranges", () => {
@@ -96,6 +120,7 @@ describe("player store", () => {
 
     usePlayerStore.getState().next();
     expect(usePlayerStore.getState().currentTrack?.id).toBe(tracks[1].id);
+    expect(usePlayerStore.getState().playbackStartPosition).toBe(0);
 
     usePlayerStore.getState().previous();
     expect(usePlayerStore.getState().currentTrack?.id).toBe(tracks[0].id);

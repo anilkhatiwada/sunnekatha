@@ -6,7 +6,6 @@ import { usePlayerStore } from "@/features/player/player-store";
 import { usePreferencesStore } from "@/features/profile/preferences-store";
 import { getSimilarTracks } from "@/services/track-service";
 import {
-  getResumePosition,
   PROGRESS_UPDATE_INTERVAL_SECONDS,
   recordRecentlyPlayed,
   saveListeningProgress,
@@ -74,6 +73,9 @@ function isExpectedPlayInterruption(error: unknown) {
 export function AudioEngine() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const playbackPhase = usePlayerStore((state) => state.playbackPhase);
+  const playbackStartPosition = usePlayerStore(
+    (state) => state.playbackStartPosition,
+  );
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const volume = usePlayerStore((state) => state.volume);
@@ -335,7 +337,7 @@ export function AudioEngine() {
           if (!isIntroduction) recordRecentlyPlayed(state.currentTrack.id);
           const resumeTime = isIntroduction
             ? 0
-            : getResumePosition(state.currentTrack.id);
+            : state.playbackStartPosition;
           pendingResumeTime.current = resumeTime;
           lastRecordedProgress.current =
             resumeTime > 0
@@ -412,7 +414,7 @@ export function AudioEngine() {
 
     activeTrack.current = isIntroduction ? null : currentTrack;
     if (!isIntroduction) recordRecentlyPlayed(currentTrack.id);
-    const resumeTime = isIntroduction ? 0 : getResumePosition(currentTrack.id);
+    const resumeTime = isIntroduction ? 0 : playbackStartPosition;
     pendingResumeTime.current = resumeTime;
     lastRecordedProgress.current =
       resumeTime > 0
@@ -426,6 +428,7 @@ export function AudioEngine() {
   }, [
     currentTrack,
     playbackPhase,
+    playbackStartPosition,
     flushProgress,
     setCurrentTime,
     setLoading,

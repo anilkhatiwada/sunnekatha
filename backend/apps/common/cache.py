@@ -51,6 +51,12 @@ class PublicCacheInvalidation:
         "taxonomy.genre": ("genres", "track-detail", "playlist-detail", "home"),
         "taxonomy.mood": ("moods", "track-detail", "playlist-detail", "home"),
         "taxonomy.language": ("track-detail", "playlist-detail"),
+        "taxonomy.contentcategory": (
+            "content-categories",
+            "track-detail",
+            "playlist-detail",
+            "home",
+        ),
         "playlists.playlist": ("featured-playlists", "playlist-detail", "home"),
         "playlists.playlistitem": (
             "featured-playlists",

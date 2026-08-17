@@ -16,7 +16,6 @@ import { SectionError } from "@/components/common/section-error";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
 import { Button } from "@/components/ui/button";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
-import { usePlayerStore } from "@/features/player/player-store";
 import {
   getRemoteUserLibrary,
   queryKeys,
@@ -35,8 +34,12 @@ export function LibraryPageContent() {
     queryFn: getRemoteUserLibrary,
     staleTime: 30_000,
   });
-  const { playTrack, playCollection, playPlaylist } = useCatalogPlayback();
-  const seek = usePlayerStore((state) => state.seek);
+  const {
+    playTrack,
+    continueTrack: continuePlayback,
+    playCollection,
+    playPlaylist,
+  } = useCatalogPlayback();
   const removeProgress = useMutation({
     mutationFn: removeFromContinueListening,
     onSuccess: () =>
@@ -69,9 +72,8 @@ export function LibraryPageContent() {
   const playAuthor = (author: Author) => playCollection(author.popularTracks);
   const playNarrator = (narrator: Narrator) =>
     playCollection(narrator.narratedTracks);
-  const continueTrack = async (item: ContinueListeningItem) => {
-    await playTrack(item.track);
-    seek(item.progress.progressSeconds);
+  const resumeTrack = async (item: ContinueListeningItem) => {
+    await continuePlayback(item.track, item.progress.progressSeconds);
   };
 
   return (
@@ -185,7 +187,7 @@ export function LibraryPageContent() {
               <ContinueListeningCard
                 key={item.track.id}
                 item={item}
-                onPlay={() => void continueTrack(item)}
+                onPlay={() => void resumeTrack(item)}
                 onRemove={() => removeProgress.mutate(item.track.id)}
               />
             ))}

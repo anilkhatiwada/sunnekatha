@@ -17,18 +17,16 @@ import {
   TrackCard,
 } from "@/components/cards";
 import { ExploreCollectionCard } from "@/components/cards/explore-collection-card";
+import { CategoryCircleCard } from "@/components/cards/category-circle-card";
 import { CardPlayButton } from "@/components/cards/card-primitives";
 import { EmptyState } from "@/components/common/empty-state";
 import { SearchInput } from "@/components/common/search-input";
 import { SectionError } from "@/components/common/section-error";
 import { CardRailSkeleton } from "@/components/sections/card-rail-skeleton";
 import { HorizontalSection } from "@/components/sections/horizontal-section";
-import { usePlayerStore } from "@/features/player/player-store";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import {
   getHomePage,
-  getTrackStream,
-  mapPlayableTrack,
   queryKeys,
 } from "@/services";
 import type {
@@ -36,7 +34,6 @@ import type {
   CatalogTrack,
   HomeHero,
   HomeSection,
-  Track,
 } from "@/types";
 
 const cardWidth = "w-[10.5rem] shrink-0 snap-start sm:w-[13rem] lg:w-[14rem]";
@@ -44,16 +41,12 @@ const personCardWidth =
   "w-[10.5rem] shrink-0 snap-start sm:w-[12rem] lg:w-[13rem]";
 const continueCardWidth =
   "w-[19rem] shrink-0 snap-start sm:w-[23rem] lg:w-[25rem]";
+const categoryCardWidth =
+  "w-[9rem] shrink-0 snap-start sm:w-[10rem] lg:w-[11rem]";
 
 export function HomePageContent() {
   const shouldReduceMotion = useReducedMotion();
-  const playTrack = usePlayerStore((state) => state.play);
-  const { playPlaylist } = useCatalogPlayback();
-  const seek = usePlayerStore((state) => state.seek);
-  const setLoading = usePlayerStore((state) => state.setLoading);
-  const setPlaybackError = usePlayerStore(
-    (state) => state.setPlaybackError,
-  );
+  const { playTrack, continueTrack, playPlaylist } = useCatalogPlayback();
   const homeQuery = useQuery({
     queryKey: queryKeys.home.detail(),
     queryFn: getHomePage,
@@ -62,27 +55,13 @@ export function HomePageContent() {
 
   const playCatalogTrack = useCallback(
     async (track: CatalogTrack, resumeAt?: number) => {
-      if ("audioUrl" in track && typeof track.audioUrl === "string") {
-        playTrack(track as Track);
-        if (resumeAt && resumeAt > 0) seek(resumeAt);
-        return;
-      }
-
-      setLoading(true);
-      setPlaybackError(null);
-      try {
-        const stream = await getTrackStream(track.slug);
-        playTrack(mapPlayableTrack(stream));
-        if (resumeAt && resumeAt > 0) seek(resumeAt);
-      } catch {
-        setLoading(false);
-        setPlaybackError({
-          code: "stream-unavailable",
-          message: "This track cannot be played right now. Please try again.",
-        });
+      if (resumeAt !== undefined) {
+        await continueTrack(track, resumeAt);
+      } else {
+        await playTrack(track);
       }
     },
-    [playTrack, seek, setLoading, setPlaybackError],
+    [continueTrack, playTrack],
   );
 
   const handlePlaylistPlay = (playlist: CatalogPlaylist) => {
@@ -334,12 +313,12 @@ function renderSectionItems(
     ));
   }
   if (section.kind === "categories") {
-    return section.items.slice(0, 6).map((collection, index) => (
+    return section.items.slice(0, 6).map((collection) => (
       <div
         key={collection.id}
-        className={`${standardItemClass} ${index >= 4 ? "hidden sm:block" : ""}`}
+        className={section.layout === "grid" ? "min-w-0" : categoryCardWidth}
       >
-        <ExploreCollectionCard collection={collection} kind="category" />
+        <CategoryCircleCard category={collection} />
       </div>
     ));
   }

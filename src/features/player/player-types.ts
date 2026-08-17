@@ -7,7 +7,8 @@ export type PlaybackSource =
   | "playlist"
   | "queue"
   | "play_all"
-  | "autoplay";
+  | "autoplay"
+  | "continue";
 
 export interface PlayerError {
   code: string;
@@ -31,10 +32,15 @@ export interface PlayerState {
   playbackError: PlayerError | null;
   playbackPhase: PlaybackPhase;
   playbackSource: PlaybackSource;
+  playbackStartPosition: number;
 }
 
 export interface PlayerActions {
-  play: (track?: Track, source?: PlaybackSource) => void;
+  play: (
+    track?: Track,
+    source?: PlaybackSource,
+    startPosition?: number,
+  ) => void;
   pause: () => void;
   togglePlay: () => void;
   next: () => void;
