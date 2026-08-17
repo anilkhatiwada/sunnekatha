@@ -1,10 +1,12 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count, Max
 from django.urls import reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 
+from apps.audio_ads.metadata import audio_advertisement_metadata_service
 from apps.audio_ads.models import AudioAdvertisement, AudioAdvertisementPlayback
+from apps.catalog.audio_processing import AudioProcessingError
 
 
 @admin.register(AudioAdvertisement)
@@ -22,6 +24,7 @@ class AudioAdvertisementAdmin(ModelAdmin):
     search_fields = ("title",)
     readonly_fields = (
         "id",
+        "duration_seconds",
         "total_plays_display",
         "latest_play_display",
         "playback_history_link",
@@ -57,14 +60,49 @@ class AudioAdvertisementAdmin(ModelAdmin):
             )
         )
 
+    def save_model(self, request, obj, form, change):
+        audio_changed = "audio_file" in form.changed_data
+        super().save_model(request, obj, form, change)
+        if not audio_changed:
+            return
+
+        try:
+            duration = audio_advertisement_metadata_service.detect_duration(obj)
+        except AudioProcessingError as exc:
+            obj.duration_seconds = 0
+            obj.is_enabled = False
+            obj.save(update_fields=("duration_seconds", "is_enabled", "updated_at"))
+            self.message_user(
+                request,
+                f"Audio metadata could not be read: {exc.summary} The ad was disabled.",
+                level=messages.ERROR,
+            )
+            return
+
+        obj.duration_seconds = duration
+        obj.save(update_fields=("duration_seconds", "updated_at"))
+        self.message_user(
+            request,
+            f"Audio duration detected automatically: {self.format_duration(duration)}.",
+            level=messages.SUCCESS,
+        )
+
+    @staticmethod
+    def format_duration(seconds):
+        minutes, seconds = divmod(seconds, 60)
+        return f"{minutes}:{seconds:02d}"
+
     @admin.display(description="Frequency", ordering="frequency")
     def frequency_display(self, obj):
         return f"Every {obj.frequency} audios"
 
     @admin.display(description="Duration", ordering="duration_seconds")
     def duration_display(self, obj):
-        minutes, seconds = divmod(obj.duration_seconds, 60)
-        return f"{minutes}:{seconds:02d}"
+        return (
+            self.format_duration(obj.duration_seconds)
+            if obj.duration_seconds
+            else "Pending"
+        )
 
     @admin.display(description="Total plays", ordering="_total_plays")
     def total_plays_display(self, obj):
