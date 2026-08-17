@@ -60,7 +60,11 @@ from apps.catalog.scheduled_publications import (
 )
 from apps.catalog.services import EditorialService
 from apps.catalog.tasks import queue_audio_processing
-from apps.common.admin import CoverPreviewAdminMixin, ProtectedDeleteAdminMixin
+from apps.common.admin import (
+    CoverPreviewAdminMixin,
+    ProtectedDeleteAdminMixin,
+    ServiceManagedFeaturedAdminMixin,
+)
 from apps.common.admin_actions import (
     confirm_bulk_action,
     export_metadata_csv,
@@ -1603,6 +1607,7 @@ class AudioTrackAdmin(
     RomanizedAliasAdminSearchMixin,
     SecureAudioPreviewAdminMixin,
     ProcessingStatusMediaMixin,
+    ServiceManagedFeaturedAdminMixin,
     ProtectedDeleteAdminMixin,
     EditorialActionMixin,
     ModelAdmin,
@@ -1684,7 +1689,6 @@ class AudioTrackAdmin(
         "audio_preview",
         "cloudfront_preview",
         "publication_readiness",
-        "is_featured",
         "is_published",
         "published_at",
         "play_count_cache",

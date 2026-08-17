@@ -9,7 +9,7 @@ from apps.home.editorial_services import (
     HomeSectionItemInput,
     home_editorial_service,
 )
-from apps.home.models import HomeSectionItem, HomeSectionType
+from apps.home.models import HomeSection, HomeSectionItem, HomeSectionType
 from apps.home.tests.factories import HomeSectionFactory
 from apps.playlists.tests.factories import PlaylistFactory
 
@@ -145,3 +145,31 @@ def test_homepage_activation_records_administrative_audit():
     assert audit.staff_user == actor
     assert audit.before_summary == {"is_active": False}
     assert audit.after_summary == {"is_active": True}
+
+
+def test_add_new_playlists_creates_managed_homepage_section(homepage_editor):
+    first = PlaylistFactory(editorial=True)
+    second = PlaylistFactory(editorial=True)
+
+    section, added = home_editorial_service.add_new_playlists(
+        playlists=first.__class__.objects.filter(pk__in=(first.pk, second.pk)),
+        actor=homepage_editor,
+    )
+
+    assert added == 2
+    assert section == HomeSection.objects.get(identifier="new-playlists")
+    assert section.section_type == HomeSectionType.PLAYLISTS
+    assert list(section.items.values_list("playlist_id", flat=True)) == [
+        first.pk,
+        second.pk,
+    ]
+
+
+def test_add_new_playlists_rejects_personal_playlist(homepage_editor):
+    playlist = PlaylistFactory()
+
+    with pytest.raises(ValidationError, match="editorial"):
+        home_editorial_service.add_new_playlists(
+            playlists=playlist.__class__.objects.filter(pk=playlist.pk),
+            actor=homepage_editor,
+        )

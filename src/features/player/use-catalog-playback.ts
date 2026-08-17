@@ -54,20 +54,26 @@ export function useCatalogPlayback() {
       setLoading(true);
       setPlaybackError(null);
       try {
-        const playable = await Promise.all(
+        const results = await Promise.allSettled(
           selected.map(async (track) =>
             isPlayableTrack(track)
               ? track
               : mapPlayableTrack(await getTrackStream(track.slug, "auto", true)),
           ),
         );
+        const playable = results.flatMap((result) =>
+          result.status === "fulfilled" ? [result.value] : [],
+        );
+        if (playable.length === 0) {
+          throw new Error("No playable tracks are available.");
+        }
         replaceQueue(playable, 0, "playlist");
       } catch {
         setLoading(false);
         setPlaybackError({
           code: "stream-unavailable",
           message:
-            "Some playlist tracks cannot be played right now. Please try again.",
+            "No playlist tracks can be played right now. Please try again.",
         });
       }
     },

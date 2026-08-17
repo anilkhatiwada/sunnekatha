@@ -46,12 +46,14 @@ def test_playlist_admin_has_requested_columns_sections_actions_and_track_fields(
         "unpublish_selected",
         "feature_selected",
         "unfeature_selected",
+        "add_to_new_playlists_homepage",
         "recalculate_positions",
         "remove_unavailable_tracks",
     } == set(model_admin.actions)
     assert PlaylistItemInline.autocomplete_fields == ("track",)
     assert PlaylistItemInline.ordering_field == "position"
     assert PlaylistItemInline.hide_ordering_field is False
+    assert "is_featured" not in model_admin.readonly_fields
     assert {
         "track_duration",
         "track_narrator",

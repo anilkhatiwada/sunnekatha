@@ -9,7 +9,14 @@ from django.utils import timezone
 from apps.common.audit import administrative_audit_service
 from apps.common.cache import public_cache_invalidation
 from apps.common.models import AdministrativeAuditAction
-from apps.home.models import HomeSection, HomeSectionItem
+from apps.home.models import (
+    HomeSection,
+    HomeSectionItem,
+    HomeSectionLayout,
+    HomeSectionSource,
+    HomeSectionType,
+)
+from apps.playlists.models import PlaylistType, PlaylistVisibility
 
 
 @dataclass(frozen=True)
@@ -140,6 +147,71 @@ class HomeEditorialService:
                     after={"is_active": value},
                 )
         return updated
+
+    @transaction.atomic
+    def add_new_playlists(self, *, playlists, actor=None):
+        """Add valid editorial playlists to the managed homepage rail."""
+        self._authorize(actor)
+        selected = list(playlists.select_for_update().order_by("created_at", "id"))
+        if not selected:
+            raise ValidationError("Select at least one playlist.")
+        invalid = [
+            playlist
+            for playlist in selected
+            if playlist.playlist_type != PlaylistType.EDITORIAL
+            or playlist.visibility != PlaylistVisibility.PUBLIC
+            or not playlist.is_published
+        ]
+        if invalid:
+            raise ValidationError(
+                "Only published, public editorial playlists can appear on the homepage."
+            )
+
+        section, _ = HomeSection.objects.select_for_update().get_or_create(
+            identifier="new-playlists",
+            defaults={
+                "title_ne": "नयाँ प्लेलिस्टहरू",
+                "title_en": "New Playlists",
+                "subtitle_en": "Fresh editorial collections from SunneKatha",
+                "section_type": HomeSectionType.PLAYLISTS,
+                "content_source": HomeSectionSource.EDITORIAL,
+                "layout": HomeSectionLayout.RAIL,
+                "max_items": 12,
+                "sort_order": 50,
+                "is_active": True,
+            },
+        )
+        if (
+            section.section_type != HomeSectionType.PLAYLISTS
+            or section.content_source != HomeSectionSource.EDITORIAL
+        ):
+            raise ValidationError(
+                "The new-playlists homepage identifier is used by an "
+                "incompatible section."
+            )
+
+        existing = list(section.items.order_by("position", "id"))
+        existing_playlist_ids = {
+            item.playlist_id for item in existing if item.playlist_id is not None
+        }
+        additions = [
+            playlist
+            for playlist in selected
+            if playlist.pk not in existing_playlist_ids
+        ]
+        if len(existing) + len(additions) > section.max_items:
+            raise ValidationError(
+                f"The homepage section supports at most {section.max_items} playlists."
+            )
+        inputs = [
+            HomeSectionItemInput(item.pk, "playlist", item.playlist_id)
+            for item in existing
+        ] + [
+            HomeSectionItemInput(None, "playlist", playlist.pk)
+            for playlist in additions
+        ]
+        self.replace_items(section=section, items=inputs, actor=actor)
+        return section, len(additions)
 
 
 home_editorial_service = HomeEditorialService()

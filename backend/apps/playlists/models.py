@@ -84,6 +84,13 @@ class Playlist(UUIDTimeStampedModel):
                 ),
                 name="playlist_featured_editorial_only",
             ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(playlist_type=PlaylistType.USER)
+                    | ~models.Q(visibility=PlaylistVisibility.PUBLIC)
+                ),
+                name="playlist_user_not_public",
+            ),
         ]
         indexes = [
             models.Index(
@@ -111,6 +118,18 @@ class Playlist(UUIDTimeStampedModel):
         if self.is_featured and self.playlist_type != PlaylistType.EDITORIAL:
             raise ValidationError(
                 {"is_featured": "Only editorial playlists can be featured."}
+            )
+        if (
+            self.playlist_type == PlaylistType.USER
+            and self.visibility == PlaylistVisibility.PUBLIC
+        ):
+            raise ValidationError(
+                {
+                    "visibility": (
+                        "User playlists may be private or unlisted. Only staff "
+                        "editorial playlists can be public."
+                    )
+                }
             )
 
     def save(self, *args, **kwargs):

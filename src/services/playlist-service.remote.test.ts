@@ -19,6 +19,7 @@ import {
   createPlaylist,
   deletePlaylist,
   getMyPlaylists,
+  getPlaylistBySlug,
   reorderPlaylistTracks,
 } from "@/services/playlist-service";
 
@@ -65,6 +66,17 @@ describe("remote playlist service", () => {
       id: "playlist-id",
       isOwnedByCurrentUser: true,
     });
+  });
+
+  it("includes authentication when loading playlist details", async () => {
+    get.mockResolvedValue(playlist);
+
+    const result = await getPlaylistBySlug("mero-sangraha");
+
+    expect(get).toHaveBeenCalledWith("/playlists/mero-sangraha/", {
+      requiresAuth: true,
+    });
+    expect(result?.id).toBe("playlist-id");
   });
 
   it("uses the write, add, reorder, and delete contracts", async () => {

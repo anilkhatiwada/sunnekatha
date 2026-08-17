@@ -103,6 +103,8 @@ class AudioTrackFactory(DjangoModelFactory):
     language = factory.SubFactory(LanguageFactory, slug="ne")
     duration_seconds = 600
     processing_status = TrackProcessingStatus.READY
+    stream_file_low = "processed/audio/test-low.mp3"
+    stream_file_high = "processed/audio/test-high.mp3"
     is_published = True
     published_at = factory.LazyFunction(timezone.now)
 

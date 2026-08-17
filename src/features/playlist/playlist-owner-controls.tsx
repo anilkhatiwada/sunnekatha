@@ -24,8 +24,8 @@ export function PlaylistOwnerControls({
   const queryClient = useQueryClient();
   const router = useRouter();
   const [title, setTitle] = useState(playlist.title);
-  const [visibility, setVisibility] = useState(
-    playlist.visibility ?? "private",
+  const [visibility, setVisibility] = useState<"private" | "unlisted">(
+    playlist.visibility === "unlisted" ? "unlisted" : "private",
   );
   const [message, setMessage] = useState("");
   const invalidate = () =>
@@ -113,14 +113,13 @@ export function PlaylistOwnerControls({
             value={visibility}
             onChange={(event) =>
               setVisibility(
-                event.target.value as "private" | "unlisted" | "public",
+                event.target.value as "private" | "unlisted",
               )
             }
             className="mt-2 h-11 w-full rounded-lg border border-border bg-background/60 px-3"
           >
             <option value="private">Private</option>
             <option value="unlisted">Unlisted</option>
-            <option value="public">Public</option>
           </select>
         </label>
         <Button

@@ -39,7 +39,7 @@ def client_for(user):
         ),
         (
             "library:save-playlist",
-            PlaylistFactory,
+            lambda: PlaylistFactory(editorial=True),
             SavedPlaylist,
             "playlist",
             "is_playlist_saved",
@@ -194,7 +194,7 @@ def test_favorite_track_list_has_bounded_queries(django_assert_num_queries):
 def test_saved_playlist_list_has_bounded_queries(django_assert_num_queries):
     user = UserFactory()
     for _ in range(3):
-        playlist = PlaylistFactory()
+        playlist = PlaylistFactory(editorial=True)
         PlaylistItemFactory(playlist=playlist, position=1)
         SavedPlaylist.objects.create(user=user, playlist=playlist)
 

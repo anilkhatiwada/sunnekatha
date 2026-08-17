@@ -24,13 +24,18 @@ from unfold.contrib.filters.admin import (
 from apps.catalog.admin import AudioTrackAdmin
 from apps.catalog.models import AudioTrack, TrackProcessingStatus
 from apps.catalog.services import EditorialService
-from apps.common.admin import CoverPreviewAdminMixin, ProtectedDeleteAdminMixin
+from apps.common.admin import (
+    CoverPreviewAdminMixin,
+    ProtectedDeleteAdminMixin,
+    ServiceManagedFeaturedAdminMixin,
+)
 from apps.common.admin_actions import confirm_bulk_action
 from apps.common.admin_performance import (
     is_admin_autocomplete_request,
     is_admin_changelist_request,
 )
 from apps.common.admin_search import RomanizedAliasAdminSearchMixin
+from apps.home.editorial_services import home_editorial_service
 from apps.media_access.services import cloudfront_media_service
 from apps.playlists.models import Playlist, PlaylistItem
 from apps.playlists.services import playlist_item_service
@@ -221,6 +226,7 @@ class PlaylistItemInline(TabularInline):
 @admin.register(Playlist)
 class PlaylistAdmin(
     RomanizedAliasAdminSearchMixin,
+    ServiceManagedFeaturedAdminMixin,
     ProtectedDeleteAdminMixin,
     CoverPreviewAdminMixin,
     ModelAdmin,
@@ -266,7 +272,6 @@ class PlaylistAdmin(
         "id",
         "slug",
         "cover_preview",
-        "is_featured",
         "is_published",
         "publication_readiness",
         "ordered_tracks_link",
@@ -319,6 +324,7 @@ class PlaylistAdmin(
         "unpublish_selected",
         "feature_selected",
         "unfeature_selected",
+        "add_to_new_playlists_homepage",
         "recalculate_positions",
         "remove_unavailable_tracks",
     )
@@ -394,14 +400,31 @@ class PlaylistAdmin(
         items = PlaylistItem.objects.filter(playlist=obj)
         if not items.exists():
             return "Blocked: a published playlist must contain at least one track."
-        unavailable = items.exclude(
-            track__is_published=True,
-            track__processing_status=TrackProcessingStatus.READY,
-            track__published_at__lte=now,
+        unavailable = items.filter(
+            Q(track__is_published=False)
+            | ~Q(track__processing_status=TrackProcessingStatus.READY)
+            | Q(track__published_at__isnull=True)
+            | Q(track__published_at__gt=now)
+            | (Q(track__stream_file_low="") & Q(track__stream_file_high=""))
         ).count()
         if unavailable:
             return f"Blocked: {unavailable} track(s) are unpublished or unready."
         return "Ready to publish."
+
+    @admin.action(description="Add to New Playlists homepage section")
+    def add_to_new_playlists_homepage(self, request, queryset):
+        try:
+            section, added = home_editorial_service.add_new_playlists(
+                playlists=queryset,
+                actor=request.user,
+            )
+        except (PermissionDenied, ValidationError) as exc:
+            self.message_user(request, str(exc), level=messages.ERROR)
+            return
+        self.message_user(
+            request,
+            f"Added {added} playlist(s) to {section.title_en or section.title_ne}.",
+        )
 
     def _preview_items(self, obj):
         if not obj or not obj.pk:

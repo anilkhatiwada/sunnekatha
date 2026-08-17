@@ -41,6 +41,9 @@ def playlist_queryset(*, include_tracks=True):
         items__track__is_published=True,
         items__track__processing_status=TrackProcessingStatus.READY,
         items__track__published_at__lte=timezone.now(),
+    ) & (
+        Q(items__track__stream_file_low__gt="")
+        | Q(items__track__stream_file_high__gt="")
     )
     playable_items = (
         PlaylistItem.objects.filter(
@@ -48,6 +51,7 @@ def playlist_queryset(*, include_tracks=True):
             track__processing_status=TrackProcessingStatus.READY,
             track__published_at__lte=timezone.now(),
         )
+        .filter(Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt=""))
         .select_related(
             "track__work__author",
             "track__work__category",
@@ -101,7 +105,7 @@ class PlaylistListCreateView(ListCreateAPIView):
         return queryset.filter(
             visibility=PlaylistVisibility.PUBLIC,
             is_published=True,
-        )
+        ).exclude(playlist_type=PlaylistType.USER)
 
     def perform_create(self, serializer):
         serializer.save()
@@ -156,7 +160,11 @@ class PlaylistDetailView(PublicDetailCacheMixin, RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         queryset = playlist_queryset()
         user = self.request.user
-        visible = Q(is_published=True) & ~Q(visibility=PlaylistVisibility.PRIVATE)
+        visible = (
+            Q(is_published=True)
+            & ~Q(visibility=PlaylistVisibility.PRIVATE)
+            & ~Q(playlist_type=PlaylistType.USER)
+        )
         if user.is_authenticated:
             visible |= Q(owner=user)
             if user.is_staff:
@@ -203,7 +211,10 @@ class AddTrackView(PlaylistActionView):
 
     def post(self, request, slug):
         playlist = self.get_playlist(slug)
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data,
+            context={**self.get_serializer_context(), "playlist": playlist},
+        )
         serializer.is_valid(raise_exception=True)
         playlist_item_service.add(
             playlist=playlist,
@@ -254,7 +265,10 @@ class ChangeVisibilityView(PlaylistActionView):
 
     def patch(self, request, slug):
         playlist = self.get_playlist(slug)
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data,
+            context={**self.get_serializer_context(), "playlist": playlist},
+        )
         serializer.is_valid(raise_exception=True)
         playlist.visibility = serializer.validated_data["visibility"]
         playlist.save(update_fields=["visibility", "updated_at"])
@@ -268,7 +282,9 @@ class DuplicatePlaylistView(GenericAPIView):
 
     def post(self, request, slug):
         visible = (
-            Q(is_published=True) & ~Q(visibility=PlaylistVisibility.PRIVATE)
+            Q(is_published=True)
+            & ~Q(visibility=PlaylistVisibility.PRIVATE)
+            & ~Q(playlist_type=PlaylistType.USER)
         ) | Q(owner=request.user)
         source = get_object_or_404(
             playlist_queryset().filter(visible),

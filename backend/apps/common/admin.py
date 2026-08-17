@@ -37,6 +37,27 @@ class ProtectedDeleteAdminMixin:
         return False
 
 
+class ServiceManagedFeaturedAdminMixin:
+    """Allow form edits while keeping featured mutations in the service layer."""
+
+    def save_model(self, request, obj, form, change):
+        changed = "is_featured" in (getattr(form, "changed_data", ()) or ())
+        desired = bool(getattr(obj, "is_featured", False))
+        if changed and change:
+            previous = type(obj)._base_manager.only("is_featured").get(pk=obj.pk)
+            obj.is_featured = previous.is_featured
+        super().save_model(request, obj, form, change)
+        if changed:
+            from apps.catalog.services import EditorialService
+
+            EditorialService.set_featured(
+                type(obj)._base_manager.filter(pk=obj.pk),
+                value=desired,
+                actor=request.user,
+            )
+            obj.is_featured = desired
+
+
 class ImagePreviewAdminMixin:
     image_field_name = "image"
 

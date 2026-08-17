@@ -19,13 +19,14 @@ class PlaylistFactory(DjangoModelFactory):
     title_ne = factory.Sequence(lambda number: f"प्लेलिस्ट {number}")
     title_en = factory.Sequence(lambda number: f"Playlist {number}")
     playlist_type = PlaylistType.USER
-    visibility = PlaylistVisibility.PUBLIC
+    visibility = PlaylistVisibility.PRIVATE
     is_published = True
 
     class Params:
         editorial = factory.Trait(
             owner=None,
             playlist_type=PlaylistType.EDITORIAL,
+            visibility=PlaylistVisibility.PUBLIC,
         )
         featured = factory.Trait(
             owner=None,

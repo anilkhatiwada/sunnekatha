@@ -147,7 +147,9 @@ export async function getPlaylistBySlug(
 ): Promise<CatalogPlaylist | null> {
   if (environment.apiMode === "remote") {
     const payload = await nullOnNotFound(
-      apiClient.get<ApiPlaylistDetail>(`/playlists/${slug}/`),
+      apiClient.get<ApiPlaylistDetail>(`/playlists/${slug}/`, {
+        requiresAuth: true,
+      }),
     );
     return payload ? mapPlaylistDetail(payload) : null;
   }

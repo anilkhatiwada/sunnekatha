@@ -211,6 +211,7 @@ class PlaylistItemService:
                 | ~Q(track__processing_status=TrackProcessingStatus.READY)
                 | Q(track__published_at__isnull=True)
                 | Q(track__published_at__gt=now)
+                | (Q(track__stream_file_low="") & Q(track__stream_file_high=""))
             ).exists()
             if has_items and not has_unavailable:
                 eligible_ids.append(playlist.pk)

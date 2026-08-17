@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import serializers
 
 from apps.catalog.models import AudioTrack
@@ -152,6 +153,22 @@ class PlaylistWriteSerializer(RejectUnknownFieldsMixin, serializers.ModelSeriali
             raise serializers.ValidationError(
                 "Only staff can change publication and featured status."
             )
+        visibility = attrs.get(
+            "visibility",
+            self.instance.visibility if self.instance else PlaylistVisibility.PRIVATE,
+        )
+        if (
+            playlist_type == PlaylistType.USER
+            and visibility == PlaylistVisibility.PUBLIC
+        ):
+            raise serializers.ValidationError(
+                {
+                    "visibility": (
+                        "Personal playlists may be private or unlisted. Only "
+                        "SunneKatha editorial playlists can be public."
+                    )
+                }
+            )
         if (
             attrs.get(
                 "is_featured",
@@ -176,6 +193,8 @@ class PlaylistWriteSerializer(RejectUnknownFieldsMixin, serializers.ModelSeriali
         user = self.context["request"].user
         playlist_type = validated_data.get("playlist_type", PlaylistType.USER)
         validated_data["owner"] = user if playlist_type == PlaylistType.USER else None
+        if playlist_type == PlaylistType.USER:
+            validated_data.setdefault("visibility", PlaylistVisibility.PRIVATE)
         validated_data.setdefault(
             "is_published",
             playlist_type == PlaylistType.USER,
@@ -190,7 +209,12 @@ class AddTrackSerializer(serializers.Serializer):
     )
 
     def validate_trackId(self, track):
-        if not AudioTrack.objects.published().filter(pk=track.pk).exists():
+        if not (
+            AudioTrack.objects.published()
+            .filter(pk=track.pk)
+            .filter(Q(stream_file_low__gt="") | Q(stream_file_high__gt=""))
+            .exists()
+        ):
             raise serializers.ValidationError("Track is not publicly playable.")
         return track
 
@@ -208,6 +232,18 @@ class ReorderTracksSerializer(serializers.Serializer):
 
 class VisibilitySerializer(serializers.Serializer):
     visibility = serializers.ChoiceField(choices=PlaylistVisibility.choices)
+
+    def validate_visibility(self, value):
+        playlist = self.context.get("playlist")
+        if (
+            playlist
+            and playlist.playlist_type == PlaylistType.USER
+            and value == PlaylistVisibility.PUBLIC
+        ):
+            raise serializers.ValidationError(
+                "Personal playlists may be private or unlisted."
+            )
+        return value
 
 
 class DuplicatePlaylistSerializer(serializers.Serializer):

@@ -26,9 +26,9 @@ export function PlaylistsPageContent() {
   const { playPlaylist } = useCatalogPlayback();
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState("");
-  const [visibility, setVisibility] = useState<
-    "private" | "unlisted" | "public"
-  >("private");
+  const [visibility, setVisibility] = useState<"private" | "unlisted">(
+    "private",
+  );
   const publicQuery = useQuery({
     queryKey: queryKeys.playlists.public(),
     queryFn: getPublicPlaylists,
@@ -133,17 +133,13 @@ export function PlaylistsPageContent() {
                 value={visibility}
                 onChange={(event) =>
                   setVisibility(
-                    event.target.value as
-                      | "private"
-                      | "unlisted"
-                      | "public",
+                    event.target.value as "private" | "unlisted",
                   )
                 }
                 className={`${inputClassName} mt-2`}
               >
                 <option value="private">Private</option>
                 <option value="unlisted">Unlisted</option>
-                <option value="public">Public</option>
               </select>
             </label>
             <Button
@@ -190,11 +186,11 @@ export function PlaylistsPageContent() {
       )}
 
       <PlaylistGrid
-        title="Public Playlist"
-        eyebrow="Editorial and community"
+        title="Public Playlists"
+        eyebrow="SunneKatha editorial"
         isPending={publicQuery.isPending}
         playlists={publicQuery.data ?? []}
-        emptyDescription="Public playlists will appear here."
+        emptyDescription="SunneKatha editorial playlists will appear here."
         onPlay={(playlist) => void playPlaylist(playlist)}
       />
     </div>

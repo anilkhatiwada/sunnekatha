@@ -21,7 +21,7 @@ def authenticated_client(user):
 
 
 def test_public_listing_only_contains_published_public_playlists():
-    visible = PlaylistFactory()
+    visible = PlaylistFactory(editorial=True)
     PlaylistItemFactory(playlist=visible, position=1)
     PlaylistFactory(visibility=PlaylistVisibility.UNLISTED)
     PlaylistFactory(visibility=PlaylistVisibility.PRIVATE)
@@ -39,7 +39,7 @@ def test_public_listing_only_contains_published_public_playlists():
 def test_owner_can_list_only_their_user_playlists_with_mine_filter():
     owner = UserFactory()
     private = PlaylistFactory(owner=owner, visibility=PlaylistVisibility.PRIVATE)
-    public = PlaylistFactory(owner=owner, visibility=PlaylistVisibility.PUBLIC)
+    unlisted = PlaylistFactory(owner=owner, visibility=PlaylistVisibility.UNLISTED)
     PlaylistFactory(visibility=PlaylistVisibility.PRIVATE)
 
     response = authenticated_client(owner).get(
@@ -54,14 +54,17 @@ def test_owner_can_list_only_their_user_playlists_with_mine_filter():
     assert response.status_code == status.HTTP_200_OK
     assert {item["id"] for item in response.data["results"]} == {
         str(private.id),
-        str(public.id),
+        str(unlisted.id),
     }
     assert all(item["isOwnedByCurrentUser"] for item in response.data["results"])
     assert anonymous.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_unlisted_is_available_by_direct_url_but_private_is_not():
-    unlisted = PlaylistFactory(visibility=PlaylistVisibility.UNLISTED)
+    unlisted = PlaylistFactory(
+        editorial=True,
+        visibility=PlaylistVisibility.UNLISTED,
+    )
     private = PlaylistFactory(visibility=PlaylistVisibility.PRIVATE)
 
     unlisted_response = APIClient().get(
@@ -109,6 +112,26 @@ def test_user_create_forces_owner_and_rejects_editorial_type():
     assert forbidden.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_user_cannot_create_or_change_a_playlist_to_public():
+    user = UserFactory()
+    playlist = PlaylistFactory(owner=user)
+    client = authenticated_client(user)
+
+    created = client.post(
+        reverse("playlists:list-create"),
+        {"titleNe": "सार्वजनिक सूची", "visibility": "public"},
+        format="json",
+    )
+    changed = client.patch(
+        reverse("playlists:visibility", kwargs={"slug": playlist.slug}),
+        {"visibility": "public"},
+        format="json",
+    )
+
+    assert created.status_code == status.HTTP_400_BAD_REQUEST
+    assert changed.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_staff_can_create_editorial_playlist():
     staff = UserFactory(is_staff=True)
 
@@ -149,7 +172,7 @@ def test_user_cannot_modify_another_users_playlist():
         format="json",
     )
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_staff_cannot_view_or_modify_another_users_private_playlist():
@@ -225,6 +248,20 @@ def test_track_add_remove_and_reorder_preserve_stable_order():
     assert list(playlist.items.values_list("position", flat=True)) == [1, 2]
 
 
+def test_track_without_a_stream_cannot_be_added():
+    playlist = PlaylistFactory()
+    track = AudioTrackFactory(stream_file_low="", stream_file_high="")
+
+    response = authenticated_client(playlist.owner).post(
+        reverse("playlists:add-track", kwargs={"slug": playlist.slug}),
+        {"trackId": str(track.id)},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "publicly playable" in str(response.data)
+
+
 def test_reorder_requires_every_current_track_once():
     playlist = PlaylistFactory()
     item = PlaylistItemFactory(playlist=playlist, position=1)
@@ -267,6 +304,7 @@ def test_featured_endpoint_only_returns_published_public_editorial_playlists():
     featured = PlaylistFactory(
         owner=None,
         playlist_type=PlaylistType.EDITORIAL,
+        visibility=PlaylistVisibility.PUBLIC,
         is_featured=True,
     )
     PlaylistFactory(is_featured=False)
@@ -280,7 +318,7 @@ def test_featured_endpoint_only_returns_published_public_editorial_playlists():
 def test_public_playlist_list_uses_compact_payload_and_bounded_queries():
     cache.clear()
     for _ in range(4):
-        playlist = PlaylistFactory()
+        playlist = PlaylistFactory(editorial=True)
         PlaylistItemFactory.create_batch(2, playlist=playlist)
 
     with CaptureQueriesContext(connection) as queries:
@@ -295,7 +333,7 @@ def test_public_playlist_list_uses_compact_payload_and_bounded_queries():
 
 def test_public_playlist_detail_has_bounded_queries():
     cache.clear()
-    playlist = PlaylistFactory()
+    playlist = PlaylistFactory(editorial=True)
     PlaylistItemFactory.create_batch(5, playlist=playlist)
 
     with CaptureQueriesContext(connection) as queries:
