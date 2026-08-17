@@ -182,10 +182,17 @@ class PlaylistItemService:
             and actor.has_perm("playlists.change_playlist")
         ):
             raise PermissionDenied("Playlist publication permission is required.")
-        total = queryset.count()
+        # Admin changelists add annotations, select_related(), and deferred fields.
+        # Materialize only the selected identities, then perform publication work on
+        # a clean queryset so row locking cannot inherit incompatible query options.
+        selected_ids = list(dict.fromkeys(queryset.values_list("pk", flat=True)))
+        total = len(selected_ids)
+        locked_queryset = Playlist.objects.select_for_update().filter(
+            pk__in=selected_ids
+        )
         if not value:
-            targets = list(queryset.filter(is_published=True))
-            updated = queryset.filter(is_published=True).update(
+            targets = list(locked_queryset.filter(is_published=True))
+            updated = locked_queryset.filter(is_published=True).update(
                 is_published=False,
                 updated_at=timezone.now(),
             )
@@ -203,7 +210,7 @@ class PlaylistItemService:
 
         now = timezone.now()
         eligible_ids = []
-        for playlist in queryset.select_for_update().only("pk"):
+        for playlist in locked_queryset.only("pk"):
             items = PlaylistItem.objects.filter(playlist=playlist)
             has_items = items.exists()
             has_unavailable = items.filter(
@@ -215,8 +222,10 @@ class PlaylistItemService:
             ).exists()
             if has_items and not has_unavailable:
                 eligible_ids.append(playlist.pk)
-        targets = list(queryset.filter(pk__in=eligible_ids, is_published=False))
-        updated = queryset.filter(pk__in=eligible_ids, is_published=False).update(
+        targets = list(locked_queryset.filter(pk__in=eligible_ids, is_published=False))
+        updated = locked_queryset.filter(
+            pk__in=eligible_ids, is_published=False
+        ).update(
             is_published=True,
             updated_at=now,
         )

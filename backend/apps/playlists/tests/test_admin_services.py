@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
+from django.db.models import Count
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.accounts.tests.factories import UserFactory
@@ -80,6 +81,34 @@ def test_safe_publish_skips_empty_and_unavailable_playlists():
     assert ready.is_published is True
     assert unavailable.is_published is False
     assert empty.is_published is False
+
+
+def test_safe_publish_accepts_admin_changelist_queryset():
+    actor = UserFactory(is_staff=True)
+    actor.user_permissions.add(
+        Permission.objects.get(
+            content_type__app_label="playlists",
+            codename="change_playlist",
+        )
+    )
+    playlist = PlaylistFactory(is_published=False, owner=actor)
+    PlaylistItemFactory(playlist=playlist, position=1)
+    queryset = (
+        playlist.__class__.objects.select_related("owner")
+        .annotate(_track_count=Count("items", distinct=True))
+        .defer("owner__password", "owner__avatar")
+        .filter(pk=playlist.pk)
+    )
+
+    updated, skipped = playlist_item_service.set_published(
+        queryset,
+        value=True,
+        actor=actor,
+    )
+
+    playlist.refresh_from_db()
+    assert (updated, skipped) == (1, 0)
+    assert playlist.is_published is True
 
 
 def test_recalculate_positions_uses_stable_service_order():
