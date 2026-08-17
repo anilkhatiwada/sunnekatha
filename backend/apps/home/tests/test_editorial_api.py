@@ -110,6 +110,33 @@ def test_editorial_hero_uses_first_visible_item():
     assert response.data["hero"]["content"]["id"] == str(album.id)
 
 
+def test_newest_featured_track_takes_priority_over_editorial_hero():
+    hero = HomeSectionFactory(
+        identifier="featured-story",
+        section_type=HomeSectionType.HERO,
+    )
+    HomeSectionItem.objects.create(section=hero, album=AlbumFactory(), position=1)
+    older = AudioTrackFactory(
+        is_featured=True,
+        published_at=timezone.now() - timedelta(days=2),
+    )
+    newest = AudioTrackFactory(
+        is_featured=True,
+        published_at=timezone.now() - timedelta(hours=1),
+    )
+    AudioTrackFactory(
+        is_featured=False,
+        published_at=timezone.now(),
+    )
+
+    response = APIClient().get(reverse("home:detail"))
+
+    assert response.data["hero"]["id"] == "latest-featured-track"
+    assert response.data["hero"]["contentType"] == "track"
+    assert response.data["hero"]["content"]["id"] == str(newest.id)
+    assert response.data["hero"]["content"]["id"] != str(older.id)
+
+
 def test_configured_continue_listening_is_always_immediately_after_hero():
     before = HomeSectionFactory(
         section_type=HomeSectionType.ALBUMS,

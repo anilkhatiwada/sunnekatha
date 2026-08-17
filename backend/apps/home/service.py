@@ -66,6 +66,7 @@ class HomeService:
         return payload
 
     def build_public_payload(self):
+        featured_track_hero = self.get_featured_track_hero()
         editorial_sections = list(
             HomeSection.objects.active()
             .select_related("browse_category")
@@ -89,11 +90,31 @@ class HomeService:
             .order_by("sort_order", "identifier", "id")
         )
         if editorial_sections:
-            return self.build_editorial_payload(editorial_sections)
-        return self.build_default_payload()
+            return self.build_editorial_payload(
+                editorial_sections,
+                featured_track_hero=featured_track_hero,
+            )
+        return self.build_default_payload(featured_track_hero=featured_track_hero)
 
-    def build_editorial_payload(self, editorial_sections):
-        hero = {
+    def get_featured_track_hero(self):
+        track = (
+            public_track_queryset()
+            .filter(is_featured=True)
+            .order_by("-published_at", "-created_at", "id")
+            .first()
+        )
+        if track is None:
+            return None
+        return {
+            "id": "latest-featured-track",
+            "title": "विशेष प्रस्तुति",
+            "titleEnglish": "Featured",
+            "contentType": "track",
+            "content": CompactTrackSerializer(track).data,
+        }
+
+    def build_editorial_payload(self, editorial_sections, *, featured_track_hero=None):
+        hero = featured_track_hero or {
             "id": "hero",
             "title": "विशेष प्रस्तुति",
             "contentType": None,
@@ -132,7 +153,7 @@ class HomeService:
                     if (serialized := self.serialize_editorial_item(item)) is not None
                 ][: configured.max_items]
             if configured.section_type == HomeSectionType.HERO:
-                if items:
+                if items and featured_track_hero is None:
                     content_type, content = items[0]
                     hero = {
                         "id": configured.identifier,
@@ -223,7 +244,7 @@ class HomeService:
             return "category", HomeCategorySerializer(item.category).data
         return None
 
-    def build_default_payload(self):
+    def build_default_payload(self, *, featured_track_hero=None):
         playable = Q(
             items__track__is_published=True,
             items__track__processing_status=TrackProcessingStatus.READY,
@@ -306,22 +327,25 @@ class HomeService:
         trending_data = CompactTrackSerializer(trending, many=True).data
         recent_data = CompactTrackSerializer(recent, many=True).data
         album_data = HomeAlbumSerializer(albums, many=True).data
-        hero_content = None
-        hero_type = None
-        if playlist_data:
-            hero_content, hero_type = playlist_data[0], "playlist"
-        elif trending_data:
-            hero_content, hero_type = trending_data[0], "track"
-        elif album_data:
-            hero_content, hero_type = album_data[0], "album"
-
-        return {
-            "hero": {
+        hero = featured_track_hero
+        if hero is None:
+            hero_content = None
+            hero_type = None
+            if playlist_data:
+                hero_content, hero_type = playlist_data[0], "playlist"
+            elif trending_data:
+                hero_content, hero_type = trending_data[0], "track"
+            elif album_data:
+                hero_content, hero_type = album_data[0], "album"
+            hero = {
                 "id": "hero",
                 "title": "विशेष प्रस्तुति",
                 "contentType": hero_type,
                 "content": hero_content,
-            },
+            }
+
+        return {
+            "hero": hero,
             "sections": [
                 section(
                     "categories",

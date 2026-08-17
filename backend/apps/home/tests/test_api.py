@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 import pytest
 from django.core.cache import cache
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -72,6 +75,24 @@ def test_anonymous_home_returns_all_public_sections_without_personal_data():
     ]
     assert "continue-listening" not in identifiers
     assert all(section["title"] for section in response.data["sections"])
+
+
+def test_default_home_uses_newest_featured_track_as_hero():
+    seed_public_home()
+    older = AudioTrackFactory(
+        is_featured=True,
+        published_at=timezone.now() - timedelta(days=1),
+    )
+    newest = AudioTrackFactory(
+        is_featured=True,
+        published_at=timezone.now(),
+    )
+
+    response = APIClient().get(reverse("home:detail"))
+
+    assert response.data["hero"]["contentType"] == "track"
+    assert response.data["hero"]["content"]["id"] == str(newest.id)
+    assert response.data["hero"]["content"]["id"] != str(older.id)
 
 
 def test_authenticated_home_adds_only_the_current_users_continue_listening():
@@ -160,7 +181,7 @@ def test_updating_category_image_invalidates_cached_homepage():
 def test_uncached_public_home_has_bounded_queries(django_assert_num_queries):
     seed_public_home()
 
-    with django_assert_num_queries(12):
+    with django_assert_num_queries(13):
         response = APIClient().get(reverse("home:detail"))
 
     assert response.status_code == status.HTTP_200_OK
