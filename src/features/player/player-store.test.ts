@@ -22,6 +22,8 @@ function resetPlayerStore() {
     playbackPhase: "content",
     playbackSource: "manual",
     playbackStartPosition: 0,
+    currentAdvertisement: null,
+    playbackSequence: 0,
   });
 }
 
@@ -50,10 +52,14 @@ describe("player store", () => {
     };
 
     usePlayerStore.getState().play(track, "manual");
+    expect(usePlayerStore.getState().playbackPhase).toBe("preparing");
+    usePlayerStore.getState().preparePlayback(null, 1);
     expect(usePlayerStore.getState().playbackPhase).toBe("content");
     expect(usePlayerStore.getState().playbackStartPosition).toBe(0);
 
     usePlayerStore.getState().replaceQueue([track], 0, "playlist");
+    expect(usePlayerStore.getState().playbackPhase).toBe("preparing");
+    usePlayerStore.getState().preparePlayback(null, 2);
     expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
 
     usePlayerStore.getState().finishIntroduction();
@@ -72,6 +78,7 @@ describe("player store", () => {
     };
 
     usePlayerStore.getState().play(track, "continue", 47);
+    usePlayerStore.getState().preparePlayback(null, 1);
     expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
     expect(usePlayerStore.getState().playbackStartPosition).toBe(47);
 
@@ -81,6 +88,35 @@ describe("player store", () => {
 
     usePlayerStore.getState().play(track, "autoplay", 47);
     expect(usePlayerStore.getState().playbackStartPosition).toBe(0);
+  });
+
+  it("orders an eligible advertisement before introduction and content", () => {
+    const track = {
+      ...tracks[0],
+      introduction: {
+        url: "https://media.example/introduction.mp3",
+        duration: 12,
+        expiresAt: null,
+      },
+    };
+    const advertisement = {
+      id: "ad-1",
+      title: "SunneKatha announcement",
+      url: "https://media.example/ad.mp3",
+      duration: 8,
+      expiresAt: null,
+    };
+
+    usePlayerStore.getState().replaceQueue([track], 0, "playlist");
+    usePlayerStore.getState().preparePlayback(advertisement, 3);
+    expect(usePlayerStore.getState().playbackPhase).toBe("advertisement");
+
+    usePlayerStore.getState().finishAdvertisement();
+    expect(usePlayerStore.getState().playbackPhase).toBe("introduction");
+
+    usePlayerStore.getState().finishIntroduction();
+    expect(usePlayerStore.getState().playbackPhase).toBe("content");
+    expect(usePlayerStore.getState().currentTime).toBe(0);
   });
 
   it("clamps seeking, volume, and playback speed to safe ranges", () => {

@@ -49,6 +49,15 @@ MANAGE_AUDIO = set().union(
     model_permissions("catalog", "audiotrack", "view", "change"),
     model_permissions("catalog", "audioprocessingjob", "view", "change"),
     model_permissions("uploads", "uploadsession", "view", "add", "change"),
+    model_permissions(
+        "audio_ads",
+        "audioadvertisement",
+        "view",
+        "add",
+        "change",
+        "delete",
+    ),
+    model_permissions("audio_ads", "audioadvertisementplayback", "view"),
     {"catalog.retry_audioprocessingjob"},
 )
 

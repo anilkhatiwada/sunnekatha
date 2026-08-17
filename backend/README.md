@@ -936,6 +936,23 @@ CI additionally runs migrations against PostgreSQL 17 and uses Redis. Local
 unit tests use isolated SQLite and in-memory cache settings, so a green local
 run does not replace PostgreSQL migration and query-plan validation.
 
+## Audio advertisements
+
+Authorized staff manage audio advertisements under **Audio Operations → Audio
+Ads**. Each record has a private validated audio file, enabled state, priority,
+and a numeric frequency of at least two main-audio starts. The public player
+calls `POST /api/v1/audio-ads/next/` before a main track and reports the audio
+element's actual `playing` event to
+`POST /api/v1/audio-ads/{id}/started/`. Merely selecting or loading an ad does
+not increment analytics. Start reports are idempotent per device session and
+playback sequence.
+
+Ad files remain private. The eligibility endpoint returns short-lived signed
+media access and Django never proxies audio bytes. If ad selection, delivery, or
+playback fails, the player continues to the introduction and main content. The
+player order is always advertisement, optional introduction, then main audio;
+only main audio participates in listening progress.
+
 ## Frontend integration
 
 The production Next.js application uses the remote Django API. Mock fixtures are

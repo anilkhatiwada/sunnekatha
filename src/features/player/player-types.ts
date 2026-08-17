@@ -1,7 +1,7 @@
 import type { QueueItem, Track } from "@/types";
 
 export type RepeatMode = "off" | "one" | "all";
-export type PlaybackPhase = "introduction" | "content";
+export type PlaybackPhase = "preparing" | "advertisement" | "introduction" | "content";
 export type PlaybackSource =
   | "manual"
   | "playlist"
@@ -13,6 +13,14 @@ export type PlaybackSource =
 export interface PlayerError {
   code: string;
   message: string;
+}
+
+export interface AudioAdvertisement {
+  id: string;
+  title: string;
+  url: string;
+  duration: number;
+  expiresAt: string | null;
 }
 
 export interface PlayerState {
@@ -33,6 +41,8 @@ export interface PlayerState {
   playbackPhase: PlaybackPhase;
   playbackSource: PlaybackSource;
   playbackStartPosition: number;
+  currentAdvertisement: AudioAdvertisement | null;
+  playbackSequence: number;
 }
 
 export interface PlayerActions {
@@ -67,6 +77,11 @@ export interface PlayerActions {
     source?: PlaybackSource,
   ) => void;
   updateTrackSource: (track: Track) => void;
+  preparePlayback: (
+    advertisement: AudioAdvertisement | null,
+    playbackSequence: number,
+  ) => void;
+  finishAdvertisement: () => void;
   finishIntroduction: () => void;
   setLoading: (isLoading: boolean) => void;
   setPlaybackError: (error: PlayerError | null) => void;
@@ -80,4 +95,5 @@ export interface PersistedPlayerState {
   volume: number;
   playbackSpeed: number;
   repeatMode: RepeatMode;
+  playbackSequence: number;
 }

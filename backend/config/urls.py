@@ -45,6 +45,7 @@ urlpatterns = [
     path("api/v1/", include("apps.explore.urls")),
     path("api/v1/", include("apps.home.urls")),
     path("api/v1/auth/", include("apps.accounts.urls")),
+    path("api/v1/audio-ads/", include("apps.audio_ads.urls")),
     path("api/v1/authors/", include("apps.authors.urls")),
     path("api/v1/library/", include("apps.library.urls")),
     path("api/v1/me/", include("apps.library.progress_urls")),

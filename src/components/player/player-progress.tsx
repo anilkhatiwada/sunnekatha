@@ -17,6 +17,7 @@ export function PlayerProgress({
   const duration = usePlayerStore((state) => state.duration);
   const seek = usePlayerStore((state) => state.seek);
   const hasTrack = usePlayerStore((state) => Boolean(state.currentTrack));
+  const playbackPhase = usePlayerStore((state) => state.playbackPhase);
   const progress = getProgressPercentage(currentTime, duration);
 
   if (compact) {
@@ -44,7 +45,7 @@ export function PlayerProgress({
         max={Math.max(duration, 0)}
         step={0.1}
         value={Math.min(currentTime, duration || 0)}
-        disabled={!hasTrack || duration <= 0}
+        disabled={!hasTrack || duration <= 0 || playbackPhase !== "content"}
         onChange={(event) => seek(event.currentTarget.valueAsNumber)}
         aria-label="Audio progress"
         aria-valuetext={`${formatPlayerTime(currentTime)} / ${formatPlayerTime(duration)}`}

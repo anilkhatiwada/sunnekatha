@@ -93,6 +93,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.accounts",
     "apps.analytics",
+    "apps.audio_ads",
     "apps.authors",
     "apps.catalog",
     "apps.common",
@@ -316,6 +317,16 @@ UNFOLD = {
                 "separator": True,
                 "collapsible": True,
                 "items": [
+                    {
+                        "title": "Audio Ads",
+                        "icon": "campaign",
+                        "link": reverse_lazy(
+                            "admin:audio_ads_audioadvertisement_changelist"
+                        ),
+                        "permission": admin_model_permission(
+                            "audio_ads", "audioadvertisement"
+                        ),
+                    },
                     {
                         "title": "Upload Sessions",
                         "icon": "cloud_upload",
@@ -727,6 +738,10 @@ REST_FRAMEWORK = {
         ),
         "upload": env("DRF_UPLOAD_THROTTLE_RATE", default="30/hour"),
         "stream": env("DRF_STREAM_THROTTLE_RATE", default="120/hour"),
+        "audio_ad_select": env("DRF_AUDIO_AD_SELECT_THROTTLE_RATE", default="240/hour"),
+        "audio_ad_started": env(
+            "DRF_AUDIO_AD_STARTED_THROTTLE_RATE", default="120/hour"
+        ),
     },
 }
 

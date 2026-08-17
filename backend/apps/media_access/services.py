@@ -118,6 +118,23 @@ class CloudFrontMediaService:
             "duration": track.introduction_duration_seconds,
         }
 
+    def deliver_audio_advertisement(self, advertisement):
+        """Return short-lived access to an enabled advertisement audio file."""
+        file_field = advertisement.audio_file
+        expires_at = self._signed_expiration()
+        if not self._cloudfront_enabled():
+            url = self._s3_signed_url(file_field.name)
+        else:
+            resource_url = self._resource_url(file_field.name, "restricted")
+            url = self._signed_url(resource_url, expires_at)
+        return {
+            "id": advertisement.pk,
+            "title": advertisement.title,
+            "url": url,
+            "duration": advertisement.duration_seconds,
+            "expiresAt": expires_at,
+        }
+
     def deliver_admin_object(self, *, object_key, quality, user):
         """Return signed CloudFront access for a server-controlled private key."""
         is_staff = bool(

@@ -38,6 +38,8 @@ const initialState: PlayerState = {
   playbackPhase: "content",
   playbackSource: "manual",
   playbackStartPosition: 0,
+  currentAdvertisement: null,
+  playbackSequence: 0,
 };
 
 function phaseForTrack(
@@ -47,6 +49,10 @@ function phaseForTrack(
   return track?.introduction && source !== "manual"
     ? ("introduction" as const)
     : ("content" as const);
+}
+
+function preparingPhase(track: PlayerState["currentTrack"]) {
+  return track ? ("preparing" as const) : ("content" as const);
 }
 
 export const usePlayerStore = create<PlayerStore>()(
@@ -80,7 +86,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isLoading: false,
           playbackError: null,
           playbackSource: source,
-          playbackPhase: phaseForTrack(track, source),
+          playbackPhase: preparingPhase(track),
+          currentAdvertisement: null,
           playbackStartPosition:
             source === "continue" ? Math.max(0, startPosition) : 0,
         });
@@ -122,7 +129,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isLoading: false,
           playbackError: null,
           playbackSource: "queue",
-          playbackPhase: phaseForTrack(currentTrack, "queue"),
+          playbackPhase: preparingPhase(currentTrack),
+          currentAdvertisement: null,
           playbackStartPosition: 0,
         });
       },
@@ -150,7 +158,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: currentTrack ? state.isPlaying : false,
           playbackError: null,
           playbackSource: "queue",
-          playbackPhase: phaseForTrack(currentTrack, "queue"),
+          playbackPhase: preparingPhase(currentTrack),
+          currentAdvertisement: null,
           playbackStartPosition: 0,
         });
       },
@@ -221,7 +230,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isLoading: false,
           playbackError: null,
           playbackSource: "queue",
-          playbackPhase: phaseForTrack(currentTrack, "queue"),
+          playbackPhase: preparingPhase(currentTrack),
+          currentAdvertisement: null,
           playbackStartPosition: 0,
         });
       },
@@ -279,7 +289,8 @@ export const usePlayerStore = create<PlayerStore>()(
                 : state.duration,
             isPlaying: currentTrack ? state.isPlaying : false,
             playbackSource: "queue",
-            playbackPhase: phaseForTrack(currentTrack, "queue"),
+            playbackPhase: preparingPhase(currentTrack),
+            currentAdvertisement: null,
             playbackStartPosition: 0,
           };
         }),
@@ -296,6 +307,7 @@ export const usePlayerStore = create<PlayerStore>()(
           playbackPhase: "content",
           playbackSource: "manual",
           playbackStartPosition: 0,
+          currentAdvertisement: null,
         }),
       replaceQueue: (tracks, startIndex = 0, source = "playlist") => {
         const queue = tracks.map(createQueueItem);
@@ -312,7 +324,8 @@ export const usePlayerStore = create<PlayerStore>()(
           isLoading: false,
           playbackError: null,
           playbackSource: source,
-          playbackPhase: phaseForTrack(currentTrack, source),
+          playbackPhase: preparingPhase(currentTrack),
+          currentAdvertisement: null,
           playbackStartPosition: 0,
         });
       },
@@ -335,6 +348,30 @@ export const usePlayerStore = create<PlayerStore>()(
                 : state.currentTrack,
           };
         }),
+      preparePlayback: (advertisement, playbackSequence) =>
+        set((state) => ({
+          currentAdvertisement: advertisement,
+          playbackSequence,
+          playbackPhase: advertisement
+            ? "advertisement"
+            : phaseForTrack(state.currentTrack, state.playbackSource),
+          currentTime: 0,
+          duration: advertisement?.duration ?? state.currentTrack?.duration ?? 0,
+          isLoading: true,
+          playbackError: null,
+        })),
+      finishAdvertisement: () =>
+        set((state) => ({
+          currentAdvertisement: null,
+          playbackPhase: phaseForTrack(
+            state.currentTrack,
+            state.playbackSource,
+          ),
+          currentTime: 0,
+          duration: state.currentTrack?.duration ?? 0,
+          isLoading: true,
+          playbackError: null,
+        })),
       finishIntroduction: () =>
         set((state) => ({
           playbackPhase: "content",
@@ -364,6 +401,7 @@ export const usePlayerStore = create<PlayerStore>()(
         volume: state.volume,
         playbackSpeed: state.playbackSpeed,
         repeatMode: state.repeatMode,
+        playbackSequence: state.playbackSequence,
       }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<PersistedPlayerState>;
@@ -393,6 +431,8 @@ export const usePlayerStore = create<PlayerStore>()(
           playbackPhase: "content",
           playbackSource: "manual",
           playbackStartPosition: 0,
+          currentAdvertisement: null,
+          playbackSequence: Math.max(0, persisted.playbackSequence ?? 0),
         };
       },
     },

@@ -12,6 +12,11 @@ import {
 } from "@/services/progress-service";
 import { mapPlayableTrack } from "@/services/api-mappers";
 import { getTrackStream } from "@/services/media-service";
+import {
+  getAudioAdvertisementSessionId,
+  getNextAudioAdvertisement,
+  recordAudioAdvertisementStarted,
+} from "@/services/audio-ad-service";
 import type { Track } from "@/types";
 
 let audioInstance: HTMLAudioElement | null = null;
@@ -76,6 +81,11 @@ export function AudioEngine() {
   const playbackStartPosition = usePlayerStore(
     (state) => state.playbackStartPosition,
   );
+  const currentAdvertisement = usePlayerStore(
+    (state) => state.currentAdvertisement,
+  );
+  const playbackSource = usePlayerStore((state) => state.playbackSource);
+  const playbackSequence = usePlayerStore((state) => state.playbackSequence);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const volume = usePlayerStore((state) => state.volume);
@@ -105,6 +115,8 @@ export function AudioEngine() {
     second: number;
   } | null>(null);
   const refreshedTrackId = useRef<string | null>(null);
+  const preparationKey = useRef<string | null>(null);
+  const recordedAdvertisementKey = useRef<string | null>(null);
   const flushProgress = useCallback(
     (
       track = activeTrack.current,
@@ -133,6 +145,49 @@ export function AudioEngine() {
   );
 
   useEffect(() => {
+    if (!currentTrack || playbackPhase !== "preparing") return;
+
+    const nextSequence = playbackSequence + 1;
+    const key = `${currentTrack.id}:${nextSequence}`;
+    if (preparationKey.current === key) return;
+    preparationKey.current = key;
+    let isCancelled = false;
+
+    const request = {
+      sessionId: getAudioAdvertisementSessionId(),
+      playbackSequence: nextSequence,
+      trackId: currentTrack.id,
+      source: playbackSource,
+    };
+    void getNextAudioAdvertisement(request)
+      .then((response) => {
+        if (isCancelled) return;
+        const state = usePlayerStore.getState();
+        if (
+          state.currentTrack?.id === currentTrack.id &&
+          state.playbackPhase === "preparing"
+        ) {
+          state.preparePlayback(response.advertisement, nextSequence);
+        }
+      })
+      .catch(() => {
+        if (isCancelled) return;
+        const state = usePlayerStore.getState();
+        if (
+          state.currentTrack?.id === currentTrack.id &&
+          state.playbackPhase === "preparing"
+        ) {
+          // Ad delivery must never prevent the requested literature from playing.
+          state.preparePlayback(null, nextSequence);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentTrack, playbackPhase, playbackSequence, playbackSource]);
+
+  useEffect(() => {
     const audio = getAudioInstance();
 
     const handleLoadStart = () => setLoading(true);
@@ -141,9 +196,34 @@ export function AudioEngine() {
       setLoading(false);
       setPlaybackError(null);
     };
+    const handlePlaying = () => {
+      handleReady();
+      const state = usePlayerStore.getState();
+      const advertisement = state.currentAdvertisement;
+      const track = state.currentTrack;
+      if (
+        state.playbackPhase !== "advertisement" ||
+        !advertisement ||
+        !track
+      ) {
+        return;
+      }
+
+      const key = `${advertisement.id}:${state.playbackSequence}`;
+      if (recordedAdvertisementKey.current === key) return;
+      recordedAdvertisementKey.current = key;
+      void recordAudioAdvertisementStarted(advertisement.id, {
+        sessionId: getAudioAdvertisementSessionId(),
+        playbackSequence: state.playbackSequence,
+        trackId: track.id,
+        source: state.playbackSource,
+      }).catch(() => {
+        // Playback remains uninterrupted if analytics delivery is unavailable.
+      });
+    };
     const handleDurationChange = () => {
       if (
-        usePlayerStore.getState().playbackPhase === "content" &&
+        usePlayerStore.getState().playbackPhase !== "preparing" &&
         Number.isFinite(audio.duration)
       ) {
         setDuration(audio.duration);
@@ -162,7 +242,10 @@ export function AudioEngine() {
       pendingResumeTime.current = 0;
     };
     const handleTimeUpdate = () => {
-      if (usePlayerStore.getState().playbackPhase === "introduction") return;
+      if (usePlayerStore.getState().playbackPhase !== "content") {
+        setCurrentTime(audio.currentTime);
+        return;
+      }
       setCurrentTime(audio.currentTime);
 
       const track = activeTrack.current;
@@ -183,6 +266,10 @@ export function AudioEngine() {
     };
     const handleEnded = async () => {
       const state = usePlayerStore.getState();
+      if (state.playbackPhase === "advertisement") {
+        state.finishAdvertisement();
+        return;
+      }
       if (state.playbackPhase === "introduction") {
         state.finishIntroduction();
         return;
@@ -194,16 +281,7 @@ export function AudioEngine() {
       }
 
       if (state.repeatMode === "one") {
-        audio.currentTime = 0;
-        state.setCurrentTime(0);
-        void audio.play().catch((error: unknown) => {
-          if (!isExpectedPlayInterruption(error)) {
-            state.setPlaybackError({
-              code: "playback-failed",
-              message: "Audio playback could not resume.",
-            });
-          }
-        });
+        if (track) state.play(track, "queue");
         return;
       }
 
@@ -254,6 +332,10 @@ export function AudioEngine() {
     };
     const handleError = async () => {
       const state = usePlayerStore.getState();
+      if (state.playbackPhase === "advertisement") {
+        state.finishAdvertisement();
+        return;
+      }
       if (state.playbackPhase === "introduction") {
         state.finishIntroduction();
         return;
@@ -289,7 +371,7 @@ export function AudioEngine() {
     audio.addEventListener("loadstart", handleLoadStart);
     audio.addEventListener("waiting", handleWaiting);
     audio.addEventListener("canplay", handleReady);
-    audio.addEventListener("playing", handleReady);
+    audio.addEventListener("playing", handlePlaying);
     audio.addEventListener("durationchange", handleDurationChange);
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
     audio.addEventListener("timeupdate", handleTimeUpdate);
@@ -300,7 +382,7 @@ export function AudioEngine() {
       audio.removeEventListener("loadstart", handleLoadStart);
       audio.removeEventListener("waiting", handleWaiting);
       audio.removeEventListener("canplay", handleReady);
-      audio.removeEventListener("playing", handleReady);
+      audio.removeEventListener("playing", handlePlaying);
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
@@ -332,12 +414,20 @@ export function AudioEngine() {
             flushProgress(previousTrack, audio.currentTime, audio.duration);
           }
 
+          if (state.playbackPhase === "preparing") {
+            audio.pause();
+            audio.removeAttribute("src");
+            activeTrack.current = null;
+            setLoading(true);
+            return;
+          }
+
+          const isAdvertisement = state.playbackPhase === "advertisement";
           const isIntroduction = state.playbackPhase === "introduction";
-          activeTrack.current = isIntroduction ? null : state.currentTrack;
-          if (!isIntroduction) recordRecentlyPlayed(state.currentTrack.id);
-          const resumeTime = isIntroduction
-            ? 0
-            : state.playbackStartPosition;
+          const isContent = state.playbackPhase === "content";
+          activeTrack.current = isContent ? state.currentTrack : null;
+          if (isContent) recordRecentlyPlayed(state.currentTrack.id);
+          const resumeTime = isContent ? state.playbackStartPosition : 0;
           pendingResumeTime.current = resumeTime;
           lastRecordedProgress.current =
             resumeTime > 0
@@ -348,9 +438,11 @@ export function AudioEngine() {
               : null;
           setLoading(true);
           setPlaybackError(null);
-          audio.src = isIntroduction
-            ? state.currentTrack.introduction?.url ?? state.currentTrack.audioUrl
-            : state.currentTrack.audioUrl;
+          audio.src = isAdvertisement
+            ? state.currentAdvertisement?.url ?? state.currentTrack.audioUrl
+            : isIntroduction
+              ? state.currentTrack.introduction?.url ?? state.currentTrack.audioUrl
+              : state.currentTrack.audioUrl;
           audio.load();
           setCurrentTime(resumeTime);
         }
@@ -402,19 +494,28 @@ export function AudioEngine() {
       return;
     }
 
+    if (playbackPhase === "preparing") {
+      audio.pause();
+      return;
+    }
+
+    const isAdvertisement = playbackPhase === "advertisement";
     const isIntroduction = playbackPhase === "introduction";
-    const expectedSource = isIntroduction
-      ? currentTrack.introduction?.url
-      : currentTrack.audioUrl;
+    const isContent = playbackPhase === "content";
+    const expectedSource = isAdvertisement
+      ? currentAdvertisement?.url
+      : isIntroduction
+        ? currentTrack.introduction?.url
+        : currentTrack.audioUrl;
     if (previousTrack?.id === currentTrack.id && audio.src === expectedSource) return;
 
     if (previousTrack) {
       flushProgress(previousTrack, audio.currentTime, audio.duration);
     }
 
-    activeTrack.current = isIntroduction ? null : currentTrack;
-    if (!isIntroduction) recordRecentlyPlayed(currentTrack.id);
-    const resumeTime = isIntroduction ? 0 : playbackStartPosition;
+    activeTrack.current = isContent ? currentTrack : null;
+    if (isContent) recordRecentlyPlayed(currentTrack.id);
+    const resumeTime = isContent ? playbackStartPosition : 0;
     pendingResumeTime.current = resumeTime;
     lastRecordedProgress.current =
       resumeTime > 0
@@ -427,6 +528,7 @@ export function AudioEngine() {
     setCurrentTime(resumeTime);
   }, [
     currentTrack,
+    currentAdvertisement,
     playbackPhase,
     playbackStartPosition,
     flushProgress,
@@ -438,7 +540,7 @@ export function AudioEngine() {
   useLayoutEffect(() => {
     const audio = getAudioInstance();
 
-    if (!currentTrack || !isPlaying) {
+    if (!currentTrack || !isPlaying || playbackPhase === "preparing") {
       audio.pause();
       return;
     }
@@ -524,8 +626,14 @@ export function AudioEngine() {
 
     if (currentTrack) {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: `${currentTrack.author.name} · ${currentTrack.narrator.name}`,
+        title:
+          playbackPhase === "advertisement" && currentAdvertisement
+            ? currentAdvertisement.title
+            : currentTrack.title,
+        artist:
+          playbackPhase === "advertisement"
+            ? "Advertisement · SunneKatha"
+            : `${currentTrack.author.name} · ${currentTrack.narrator.name}`,
         album: "SunneKatha",
         artwork: [
           {
@@ -582,7 +690,16 @@ export function AudioEngine() {
         }
       }
     };
-  }, [currentTrack, next, pause, play, previous, seek]);
+  }, [
+    currentAdvertisement,
+    currentTrack,
+    next,
+    pause,
+    play,
+    playbackPhase,
+    previous,
+    seek,
+  ]);
 
   return null;
 }

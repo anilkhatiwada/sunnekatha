@@ -2,6 +2,7 @@
 
 import {
   LoaderCircle,
+  Megaphone,
   Pause,
   Play,
   Repeat,
@@ -63,6 +64,12 @@ export function PlayerControls({
   if (compact) {
     return (
       <div className={cn("flex shrink-0 items-center gap-1", className)}>
+        {playbackPhase === "advertisement" ? (
+          <span className="flex items-center gap-1 px-1 text-xs text-primary" aria-label="Advertisement playing">
+            <Megaphone aria-hidden="true" className="size-3.5" />
+            Ad
+          </span>
+        ) : null}
         {playbackPhase === "introduction" ? (
           <Button
             type="button"
@@ -111,6 +118,12 @@ export function PlayerControls({
 
   return (
     <div className={cn("flex items-center justify-center gap-1", className)}>
+      {playbackPhase === "advertisement" ? (
+        <span className="mr-1 flex items-center gap-1 text-xs font-medium text-primary" aria-label="Advertisement playing">
+          <Megaphone aria-hidden="true" className="size-3.5" />
+          Advertisement
+        </span>
+      ) : null}
       {playbackPhase === "introduction" ? (
         <Button
           type="button"
