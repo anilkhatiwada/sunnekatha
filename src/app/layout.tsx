@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from "next";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { AppProviders } from "@/components/providers/app-providers";
+import { SOCIAL_IMAGE, SOCIAL_IMAGE_PATH } from "@/lib/social-metadata";
 
 import "./globals.css";
 
@@ -34,12 +35,14 @@ export const metadata: Metadata = {
     title: "SunneKatha",
     description:
       "A calm, intimate digital home for Nepali stories, poetry, and literature.",
+    images: [SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "SunneKatha",
     description:
       "A calm, intimate digital home for Nepali stories, poetry, and literature.",
+    images: [SOCIAL_IMAGE_PATH],
   },
 };
 

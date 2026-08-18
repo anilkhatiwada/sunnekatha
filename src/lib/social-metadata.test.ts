@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildTrackMetadata,
-  getSocialArtworkUrl,
+  SOCIAL_IMAGE,
+  SOCIAL_IMAGE_PATH,
 } from "@/lib/social-metadata";
 import type { ApiDetailedTrack } from "@/types/backend-api";
 
@@ -30,8 +31,12 @@ describe("track social metadata", () => {
         siteName: "SunneKatha",
         locale: "ne_NP",
         title: "बाँसुरी छुटेको बिहान",
+        images: [SOCIAL_IMAGE],
       },
-      twitter: { card: "summary_large_image" },
+      twitter: {
+        card: "summary_large_image",
+        images: [SOCIAL_IMAGE_PATH],
+      },
     });
   });
 
@@ -39,18 +44,8 @@ describe("track social metadata", () => {
     expect(buildTrackMetadata("missing", null)).toMatchObject({
       title: "Track",
       alternates: { canonical: "/track/missing" },
+      openGraph: { images: [SOCIAL_IMAGE] },
+      twitter: { images: [SOCIAL_IMAGE_PATH] },
     });
-  });
-
-  it("only allows artwork from approved SunneKatha media hosts", () => {
-    expect(
-      getSocialArtworkUrl("https://media.sunnekatha.com/covers/track.jpg"),
-    ).toBe("https://media.sunnekatha.com/covers/track.jpg");
-    expect(getSocialArtworkUrl("http://127.0.0.1/private")).toBe(
-      "https://sunnekatha.com/icons/pwa-512.png",
-    );
-    expect(getSocialArtworkUrl("https://example.com/untrusted.jpg")).toBe(
-      "https://sunnekatha.com/icons/pwa-512.png",
-    );
   });
 });

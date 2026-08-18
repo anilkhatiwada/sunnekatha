@@ -179,9 +179,9 @@ Build or stage the Next.js standalone release for the production Linux target.
 Before activating it, verify that `node_modules/@img/sharp-linux-x64` and
 `node_modules/@img/sharp-libvips-linux-x64` match the installed `sharp` version.
 A release assembled on macOS can otherwise omit these optional Linux packages,
-causing `/_next/image` and dynamic Open Graph image routes to fail at runtime.
-Smoke-test both an optimized cover URL and a track `opengraph-image` URL before
-switching the production symlink.
+causing `/_next/image` to fail at runtime. Smoke-test both an optimized cover URL
+and the static social image at `/brand/sunnekatha-og.jpg` before switching the
+production symlink.
 
 The current release audit is documented in
 [docs/first-public-release-audit.md](docs/first-public-release-audit.md).

@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import { environment } from "@/config/environment";
 import type { ApiDetailedTrack } from "@/types/backend-api";
 
-export const SITE_URL = "https://sunnekatha.com";
+export const SOCIAL_IMAGE_PATH = "/brand/sunnekatha-og.jpg";
+export const SOCIAL_IMAGE = {
+  url: SOCIAL_IMAGE_PATH,
+  width: 1200,
+  height: 630,
+  alt: "SunneKatha — Nepali audio literature",
+};
 const SOCIAL_DESCRIPTION_LIMIT = 180;
-const SOCIAL_ARTWORK_HOSTS = new Set([
-  "media.sunnekatha.com",
-  "d3dazzi8rnwbjc.cloudfront.net",
-  "sunnekatha.com",
-  "www.sunnekatha.com",
-]);
 
 export async function getSocialTrack(slug: string) {
   try {
@@ -40,6 +40,21 @@ export function buildTrackMetadata(
       title: "Track",
       description: "Listen to Nepali audio literature on SunneKatha.",
       alternates: { canonical: canonicalPath },
+      openGraph: {
+        type: "website",
+        url: canonicalPath,
+        siteName: "SunneKatha",
+        locale: "ne_NP",
+        title: "Track",
+        description: "Listen to Nepali audio literature on SunneKatha.",
+        images: [SOCIAL_IMAGE],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "Track",
+        description: "Listen to Nepali audio literature on SunneKatha.",
+        images: [SOCIAL_IMAGE_PATH],
+      },
     };
   }
 
@@ -63,27 +78,15 @@ export function buildTrackMetadata(
       locale: "ne_NP",
       title: track.title,
       description,
+      images: [SOCIAL_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: track.title,
       description,
+      images: [SOCIAL_IMAGE_PATH],
     },
   };
-}
-
-export function getSocialArtworkUrl(value: string | null | undefined) {
-  const fallback = `${SITE_URL}/icons/pwa-512.png`;
-  if (!value) return fallback;
-
-  try {
-    const url = new URL(value, SITE_URL);
-    return url.protocol === "https:" && SOCIAL_ARTWORK_HOSTS.has(url.hostname)
-      ? url.toString()
-      : fallback;
-  } catch {
-    return fallback;
-  }
 }
 
 function isSocialTrack(value: unknown): value is ApiDetailedTrack {
