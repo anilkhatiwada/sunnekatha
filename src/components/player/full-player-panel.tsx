@@ -337,10 +337,10 @@ function UtilityButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel ?? label}
-      className="flex min-w-0 flex-col items-center gap-1.5 rounded-lg px-1 py-2 font-nepali text-[0.65rem] text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary sm:text-xs"
+      className="flex min-w-0 flex-col items-center gap-1.5 rounded-lg px-1 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
     >
       <Icon aria-hidden={true} className="size-4.5" />
-      <span className="max-w-full truncate">{label}</span>
+      <span className="max-w-full whitespace-nowrap">{label}</span>
     </button>
   );
 }

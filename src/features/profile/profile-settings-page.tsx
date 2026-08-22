@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Bell,
-  KeyRound,
   Headphones,
   LogOut,
   Mail,
@@ -23,12 +22,7 @@ import {
 } from "@/features/profile/profile-schema";
 import { usePreferencesStore } from "@/features/profile/preferences-store";
 import { cn } from "@/lib/utils";
-import {
-  ApiError,
-  changePassword,
-  updateAccountPreferences,
-  updateProfile,
-} from "@/services";
+import { updateAccountPreferences, updateProfile } from "@/services";
 
 const inputClassName =
   "mt-2 h-11 w-full rounded-lg border border-border bg-background/55 px-3 text-sm text-foreground transition-colors focus:border-primary focus:outline-2 focus:outline-primary disabled:cursor-not-allowed disabled:opacity-55";
@@ -40,8 +34,6 @@ export function ProfileSettingsPage() {
     (state) => state.updatePreferences,
   );
   const [statusMessage, setStatusMessage] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState("");
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const hasHydrated = usePreferencesStore((state) => state.hasHydrated);
   const {
     register,
@@ -295,69 +287,6 @@ export function ProfileSettingsPage() {
         </div>
       </form>
 
-      <SettingsSection
-        icon={KeyRound}
-        title="Password security"
-        description="Change the password for an email sign-in account."
-      >
-        <form
-          className="grid gap-4 sm:grid-cols-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const values = new FormData(form);
-            setPasswordMessage("");
-            setIsChangingPassword(true);
-            void changePassword({
-              currentPassword: String(values.get("currentPassword") ?? ""),
-              newPassword: String(values.get("newPassword") ?? ""),
-              newPasswordConfirm: String(
-                values.get("newPasswordConfirm") ?? "",
-              ),
-            })
-              .then(() => {
-                form.reset();
-                setPasswordMessage(
-                  "Password changed. Other sessions were securely signed out.",
-                );
-              })
-              .catch((error: unknown) => {
-                setPasswordMessage(
-                  error instanceof ApiError
-                    ? error.message
-                    : "Password could not be changed.",
-                );
-              })
-              .finally(() => setIsChangingPassword(false));
-          }}
-        >
-          <PasswordField name="currentPassword" label="Current password" />
-          <PasswordField name="newPassword" label="New password" />
-          <PasswordField
-            name="newPasswordConfirm"
-            label="Confirm new password"
-          />
-          <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={isChangingPassword}
-              className="rounded-full font-nepali"
-            >
-              <KeyRound aria-hidden="true" className="size-4" />
-              {isChangingPassword ? "Saving…" : "Change password"}
-            </Button>
-            <p
-              role="status"
-              aria-live="polite"
-              className="font-nepali text-sm text-muted-foreground"
-            >
-              {passwordMessage}
-            </p>
-          </div>
-        </form>
-      </SettingsSection>
-
       {user?.isCreator ? (
         <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
           <h2 className="font-literary text-2xl font-semibold">Creator Center</h2>
@@ -404,22 +333,6 @@ export function ProfileSettingsPage() {
         </Button>
       </section>
     </div>
-  );
-}
-
-function PasswordField({ name, label }: { name: string; label: string }) {
-  return (
-    <label className="font-nepali text-sm">
-      {label}
-      <input
-        name={name}
-        type="password"
-        required
-        minLength={8}
-        autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
-        className={inputClassName}
-      />
-    </label>
   );
 }
 

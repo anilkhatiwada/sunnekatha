@@ -139,7 +139,14 @@ export function PersonCardLayout({
   isPlayDisabled = false,
 }: PersonCardLayoutProps) {
   return (
-    <article className="group min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
+    <article className="group relative min-w-0 rounded-xl border border-transparent p-3 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border/80 hover:bg-surface focus-within:border-border/80 focus-within:bg-surface">
+      <Link
+        href={href}
+        aria-label={`Open ${name}`}
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+      >
+        <span className="sr-only">Open {name}</span>
+      </Link>
       <MediaArtwork
         src={image}
         alt={`${name} photo`}
@@ -151,16 +158,14 @@ export function PersonCardLayout({
           label={playLabel}
           onPlay={onPlay}
           disabled={isPlayDisabled}
-          className="absolute right-3 bottom-3 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
+          className="absolute right-3 bottom-3 z-20 translate-y-0 opacity-100 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100"
         />
       </MediaArtwork>
       <div className="mt-4 min-w-0 text-center">
         <h3 className="line-clamp-2 min-h-12">
-          <CardTitleLink
-            href={href}
-            title={name}
-            className="inline text-base leading-6"
-          />
+          <span className="font-nepali text-base leading-6 font-semibold text-foreground transition-colors group-hover:text-primary">
+            {name}
+          </span>
         </h3>
         <p className="mt-1 truncate font-nepali text-sm text-muted-foreground">
           {description}

@@ -1612,6 +1612,11 @@ class AudioTrackAdmin(
     EditorialActionMixin,
     ModelAdmin,
 ):
+    def has_delete_permission(self, request, obj=None):
+        """Permit deliberate track deletion only for superusers."""
+
+        return bool(request.user.is_active and request.user.is_superuser)
+
     class Media:
         css = {
             "all": (

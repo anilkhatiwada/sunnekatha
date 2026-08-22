@@ -391,8 +391,11 @@ def test_album_tracks_are_a_read_only_linked_inline():
     assert AlbumTrackInline in AlbumAdmin.inlines
 
 
-def test_durable_tracks_cannot_be_deleted_in_admin():
+def test_only_superusers_can_delete_tracks_in_admin():
     request = RequestFactory().get("/admin/")
     request.user = UserFactory(is_superuser=True, is_staff=True)
     model_admin = AudioTrackAdmin(AudioTrack, AdminSite())
+    assert model_admin.has_delete_permission(request)
+
+    request.user = UserFactory(is_superuser=False, is_staff=True)
     assert not model_admin.has_delete_permission(request)
