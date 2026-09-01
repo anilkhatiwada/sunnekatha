@@ -485,13 +485,21 @@ class LiteraryWorkTrackInline(TabularInline):
     extra = 0
     fields = (
         "track_number",
+        "chapter_number",
         "title_ne",
         "narrator",
         "processing_status",
         "review_status",
         "is_published",
     )
-    readonly_fields = fields
+    readonly_fields = (
+        "track_number",
+        "title_ne",
+        "narrator",
+        "processing_status",
+        "review_status",
+        "is_published",
+    )
     ordering = ("track_number", "chapter_number", "title_ne")
     show_change_link = True
     verbose_name_plural = "Related audio tracks"

@@ -22,7 +22,7 @@ from apps.catalog.admin import (
     LiteraryWorkTrackInline,
     PublicationStatusFilter,
 )
-from apps.catalog.models import Album, LiteraryWork
+from apps.catalog.models import Album, LiteraryWork, WorkStructure
 from apps.catalog.services import EditorialResult, EditorialService
 from apps.catalog.tests.factories import AudioTrackFactory, LiteraryWorkFactory
 
@@ -81,6 +81,36 @@ def test_literary_work_admin_has_requested_columns_filters_search_and_fieldsets(
     assert {"slug", "created_at", "updated_at", "cover_preview"} <= set(
         model_admin.readonly_fields
     )
+
+
+@pytest.mark.django_db
+def test_literary_work_track_inline_reports_missing_chapter_without_crashing(rf):
+    work = LiteraryWorkFactory(structure=WorkStructure.STANDALONE)
+    track = AudioTrackFactory(work=work, chapter_number=None)
+    work.structure = WorkStructure.SERIALIZED
+    request = rf.post("/admin/catalog/literarywork/")
+    request.user = UserFactory(is_staff=True, is_superuser=True)
+    inline = LiteraryWorkTrackInline(LiteraryWork, admin.site)
+    formset_class = inline.get_formset(request, work)
+    prefix = formset_class.get_default_prefix()
+    formset = formset_class(
+        data={
+            f"{prefix}-TOTAL_FORMS": "1",
+            f"{prefix}-INITIAL_FORMS": "1",
+            f"{prefix}-MIN_NUM_FORMS": "0",
+            f"{prefix}-MAX_NUM_FORMS": "1000",
+            f"{prefix}-0-id": str(track.pk),
+            f"{prefix}-0-work": str(work.pk),
+            f"{prefix}-0-chapter_number": "",
+        },
+        instance=work,
+        prefix=prefix,
+    )
+
+    assert formset.is_valid() is False
+    assert formset.forms[0].errors["chapter_number"] == [
+        "Serialized tracks require a chapter number."
+    ]
 
 
 @pytest.mark.django_db
