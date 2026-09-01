@@ -47,6 +47,27 @@ const playlist = {
   isFeatured: true,
 };
 
+const serializedWork = {
+  id: "work-id",
+  slug: "serialized-work",
+  title: "क्रमिक उपन्यास",
+  titleEnglish: "Serialized Novel",
+  contentType: "Novel",
+  structure: "serialized",
+  author: track.author,
+  category: null,
+  primaryCategory: null,
+  categories: [],
+  coverImage: null,
+  genres: [],
+  moods: [],
+  tags: [],
+  isFeatured: false,
+  publishedAt: "2026-07-30T12:00:00Z",
+  chapterCount: 6,
+  totalDuration: 3600,
+};
+
 describe("homepage response adapter", () => {
   it("preserves backend section order and uses explicit editorial presentation", () => {
     const result = mapHomeResponse({
@@ -128,6 +149,27 @@ describe("homepage response adapter", () => {
     }
     expect(section.items[0]?.track).not.toHaveProperty("audioUrl");
     expect(section.items[0]?.progress.progressSeconds).toBe(30);
+  });
+
+  it("preserves serialized parents in legacy track-labelled sections", () => {
+    const result = mapHomeResponse({
+      hero: null,
+      sections: [
+        {
+          id: "new-releases",
+          title: "नयाँ सार्वजनिक रचना",
+          sectionType: "tracks",
+          items: [serializedWork, track],
+        },
+      ],
+    });
+
+    expect(result.sections[0]?.kind).toBe("catalog");
+    if (result.sections[0]?.kind !== "catalog") return;
+    expect(result.sections[0].items.map((item) => item.kind)).toEqual([
+      "work",
+      "track",
+    ]);
   });
 
   it("supports an editorial track hero without inventing an audio URL", () => {

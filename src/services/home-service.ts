@@ -312,6 +312,17 @@ function classifySection(id: string, items: unknown[], sectionType: unknown) {
     categories: "categories",
     continue_listening: "continue-listening",
   };
+  // Older cached homepage payloads can label automatic new releases as tracks
+  // even after a serialized parent replaces its child tracks. Preserve those
+  // parents instead of dropping them while the backend cache rolls over.
+  if (
+    sectionType === "tracks" &&
+    items.some(
+      (item) => isRecord(item) && item.structure === "serialized",
+    )
+  ) {
+    return "catalog";
+  }
   if (isString(sectionType) && explicitKinds[sectionType]) {
     return explicitKinds[sectionType];
   }

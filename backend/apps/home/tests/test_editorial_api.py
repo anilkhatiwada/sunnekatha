@@ -7,7 +7,12 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.tests.factories import UserFactory
-from apps.catalog.tests.factories import AlbumFactory, AudioTrackFactory
+from apps.catalog.models import WorkStructure
+from apps.catalog.tests.factories import (
+    AlbumFactory,
+    AudioTrackFactory,
+    LiteraryWorkFactory,
+)
 from apps.home.models import HomeSectionItem, HomeSectionSource, HomeSectionType
 from apps.home.tests.factories import HomeSectionFactory
 from apps.library.progress import listening_progress_service
@@ -190,6 +195,30 @@ def test_automatic_new_releases_ignores_editorial_items_and_uses_publish_order()
     assert [item["id"] for item in response.data["sections"][0]["items"]] == [
         str(newer.id)
     ]
+
+
+def test_automatic_new_releases_is_catalog_when_it_contains_serialized_work():
+    published_at = timezone.now() - timedelta(minutes=5)
+    work = LiteraryWorkFactory(
+        structure=WorkStructure.SERIALIZED,
+        published_at=published_at,
+    )
+    AudioTrackFactory(
+        work=work,
+        chapter_number=1,
+        published_at=published_at,
+    )
+    HomeSectionFactory(
+        identifier="new-releases",
+        section_type=HomeSectionType.TRACKS,
+        content_source=HomeSectionSource.RECENT_RELEASES,
+    )
+
+    response = APIClient().get(reverse("home:detail"))
+
+    section = response.data["sections"][0]
+    assert section["sectionType"] == HomeSectionType.CATALOG
+    assert any(item["id"] == str(work.id) for item in section["items"])
 
 
 def test_track_section_exposes_structured_browse_category():

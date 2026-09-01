@@ -202,7 +202,11 @@ class HomeService:
                 "titleEnglish": configured.title_en,
                 "subtitle": configured.subtitle_ne,
                 "subtitleEnglish": configured.subtitle_en,
-                "sectionType": configured.section_type,
+                "sectionType": (
+                    HomeSectionType.CATALOG
+                    if configured.content_source == HomeSectionSource.RECENT_RELEASES
+                    else configured.section_type
+                ),
                 "layout": configured.layout,
                 "items": [content for _, content in items],
             }
