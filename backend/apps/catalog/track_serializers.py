@@ -61,11 +61,13 @@ class CompactTrackSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_coverImage(self, obj: AudioTrack) -> str | None:
-        cover = (
-            obj.album.cover_image
-            if obj.album_id and obj.album.cover_image
-            else obj.work.cover_image
-        )
+        cover = obj.cover_image
+        if not cover:
+            cover = (
+                obj.album.cover_image
+                if obj.album_id and obj.album.cover_image
+                else obj.work.cover_image
+            )
         if not cover:
             return None
         request = self.context.get("request")
@@ -117,8 +119,12 @@ class DetailedTrackSerializer(CompactTrackSerializer):
             "title": obj.work.title_ne,
             "titleEnglish": obj.work.title_en,
             "type": (
-                "novel" if obj.work.category.slug == "novel_chapter" else "collection"
+                "novel"
+                if obj.work.structure == "serialized"
+                or obj.work.category.slug == "novel_chapter"
+                else "collection"
             ),
+            "structure": obj.work.structure,
             "category": {
                 "id": str(obj.work.category_id),
                 "slug": obj.work.category.slug,

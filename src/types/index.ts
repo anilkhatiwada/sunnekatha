@@ -26,6 +26,8 @@ export type {
   ApiCompactPlaylist,
   ApiCompactAlbum,
   ApiCompactLiteraryWork,
+  ApiCatalogItem,
+  ApiCatalogItemPage,
   ApiCompactTrack,
   ApiContinueListeningItem,
   ApiContinueListeningPage,
@@ -64,7 +66,7 @@ export type {
   ApiLiteraryWork,
   ApiLiteraryWorkPage,
 } from "@/types/backend-api";
-export type { Album, LiteraryWork } from "@/types/catalog";
+export type { Album, CatalogItem, LiteraryWork } from "@/types/catalog";
 export type {
   ContinueListeningItem,
   Genre,
@@ -87,6 +89,7 @@ export type { Narrator, NarratorSummary } from "@/types/narrator";
 export type {
   CatalogPlaylist,
   Playlist,
+  PlaylistContentItem,
 } from "@/types/playlist";
 export type {
   SearchRequest,

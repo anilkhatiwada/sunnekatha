@@ -2,7 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 
 from apps.common.admin import ImagePreviewAdminMixin, ProtectedDeleteAdminMixin
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 
 
 class TaxonomyAdmin(ProtectedDeleteAdminMixin, ImagePreviewAdminMixin, ModelAdmin):
@@ -39,3 +39,4 @@ admin.site.register(Genre, TaxonomyAdmin)
 admin.site.register(Mood, TaxonomyAdmin)
 admin.site.register(Language, TaxonomyAdmin)
 admin.site.register(ContentCategory, TaxonomyAdmin)
+admin.site.register(Tag, TaxonomyAdmin)

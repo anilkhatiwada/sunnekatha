@@ -2,7 +2,8 @@ from django.db import transaction
 from django.db.models import Q
 from rest_framework import serializers
 
-from apps.catalog.models import AudioTrack
+from apps.catalog.models import AudioTrack, LiteraryWork, WorkStructure
+from apps.catalog.serializers import CompactLiteraryWorkSerializer
 from apps.catalog.track_serializers import CompactTrackSerializer
 from apps.common.serializers import RejectUnknownFieldsMixin
 from apps.playlists.models import (
@@ -81,18 +82,46 @@ class PlaylistSerializer(CompactPlaylistSerializer):
 
 class PlaylistDetailSerializer(PlaylistSerializer):
     tracks = serializers.SerializerMethodField()
+    items = serializers.SerializerMethodField()
 
     class Meta(PlaylistSerializer.Meta):
-        fields = PlaylistSerializer.Meta.fields + ("tracks",)
+        fields = PlaylistSerializer.Meta.fields + ("items", "tracks")
+
+    def get_items(self, obj: Playlist) -> list[dict]:
+        result = []
+        for item in obj.items.all():
+            if item.track_id:
+                result.append(
+                    {
+                        "id": str(item.id),
+                        "position": item.position,
+                        "kind": "track",
+                        "content": CompactTrackSerializer(
+                            item.track, context=self.context
+                        ).data,
+                    }
+                )
+            elif item.work_id:
+                result.append(
+                    {
+                        "id": str(item.id),
+                        "position": item.position,
+                        "kind": "work",
+                        "content": CompactLiteraryWorkSerializer(
+                            item.work, context=self.context
+                        ).data,
+                    }
+                )
+        return result
 
     def get_tracks(self, obj: Playlist) -> list[dict]:
-        return [
-            CompactTrackSerializer(
-                item.track,
-                context=self.context,
-            ).data
-            for item in obj.items.all()
-        ]
+        tracks = []
+        for item in obj.items.all():
+            if item.track_id:
+                tracks.append(item.track)
+            elif item.work_id:
+                tracks.extend(getattr(item.work, "public_chapters", ()))
+        return CompactTrackSerializer(tracks, many=True, context=self.context).data
 
 
 class PlaylistWriteSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
@@ -223,6 +252,26 @@ class RemoveTrackSerializer(AddTrackSerializer):
     pass
 
 
+class AddWorkSerializer(serializers.Serializer):
+    workId = serializers.PrimaryKeyRelatedField(
+        source="work", queryset=LiteraryWork.objects.all()
+    )
+
+    def validate_workId(self, work):
+        if (
+            work.structure != WorkStructure.SERIALIZED
+            or not LiteraryWork.objects.discoverable().filter(pk=work.pk).exists()
+        ):
+            raise serializers.ValidationError(
+                "Work is not a publicly playable serialized work."
+            )
+        return work
+
+
+class RemoveWorkSerializer(AddWorkSerializer):
+    pass
+
+
 class ReorderTracksSerializer(serializers.Serializer):
     trackIds = serializers.ListField(
         child=serializers.UUIDField(),
@@ -269,6 +318,7 @@ class DuplicatePlaylistSerializer(serializers.Serializer):
                 PlaylistItem(
                     playlist=duplicate,
                     track=item.track,
+                    work=item.work,
                     position=item.position,
                     added_by=user,
                 )

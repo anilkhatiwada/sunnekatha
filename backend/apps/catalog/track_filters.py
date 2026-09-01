@@ -1,11 +1,13 @@
 import django_filters
+from django.db.models import Q
 
 from apps.catalog.models import AudioTrack
 
 
 class AudioTrackFilter(django_filters.FilterSet):
-    category = django_filters.CharFilter(field_name="work__category__slug")
-    contentType = django_filters.CharFilter(field_name="work__category__slug")
+    category = django_filters.CharFilter(method="filter_category")
+    contentType = django_filters.CharFilter(method="filter_category")
+    tag = django_filters.CharFilter(field_name="work__tags__slug", distinct=True)
     author = django_filters.CharFilter(field_name="work__author__slug")
     work = django_filters.CharFilter(field_name="work__slug")
     album = django_filters.CharFilter(field_name="album__slug")
@@ -28,11 +30,18 @@ class AudioTrackFilter(django_filters.FilterSet):
             "narrator",
             "genre",
             "mood",
+            "tag",
             "language",
             "featured",
             "premium",
             "explicit",
         )
+
+    def filter_category(self, queryset, name, value):
+        del name
+        return queryset.filter(
+            Q(work__category__slug=value) | Q(work__categories__slug=value)
+        ).distinct()
 
     def filter_genre(self, queryset, name, value):
         del name

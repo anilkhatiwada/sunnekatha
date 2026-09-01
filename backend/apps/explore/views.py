@@ -35,4 +35,5 @@ class ExploreTrackListView(ListAPIView):
     ordering = ("-published_at", "-created_at", "id")
 
     def get_queryset(self):
-        return public_track_queryset()
+        # General explore lists represent serialized content by its parent work.
+        return public_track_queryset().discoverable()

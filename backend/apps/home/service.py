@@ -2,13 +2,15 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Prefetch, Q, Sum
 from django.utils import timezone
 
 from apps.authors.models import Author
 from apps.catalog.models import Album, TrackProcessingStatus
+from apps.catalog.serializers import CompactLiteraryWorkSerializer
 from apps.catalog.track_serializers import CompactTrackSerializer
 from apps.catalog.track_views import public_track_queryset
+from apps.catalog.views import literary_work_queryset
 from apps.common.cache import public_cache_keys
 from apps.home.models import HomeSection, HomeSectionSource, HomeSectionType
 from apps.home.serializers import (
@@ -78,6 +80,7 @@ class HomeService:
                 "items__track__narrator",
                 "items__track__language",
                 "items__track__album",
+                Prefetch("items__work", queryset=literary_work_queryset()),
                 "items__playlist__owner",
                 "items__playlist__items__track",
                 "items__album__author",
@@ -99,6 +102,7 @@ class HomeService:
     def get_featured_track_hero(self):
         track = (
             public_track_queryset()
+            .discoverable()
             .filter(is_featured=True)
             .order_by("-published_at", "-created_at", "id")
             .first()
@@ -146,15 +150,33 @@ class HomeService:
                     for item in HomeCategorySerializer(categories, many=True).data
                 ]
             elif configured.content_source == HomeSectionSource.RECENT_RELEASES:
-                items = [
+                track_items = [
                     ("track", item)
                     for item in CompactTrackSerializer(
-                        public_track_queryset().order_by(
-                            "-published_at", "-created_at", "id"
-                        )[: configured.max_items],
+                        public_track_queryset()
+                        .discoverable()
+                        .order_by("-published_at", "-created_at", "id")[
+                            : configured.max_items
+                        ],
                         many=True,
                     ).data
                 ]
+                work_items = [
+                    ("work", item)
+                    for item in CompactLiteraryWorkSerializer(
+                        literary_work_queryset()
+                        .discoverable()
+                        .order_by("-published_at", "-created_at", "id")[
+                            : configured.max_items
+                        ],
+                        many=True,
+                    ).data
+                ]
+                items = sorted(
+                    track_items + work_items,
+                    key=lambda pair: pair[1].get("publishedAt") or "",
+                    reverse=True,
+                )[: configured.max_items]
             else:
                 items = [
                     serialized
@@ -199,6 +221,11 @@ class HomeService:
 
     def serialize_editorial_item(self, item):
         now = timezone.now()
+        if item.work_id:
+            work = item.work
+            if work.structure != "serialized" or work.playable_chapter_count < 1:
+                return None
+            return "work", CompactLiteraryWorkSerializer(work).data
         if item.track_id:
             track = item.track
             if not (
@@ -206,6 +233,7 @@ class HomeService:
                 and track.processing_status == TrackProcessingStatus.READY
                 and track.published_at
                 and track.published_at <= now
+                and track.work.structure == "standalone"
             ):
                 return None
             return "track", CompactTrackSerializer(track).data

@@ -182,6 +182,7 @@ class CatalogAdminBase(
         "=id",
         "title_ne",
         "title_en",
+        "structure",
         "slug",
         "author__name_ne",
         "author__name_en",
@@ -993,6 +994,7 @@ class LiteraryWorkAdmin(CatalogAdminBase):
     )
     list_filter = (
         ("category", AutocompleteSelectFilter),
+        ("structure", ChoicesDropdownFilter),
         PublicationStatusFilter,
         ("is_featured", BooleanRadioFilter),
         ("copyright_status", MultipleChoicesDropdownFilter),
@@ -1014,7 +1016,11 @@ class LiteraryWorkAdmin(CatalogAdminBase):
         (SearchEntityType.LITERARY_WORK, "id"),
         (SearchEntityType.AUTHOR, "author_id"),
     )
-    autocomplete_fields = CatalogAdminBase.autocomplete_fields + ("language",)
+    autocomplete_fields = CatalogAdminBase.autocomplete_fields + (
+        "language",
+        "categories",
+        "tags",
+    )
     readonly_fields = CatalogAdminBase.readonly_fields + (
         "published_at",
         "preview_public_page",
@@ -1037,7 +1043,10 @@ class LiteraryWorkAdmin(CatalogAdminBase):
             {
                 "fields": (
                     "author",
+                    "structure",
                     "category",
+                    "categories",
+                    "tags",
                     "language",
                     "genres",
                     "moods",
@@ -1709,6 +1718,7 @@ class AudioTrackAdmin(
                     "title_en",
                     "description_ne",
                     "description_en",
+                    "cover_image",
                     "slug",
                 )
             },

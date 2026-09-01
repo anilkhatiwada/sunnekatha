@@ -51,3 +51,10 @@ class Language(TaxonomyBase):
 class ContentCategory(TaxonomyBase):
     class Meta(TaxonomyBase.Meta):
         verbose_name_plural = "Content categories"
+
+
+class Tag(TaxonomyBase):
+    """A normalized editorial discovery signal for literary works."""
+
+    class Meta(TaxonomyBase.Meta):
+        verbose_name_plural = "Tags"

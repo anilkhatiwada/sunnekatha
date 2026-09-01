@@ -58,7 +58,12 @@ class TrackListView(ListAPIView):
     ordering = ("-published_at", "title_ne", "id")
 
     def get_queryset(self):
-        return public_track_queryset().defer(
+        queryset = public_track_queryset()
+        # Work detail pages explicitly request their chapters. Everywhere else,
+        # serialized chapters are represented by their parent literary work.
+        if not self.request.query_params.get("work"):
+            queryset = queryset.discoverable()
+        return queryset.defer(
             "description_ne",
             "description_en",
             "transcript",
@@ -232,6 +237,7 @@ class RelatedTrackListView(TrackListView):
         mood_ids = source.work.moods.values_list("id", flat=True)
         return (
             public_track_queryset()
+            .discoverable()
             .exclude(pk=source.pk)
             .filter(
                 Q(work__category=source.work.category)

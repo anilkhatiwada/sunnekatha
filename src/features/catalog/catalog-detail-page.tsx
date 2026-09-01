@@ -156,6 +156,8 @@ function getWorkMetadata(work: LiteraryWork) {
     work.contentType,
     work.language,
     work.publicationYear ? String(work.publicationYear) : "",
+    ...work.categories.map((category) => category.name),
+    ...work.tags.map((tag) => tag.name),
     ...work.genres,
     ...work.moods,
   ].filter(Boolean);

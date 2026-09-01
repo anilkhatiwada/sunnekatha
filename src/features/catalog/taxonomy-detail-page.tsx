@@ -3,12 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenText, Sparkles } from "lucide-react";
 
-import { TrackCard, TrackCardSkeleton } from "@/components/cards";
+import { LiteraryWorkCard, TrackCard, TrackCardSkeleton } from "@/components/cards";
 import { EmptyState } from "@/components/common/empty-state";
 import { SectionError } from "@/components/common/section-error";
 import { useCatalogPlayback } from "@/features/player/use-catalog-playback";
 import {
-  getCatalogTracks,
+  getCatalogItems,
   getGenreBySlug,
   getMoodBySlug,
   queryKeys,
@@ -33,7 +33,7 @@ export function TaxonomyDetailPage({
     queryKey: queryKeys.explore.releases({
       [kind]: slug,
     }),
-    queryFn: () => getCatalogTracks({ [kind]: slug }),
+    queryFn: () => getCatalogItems({ [kind]: slug }),
   });
   const { playTrack } = useCatalogPlayback();
   const Icon = kind === "genre" ? BookOpenText : Sparkles;
@@ -76,13 +76,20 @@ export function TaxonomyDetailPage({
         </div>
       ) : tracksQuery.data.length ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-          {tracksQuery.data.map((track) => (
-            <TrackCard
-              key={track.id}
-              track={track}
-              onPlay={(selected) => void playTrack(selected)}
-            />
-          ))}
+          {tracksQuery.data.map((item) =>
+            item.kind === "track" ? (
+              <TrackCard
+                key={`track-${item.content.id}`}
+                track={item.content}
+                onPlay={(selected) => void playTrack(selected)}
+              />
+            ) : (
+              <LiteraryWorkCard
+                key={`work-${item.content.id}`}
+                work={item.content}
+              />
+            ),
+          )}
         </div>
       ) : (
         <EmptyState

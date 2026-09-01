@@ -7,8 +7,15 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authors.tests.factories import AuthorFactory
-from apps.catalog.tests.factories import LiteraryWorkFactory
-from apps.taxonomy.tests.factories import GenreFactory, LanguageFactory, MoodFactory
+from apps.catalog.models import WorkStructure
+from apps.catalog.tests.factories import AudioTrackFactory, LiteraryWorkFactory
+from apps.taxonomy.tests.factories import (
+    ContentCategoryFactory,
+    GenreFactory,
+    LanguageFactory,
+    MoodFactory,
+    TagFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -99,7 +106,57 @@ def test_work_title_search_and_ordering():
 def test_work_list_uses_bounded_queries(django_assert_num_queries):
     LiteraryWorkFactory.create_batch(3)
 
-    with django_assert_num_queries(4):
+    # Pagination + works + four bounded M2M prefetches (genres, moods,
+    # categories, tags), independent of result count.
+    with django_assert_num_queries(6):
         response = APIClient().get(reverse("catalog:work-list"))
 
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_serialized_work_returns_ordered_chapters_categories_and_tags():
+    extra_category = ContentCategoryFactory(slug="romance")
+    tag = TagFactory(slug="family")
+    work = LiteraryWorkFactory(
+        structure=WorkStructure.SERIALIZED,
+        categories=[extra_category],
+        tags=[tag],
+    )
+    second = AudioTrackFactory(work=work, chapter_number=2, track_number=2)
+    first = AudioTrackFactory(work=work, chapter_number=1, track_number=1)
+
+    response = APIClient().get(
+        reverse("catalog:work-detail", kwargs={"slug": work.slug})
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["structure"] == "serialized"
+    assert [item["id"] for item in response.data["chapters"]] == [
+        str(first.id),
+        str(second.id),
+    ]
+    assert {item["slug"] for item in response.data["categories"]} == {
+        work.category.slug,
+        "romance",
+    }
+    assert [item["slug"] for item in response.data["tags"]] == ["family"]
+
+
+def test_catalog_items_replace_serialized_chapters_with_parent_work():
+    standalone = AudioTrackFactory()
+    work = LiteraryWorkFactory(structure=WorkStructure.SERIALIZED)
+    AudioTrackFactory(work=work, chapter_number=1)
+    AudioTrackFactory(work=work, chapter_number=2)
+
+    response = APIClient().get(reverse("catalog:catalog-item-list"))
+
+    assert response.status_code == status.HTTP_200_OK
+    identities = {
+        (item["kind"], item["content"]["id"]) for item in response.data["results"]
+    }
+    assert ("track", str(standalone.id)) in identities
+    assert ("work", str(work.id)) in identities
+    assert not any(
+        kind == "track" and identity != str(standalone.id)
+        for kind, identity in identities
+    )

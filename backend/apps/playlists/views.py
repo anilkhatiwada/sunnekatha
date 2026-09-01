@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db.models import Count, Prefetch, Q, Sum
+from django.db.models import Count, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -13,7 +13,8 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from apps.catalog.models import TrackProcessingStatus
+from apps.catalog.models import AudioTrack, TrackProcessingStatus
+from apps.catalog.views import literary_work_queryset
 from apps.common.cache_views import PublicDetailCacheMixin, PublicListCacheMixin
 from apps.notifications.services import notification_service
 from apps.playlists.models import (
@@ -25,11 +26,13 @@ from apps.playlists.models import (
 from apps.playlists.permissions import CanManagePlaylist
 from apps.playlists.serializers import (
     AddTrackSerializer,
+    AddWorkSerializer,
     CompactPlaylistSerializer,
     DuplicatePlaylistSerializer,
     PlaylistDetailSerializer,
     PlaylistWriteSerializer,
     RemoveTrackSerializer,
+    RemoveWorkSerializer,
     ReorderTracksSerializer,
     VisibilitySerializer,
 )
@@ -37,37 +40,93 @@ from apps.playlists.services import playlist_item_service
 
 
 def playlist_queryset(*, include_tracks=True):
-    playable = Q(
-        items__track__is_published=True,
-        items__track__processing_status=TrackProcessingStatus.READY,
-        items__track__published_at__lte=timezone.now(),
-    ) & (
-        Q(items__track__stream_file_low__gt="")
-        | Q(items__track__stream_file_high__gt="")
-    )
     playable_items = (
         PlaylistItem.objects.filter(
-            track__is_published=True,
-            track__processing_status=TrackProcessingStatus.READY,
-            track__published_at__lte=timezone.now(),
+            Q(
+                track__is_published=True,
+                track__processing_status=TrackProcessingStatus.READY,
+                track__published_at__lte=timezone.now(),
+            )
+            & (Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt=""))
+            | Q(work__in=literary_work_queryset().discoverable())
         )
-        .filter(Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt=""))
         .select_related(
             "track__work__author",
             "track__work__category",
             "track__album",
             "track__narrator",
             "track__language",
+            "work__author",
+            "work__category",
+            "work__language",
         )
-        .prefetch_related("track__work__genres", "track__work__moods")
+        .prefetch_related(
+            "track__work__genres",
+            "track__work__moods",
+            "work__genres",
+            "work__moods",
+            "work__categories",
+            "work__tags",
+            Prefetch(
+                "work__audio_tracks",
+                queryset=AudioTrack.objects.published()
+                .filter(Q(stream_file_low__gt="") | Q(stream_file_high__gt=""))
+                .select_related(
+                    "work",
+                    "work__category",
+                    "work__author",
+                    "album",
+                    "narrator",
+                    "language",
+                )
+                .prefetch_related("work__genres", "work__moods", "work__tags")
+                .order_by("chapter_number", "track_number", "published_at", "id"),
+                to_attr="public_chapters",
+            ),
+        )
         .order_by("position", "created_at", "id")
+    )
+    direct_metrics = (
+        PlaylistItem.objects.filter(
+            playlist=OuterRef("pk"),
+            track__is_published=True,
+            track__processing_status=TrackProcessingStatus.READY,
+            track__published_at__lte=timezone.now(),
+        )
+        .filter(Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt=""))
+        .values("playlist")
+        .annotate(count=Count("id"), duration=Sum("track__duration_seconds"))
+    )
+    chapter_metrics = (
+        AudioTrack.objects.published()
+        .filter(work__playlist_items__playlist=OuterRef("pk"))
+        .filter(Q(stream_file_low__gt="") | Q(stream_file_high__gt=""))
+        .values("work__playlist_items__playlist")
+        .annotate(count=Count("id"), duration=Sum("duration_seconds"))
     )
     queryset = (
         Playlist.objects.select_related("owner")
         .annotate(
-            trackCount=Count("items", filter=playable),
+            directTrackCount=Coalesce(Subquery(direct_metrics.values("count")[:1]), 0),
+            chapterTrackCount=Coalesce(
+                Subquery(chapter_metrics.values("count")[:1]), 0
+            ),
+            directDuration=Coalesce(Subquery(direct_metrics.values("duration")[:1]), 0),
+            chapterDuration=Coalesce(
+                Subquery(chapter_metrics.values("duration")[:1]), 0
+            ),
+            trackCount=Coalesce(Subquery(direct_metrics.values("count")[:1]), 0)
+            + Coalesce(Subquery(chapter_metrics.values("count")[:1]), 0),
             totalDuration=Coalesce(
-                Sum("items__track__duration_seconds", filter=playable),
+                Subquery(
+                    direct_metrics.values("duration")[:1], output_field=IntegerField()
+                ),
+                0,
+            )
+            + Coalesce(
+                Subquery(
+                    chapter_metrics.values("duration")[:1], output_field=IntegerField()
+                ),
                 0,
             ),
         )
@@ -234,6 +293,37 @@ class RemoveTrackView(PlaylistActionView):
         playlist_item_service.remove(
             playlist=playlist,
             track=serializer.validated_data["track"],
+            actor=request.user,
+        )
+        return self.output(playlist)
+
+    post = remove
+    delete = remove
+
+
+class AddWorkView(PlaylistActionView):
+    serializer_class = AddWorkSerializer
+
+    def post(self, request, slug):
+        playlist = self.get_playlist(slug)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        playlist_item_service.add_work(
+            playlist=playlist, work=serializer.validated_data["work"], user=request.user
+        )
+        return self.output(playlist, status_code=status.HTTP_201_CREATED)
+
+
+class RemoveWorkView(PlaylistActionView):
+    serializer_class = RemoveWorkSerializer
+
+    def remove(self, request, slug):
+        playlist = self.get_playlist(slug)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        playlist_item_service.remove_work(
+            playlist=playlist,
+            work=serializer.validated_data["work"],
             actor=request.user,
         )
         return self.output(playlist)

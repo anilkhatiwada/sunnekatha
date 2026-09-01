@@ -18,6 +18,7 @@ from apps.catalog.track_views import (
 from apps.catalog.views import (
     AlbumDetailView,
     AlbumListView,
+    CatalogItemListView,
     FeaturedAlbumListView,
     FeaturedLiteraryWorkListView,
     LiteraryWorkDetailView,
@@ -27,6 +28,7 @@ from apps.catalog.views import (
 app_name = "catalog"
 
 urlpatterns = [
+    path("catalog/items/", CatalogItemListView.as_view(), name="catalog-item-list"),
     path("tracks/", TrackListView.as_view(), name="track-list"),
     path("tracks/featured/", FeaturedTrackListView.as_view(), name="track-featured"),
     path("tracks/trending/", TrendingTrackListView.as_view(), name="track-trending"),

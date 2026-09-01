@@ -21,3 +21,4 @@ export {
   PlaylistCardSkeleton,
 } from "@/components/cards/playlist-card";
 export { TrackCard, TrackCardSkeleton } from "@/components/cards/track-card";
+export { LiteraryWorkCard } from "@/components/cards/literary-work-card";

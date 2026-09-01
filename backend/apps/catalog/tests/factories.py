@@ -68,6 +68,18 @@ class LiteraryWorkFactory(DjangoModelFactory):
         if create and extracted:
             self.moods.add(*extracted)
 
+    @factory.post_generation
+    def categories(self, create, extracted, **kwargs):
+        del kwargs
+        if create and extracted:
+            self.categories.add(*extracted)
+
+    @factory.post_generation
+    def tags(self, create, extracted, **kwargs):
+        del kwargs
+        if create and extracted:
+            self.tags.add(*extracted)
+
 
 class AlbumFactory(DjangoModelFactory):
     class Meta:

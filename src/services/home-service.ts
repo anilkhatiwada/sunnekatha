@@ -8,6 +8,7 @@ import {
   DEFAULT_AVATAR_PATH,
   mapCompactPlaylist,
   mapCompactTrack,
+  mapCompactLiteraryWork,
   mapListeningProgress,
 } from "@/services/api-mappers";
 import {
@@ -27,12 +28,14 @@ import type {
   ApiAuthorSummary,
   ApiCompactPlaylist,
   ApiCompactTrack,
+  ApiCompactLiteraryWork,
   ApiContinueListeningItem,
   ApiListeningProgress,
   ApiNarratorSummary,
 } from "@/types/backend-api";
 import type {
   Author,
+  CatalogItem,
   HomeAlbum,
   HomePageData,
   HomeSection,
@@ -121,6 +124,12 @@ function mapHero(value: unknown) {
       ? { kind: "track" as const, content: mapCompactTrack(track) }
       : null;
   }
+  if (value.contentType === "work") {
+    const work = parseCompactWork(value.content);
+    return work
+      ? { kind: "work" as const, content: mapCompactLiteraryWork(work) }
+      : null;
+  }
   if (value.contentType === "album") {
     const album = mapHomeAlbum(value.content);
     return album ? { kind: "album" as const, content: album } : null;
@@ -166,6 +175,33 @@ function mapSection(value: unknown): HomeSection[] {
         const parsed = parseCompactTrack(item);
         return parsed ? [mapCompactTrack(parsed)] : [];
       }),
+    }];
+  }
+  if (kind === "works") {
+    return [{
+      ...base,
+      kind,
+      items: value.items.flatMap((item) => {
+        const parsed = parseCompactWork(item);
+        return parsed ? [mapCompactLiteraryWork(parsed)] : [];
+      }),
+    }];
+  }
+  if (kind === "catalog") {
+    const items: CatalogItem[] = [];
+    for (const item of value.items) {
+      const track = parseCompactTrack(item);
+      if (track) {
+        items.push({ kind: "track", content: mapCompactTrack(track) });
+        continue;
+      }
+      const work = parseCompactWork(item);
+      if (work) items.push({ kind: "work", content: mapCompactLiteraryWork(work) });
+    }
+    return [{
+      ...base,
+      kind,
+      items,
     }];
   }
   if (kind === "playlists") {
@@ -265,6 +301,8 @@ function mapSectionViewAllHref(
 function classifySection(id: string, items: unknown[], sectionType: unknown) {
   const explicitKinds: Record<string, HomeSection["kind"]> = {
     tracks: "tracks",
+    works: "works",
+    catalog: "catalog",
     playlists: "playlists",
     albums: "albums",
     authors: "authors",
@@ -297,6 +335,19 @@ function classifySection(id: string, items: unknown[], sectionType: unknown) {
     if ("name" in item) return "authors";
   }
   return "unknown";
+}
+
+function parseCompactWork(value: unknown): ApiCompactLiteraryWork | null {
+  if (
+    !isRecord(value) ||
+    !hasStrings(value, ["id", "slug", "title", "contentType", "structure", "publishedAt"]) ||
+    !isRecord(value.author) ||
+    !hasStrings(value.author, ["id", "slug", "name"]) ||
+    !Array.isArray(value.genres) || !Array.isArray(value.moods) ||
+    !Array.isArray(value.categories) || !Array.isArray(value.tags) ||
+    typeof value.chapterCount !== "number" || typeof value.totalDuration !== "number"
+  ) return null;
+  return value as unknown as ApiCompactLiteraryWork;
 }
 
 function parseCompactTrack(value: unknown): ApiCompactTrack | null {
@@ -485,6 +536,8 @@ function englishSectionPresentation(
       title: "Featured Audio",
       subtitle: "Editorial selections from this category.",
     },
+    works: { title: "Serialized Works", subtitle: "Complete works, ordered by chapter." },
+    catalog: { title: "Featured Literature", subtitle: "Stories and serialized works selected for you." },
     playlists: {
       title: "Featured Playlists",
       subtitle: "Curated listening from SunneKatha.",

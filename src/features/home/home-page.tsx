@@ -15,6 +15,7 @@ import {
   NarratorCard,
   PlaylistCard,
   TrackCard,
+  LiteraryWorkCard,
 } from "@/components/cards";
 import { ExploreCollectionCard } from "@/components/cards/explore-collection-card";
 import { CategoryCircleCard } from "@/components/cards/category-circle-card";
@@ -142,9 +143,15 @@ function ContentHeroCard({
   const subtitle =
     hero.kind === "track"
       ? hero.content.author.name
-      : hero.content.authorName;
+      : hero.kind === "work"
+        ? hero.content.author.name
+        : hero.content.authorName;
   const href =
-    hero.kind === "track" ? `/track/${hero.content.slug}` : null;
+    hero.kind === "track"
+      ? `/track/${hero.content.slug}`
+      : hero.kind === "work"
+        ? `/work/${hero.content.slug}`
+        : null;
 
   return (
     <article className="group relative isolate min-h-[24rem] overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_30px_80px_rgb(0_0_0_/_0.35)] sm:min-h-[28rem] lg:min-h-[30rem]">
@@ -278,6 +285,24 @@ function renderSectionItems(
           track={track}
           onPlay={(selected) => void onPlayTrack(selected)}
         />
+      </div>
+    ));
+  }
+  if (section.kind === "works") {
+    return section.items.map((work) => (
+      <div key={work.id} className={standardItemClass}>
+        <LiteraryWorkCard work={work} />
+      </div>
+    ));
+  }
+  if (section.kind === "catalog") {
+    return section.items.map((item) => (
+      <div key={`${item.kind}-${item.content.id}`} className={standardItemClass}>
+        {item.kind === "track" ? (
+          <TrackCard track={item.content} onPlay={(track) => void onPlayTrack(track)} />
+        ) : (
+          <LiteraryWorkCard work={item.content} />
+        )}
       </div>
     ));
   }

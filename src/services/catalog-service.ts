@@ -5,6 +5,7 @@ import {
   DEFAULT_ARTWORK_PATH,
   mapAuthorSummary,
   mapCompactTrack,
+  mapCompactLiteraryWork,
   mapTaxonomy,
 } from "@/services/api-mappers";
 import { mockApiResponse } from "@/services/mock-api";
@@ -15,15 +16,16 @@ import type {
   ApiLiteraryWork,
   ApiTaxonomy,
   ApiTrackPage,
+  ApiCatalogItemPage,
 } from "@/types/backend-api";
 import type {
   Album,
-  CatalogTrack,
   ContentType,
   ContentCategory,
   Genre,
   LiteraryWork,
   Mood,
+  CatalogItem,
 } from "@/types";
 
 export async function getExploreTracks(
@@ -38,11 +40,11 @@ export async function getExploreTracks(
     explicit?: boolean;
     ordering?: string;
   } = {},
-): Promise<CatalogTrack[]> {
+): Promise<CatalogItem[]> {
   if (environment.apiMode === "remote") {
-    const payload = await apiClient.get<ApiTrackPage>("/explore/tracks/", {
+    const payload = await apiClient.get<ApiCatalogItemPage>("/catalog/items/", {
       query: {
-        contentType: filters.contentType,
+        category: filters.contentType,
         genre: filters.genre,
         mood: filters.mood,
         language: filters.language,
@@ -54,7 +56,9 @@ export async function getExploreTracks(
         pageSize: 40,
       },
     });
-    return unwrapPage(payload).map(mapCompactTrack);
+    return unwrapPage(payload).map((item) => item.kind === "track"
+      ? { kind: "track" as const, content: mapCompactTrack(item.content) }
+      : { kind: "work" as const, content: mapCompactLiteraryWork(item.content) });
   }
   const filteredTracks = tracks.filter(
     (track) =>
@@ -67,7 +71,9 @@ export async function getExploreTracks(
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
 
-  return mockApiResponse(newestTracks);
+  return mockApiResponse(
+    newestTracks.map((track) => ({ kind: "track" as const, content: track })),
+  );
 }
 
 export async function getGenres(): Promise<Genre[]> {
@@ -116,25 +122,27 @@ export async function getLiteraryWorkBySlug(
     apiClient.get<ApiLiteraryWork>(`/works/${slug}/`),
   );
   if (!value) return null;
-  const tracks = await getCatalogTracks({ work: slug });
   return {
-    id: value.id,
-    slug: value.slug,
-    title: value.title,
-    titleEnglish: value.titleEnglish || undefined,
-    subtitle: value.subtitle || value.subtitleEnglish || undefined,
+    ...mapCompactLiteraryWork(value),
     description: value.description || value.descriptionEnglish,
-    contentType: value.contentType,
-    author: mapAuthorSummary(value.author),
-    language: value.language,
-    genres: value.genres,
-    moods: value.moods,
-    publicationYear: value.publicationYear ?? undefined,
-    coverImage: value.coverImage || DEFAULT_ARTWORK_PATH,
-    publishedAt: value.publishedAt,
     copyrightStatus: value.copyrightStatus,
-    tracks,
+    tracks: value.chapters.map(mapCompactTrack),
   };
+}
+
+export async function getCatalogItems(filters: {
+  category?: string;
+  tag?: string;
+  author?: string;
+  genre?: string;
+  mood?: string;
+} = {}): Promise<CatalogItem[]> {
+  const payload = await apiClient.get<ApiCatalogItemPage>("/catalog/items/", {
+    query: { ...filters, pageSize: 40 },
+  });
+  return unwrapPage(payload).map((item) => item.kind === "track"
+    ? { kind: "track" as const, content: mapCompactTrack(item.content) }
+    : { kind: "work" as const, content: mapCompactLiteraryWork(item.content) });
 }
 
 export async function getAlbumBySlug(slug: string): Promise<Album | null> {

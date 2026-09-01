@@ -7,6 +7,7 @@ from django.utils import timezone
 from apps.common.models import UUIDTimeStampedModel
 
 ITEM_TARGET_FIELDS = (
+    "work",
     "track",
     "playlist",
     "album",
@@ -34,6 +35,8 @@ class HomeSectionType(models.TextChoices):
     HERO = "hero", "Hero"
     CONTINUE_LISTENING = "continue_listening", "Continue listening"
     TRACKS = "tracks", "Tracks"
+    WORKS = "works", "Literary works"
+    CATALOG = "catalog", "Mixed catalog"
     PLAYLISTS = "playlists", "Playlists"
     ALBUMS = "albums", "Albums"
     AUTHORS = "authors", "Authors"
@@ -163,6 +166,13 @@ class HomeSectionItem(UUIDTimeStampedModel):
     section = models.ForeignKey(
         HomeSection, related_name="items", on_delete=models.CASCADE
     )
+    work = models.ForeignKey(
+        "catalog.LiteraryWork",
+        related_name="home_section_items",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     track = models.ForeignKey(
         "catalog.AudioTrack",
         related_name="home_section_items",
@@ -223,6 +233,8 @@ class HomeSectionItem(UUIDTimeStampedModel):
 
     TARGET_FIELDS = ITEM_TARGET_FIELDS
     SECTION_TARGETS = {
+        HomeSectionType.WORKS: {"work"},
+        HomeSectionType.CATALOG: {"work", "track"},
         HomeSectionType.TRACKS: {"track"},
         HomeSectionType.PLAYLISTS: {"playlist"},
         HomeSectionType.ALBUMS: {"album"},
@@ -231,7 +243,7 @@ class HomeSectionItem(UUIDTimeStampedModel):
         HomeSectionType.GENRES: {"genre"},
         HomeSectionType.MOODS: {"mood"},
         HomeSectionType.CATEGORIES: {"category"},
-        HomeSectionType.HERO: {"track", "playlist", "album"},
+        HomeSectionType.HERO: {"work", "track", "playlist", "album"},
         HomeSectionType.CONTINUE_LISTENING: set(),
     }
 

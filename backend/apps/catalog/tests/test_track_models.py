@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from apps.authors.tests.factories import AuthorFactory
-from apps.catalog.models import AudioTrack, TrackProcessingStatus
+from apps.catalog.models import AudioTrack, TrackProcessingStatus, WorkStructure
 from apps.catalog.tests.factories import (
     AlbumFactory,
     AudioTrackFactory,
@@ -58,6 +58,27 @@ def test_track_rejects_album_from_different_author():
         track.full_clean()
 
     assert "album" in exc_info.value.message_dict
+
+
+def test_serialized_track_requires_unique_chapter_number():
+    work = LiteraryWorkFactory(structure=WorkStructure.SERIALIZED)
+    track = AudioTrackFactory.build(work=work, chapter_number=None)
+
+    with pytest.raises(ValidationError) as exc_info:
+        track.full_clean()
+
+    assert "chapter_number" in exc_info.value.message_dict
+
+
+def test_work_cannot_become_serialized_until_existing_tracks_are_numbered():
+    work = LiteraryWorkFactory()
+    AudioTrackFactory(work=work, chapter_number=None)
+    work.structure = WorkStructure.SERIALIZED
+
+    with pytest.raises(ValidationError) as exc_info:
+        work.full_clean()
+
+    assert "structure" in exc_info.value.message_dict
 
 
 def test_track_indexed_fields_are_configured():

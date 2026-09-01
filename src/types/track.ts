@@ -6,6 +6,7 @@ import type { ContentCategory } from "@/types/library";
 export interface LiteraryWorkSummary {
   title: string;
   type: "novel" | "collection";
+  structure?: "standalone" | "serialized";
   chapterNumber?: number;
 }
 
@@ -31,6 +32,7 @@ export interface Track {
   language: Language;
   genres: string[];
   moods: string[];
+  tags?: string[];
   playCount: number;
   isPremium: boolean;
   isExplicit: boolean;

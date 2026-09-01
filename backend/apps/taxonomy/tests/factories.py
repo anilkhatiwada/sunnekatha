@@ -1,7 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 
 
 class TaxonomyFactory(DjangoModelFactory):
@@ -36,3 +36,10 @@ class ContentCategoryFactory(TaxonomyFactory):
 
     class Meta:
         model = ContentCategory
+
+
+class TagFactory(TaxonomyFactory):
+    slug = factory.Sequence(lambda number: f"tag-{number}")
+
+    class Meta:
+        model = Tag

@@ -8,7 +8,7 @@ from apps.common.cache import public_cache_invalidation
 from apps.home.models import HomeSection, HomeSectionItem
 from apps.narrators.models import Narrator
 from apps.playlists.models import Playlist
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 
 
 @receiver([post_save, post_delete], sender=HomeSection)
@@ -22,6 +22,7 @@ from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
 @receiver([post_save, post_delete], sender=Mood)
 @receiver([post_save, post_delete], sender=Language)
 @receiver([post_save, post_delete], sender=ContentCategory)
+@receiver([post_save, post_delete], sender=Tag)
 @receiver([post_save, post_delete], sender=LiteraryWork)
 @receiver([post_save, post_delete], sender=User)
 def clear_homepage_cache(**kwargs):
@@ -30,6 +31,8 @@ def clear_homepage_cache(**kwargs):
 
 @receiver(m2m_changed, sender=LiteraryWork.genres.through)
 @receiver(m2m_changed, sender=LiteraryWork.moods.through)
+@receiver(m2m_changed, sender=LiteraryWork.categories.through)
+@receiver(m2m_changed, sender=LiteraryWork.tags.through)
 def clear_track_metadata_cache(**kwargs):
     if kwargs["action"].startswith("post_"):
         public_cache_invalidation.invalidate(

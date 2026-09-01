@@ -7,8 +7,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.accounts.tests.factories import UserFactory
-from apps.catalog.tests.factories import AudioTrackFactory
-from apps.playlists.models import PlaylistType, PlaylistVisibility
+from apps.catalog.models import WorkStructure
+from apps.catalog.tests.factories import AudioTrackFactory, LiteraryWorkFactory
+from apps.playlists.models import PlaylistItem, PlaylistType, PlaylistVisibility
 from apps.playlists.tests.factories import PlaylistFactory, PlaylistItemFactory
 
 pytestmark = pytest.mark.django_db
@@ -344,3 +345,24 @@ def test_public_playlist_detail_has_bounded_queries():
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data["tracks"]) == 5
     assert len(queries) <= 4
+
+
+def test_serialized_work_playlist_item_expands_to_ordered_playback_tracks():
+    playlist = PlaylistFactory(editorial=True)
+    work = LiteraryWorkFactory(structure=WorkStructure.SERIALIZED)
+    second = AudioTrackFactory(work=work, chapter_number=2)
+    first = AudioTrackFactory(work=work, chapter_number=1)
+    PlaylistItem.objects.create(playlist=playlist, work=work, position=1)
+
+    response = APIClient().get(
+        reverse("playlists:detail", kwargs={"slug": playlist.slug})
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["items"][0]["kind"] == "work"
+    assert response.data["items"][0]["content"]["id"] == str(work.id)
+    assert [track["id"] for track in response.data["tracks"]] == [
+        str(first.id),
+        str(second.id),
+    ]
+    assert response.data["trackCount"] == 2

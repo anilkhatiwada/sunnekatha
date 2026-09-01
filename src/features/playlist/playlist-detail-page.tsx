@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { PlaylistTrackRow } from "@/components/player/playlist-track-row";
+import { LiteraryWorkCard } from "@/components/cards";
 import { Button } from "@/components/ui/button";
 import { useLibraryRelationship } from "@/features/library/use-library-relationship";
 import { usePlayerStore } from "@/features/player/player-store";
@@ -223,7 +224,30 @@ export function PlaylistDetailPageContent({
           <span className="text-right">Duration</span>
           <span className="sr-only">Options</span>
         </div>
-        {hasTracks ? (
+        {playlist.items?.some((item) => item.kind === "work") ? (
+          <div className="mt-4 space-y-6">
+            {playlist.items.map((item) =>
+              item.kind === "work" ? (
+                <div key={item.id} className="max-w-[15rem]">
+                  <LiteraryWorkCard work={item.content} />
+                </div>
+              ) : (
+                <ol key={item.id} className="space-y-1">
+                  <PlaylistTrackRow
+                    track={item.content}
+                    index={item.position - 1}
+                    isActive={currentTrack?.id === item.content.id}
+                    onPlay={() => {
+                      const index = playlist.tracks.findIndex((track) => track.id === item.content.id);
+                      if (index >= 0) playFromTrack(index);
+                    }}
+                    onMoreActions={() => setStatusMessage(`${item.content.title} — more options will be available soon.`)}
+                  />
+                </ol>
+              ),
+            )}
+          </div>
+        ) : hasTracks ? (
           <ol className="mt-1 space-y-1">
             {playlist.tracks.map((track, index) => (
               <PlaylistTrackRow

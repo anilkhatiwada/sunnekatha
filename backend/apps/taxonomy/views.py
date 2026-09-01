@@ -6,12 +6,13 @@ from rest_framework.permissions import AllowAny
 
 from apps.common.cache_views import PublicListCacheMixin
 from apps.taxonomy.filters import ActiveTaxonomyFilter
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 from apps.taxonomy.serializers import (
     ContentCategorySerializer,
     GenreSerializer,
     LanguageSerializer,
     MoodSerializer,
+    TagSerializer,
 )
 
 
@@ -49,3 +50,10 @@ class ContentCategoryListView(PublicListCacheMixin, TaxonomyListView):
     cache_timeout = settings.TAXONOMY_CACHE_TIMEOUT
     queryset = ContentCategory.objects.all()
     serializer_class = ContentCategorySerializer
+
+
+class TagListView(PublicListCacheMixin, TaxonomyListView):
+    cache_namespace = "tags"
+    cache_timeout = settings.TAXONOMY_CACHE_TIMEOUT
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer

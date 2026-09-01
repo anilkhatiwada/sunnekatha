@@ -56,6 +56,7 @@ export interface ApiCompactTrack {
   language: Language;
   genres: string[];
   moods: string[];
+  tags?: string[];
   playCount: number;
   isPremium: boolean;
   isExplicit: boolean;
@@ -77,6 +78,7 @@ export interface ApiDetailedTrack extends ApiCompactTrack {
     title: string;
     titleEnglish: string;
     type: "novel" | "collection";
+    structure?: "standalone" | "serialized";
     contentType: ContentType;
     category?: Pick<ApiTaxonomy, "id" | "slug" | "name" | "nameEnglish">;
     chapterNumber: number | null;
@@ -114,7 +116,12 @@ export interface ApiPlaylistDetail extends ApiCompactPlaylist {
   description: string;
   descriptionEnglish: string;
   tracks: ApiCompactTrack[];
+  items?: ApiPlaylistItem[];
 }
+
+export type ApiPlaylistItem =
+  | { id: string; position: number; kind: "track"; content: ApiCompactTrack }
+  | { id: string; position: number; kind: "work"; content: ApiCompactLiteraryWork };
 
 export interface ApiTaxonomy {
   id: string;
@@ -136,6 +143,10 @@ export interface ApiCompactLiteraryWork {
   subtitleEnglish: string;
   contentType: ContentType;
   category?: ApiTaxonomy;
+  primaryCategory?: ApiTaxonomy;
+  categories: ApiTaxonomy[];
+  tags: ApiTaxonomy[];
+  structure: "standalone" | "serialized";
   author: ApiAuthorSummary;
   language: string;
   genres: string[];
@@ -144,6 +155,8 @@ export interface ApiCompactLiteraryWork {
   coverImage: string | null;
   isFeatured: boolean;
   publishedAt: string;
+  chapterCount: number;
+  totalDuration: number;
 }
 
 export interface ApiLiteraryWork extends ApiCompactLiteraryWork {
@@ -155,7 +168,14 @@ export interface ApiLiteraryWork extends ApiCompactLiteraryWork {
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
+  chapters: ApiCompactTrack[];
 }
+
+export type ApiCatalogItem =
+  | { kind: "track"; content: ApiCompactTrack }
+  | { kind: "work"; content: ApiCompactLiteraryWork };
+
+export type ApiCatalogItemPage = PaginatedResponse<ApiCatalogItem>;
 
 export interface ApiCompactAlbum {
   id: string;

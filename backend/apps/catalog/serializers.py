@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.authors.models import Author
 from apps.catalog.models import Album, LiteraryWork
-from apps.taxonomy.serializers import ContentCategorySerializer
+from apps.taxonomy.serializers import ContentCategorySerializer, TagSerializer
 
 
 class CatalogAuthorSummarySerializer(serializers.ModelSerializer):
@@ -21,7 +21,11 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
     subtitle = serializers.CharField(source="subtitle_ne")
     subtitleEnglish = serializers.CharField(source="subtitle_en")
     category = ContentCategorySerializer()
+    primaryCategory = ContentCategorySerializer(source="category")
+    categories = serializers.SerializerMethodField()
+    tags = TagSerializer(many=True)
     contentType = serializers.CharField(source="category.slug")
+    structure = serializers.CharField()
     author = CatalogAuthorSummarySerializer()
     language = serializers.SlugRelatedField(read_only=True, slug_field="slug")
     genres = serializers.SlugRelatedField(
@@ -38,6 +42,8 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
     coverImage = serializers.ImageField(source="cover_image")
     isFeatured = serializers.BooleanField(source="is_featured")
     publishedAt = serializers.DateTimeField(source="published_at")
+    chapterCount = serializers.SerializerMethodField()
+    totalDuration = serializers.SerializerMethodField()
 
     class Meta:
         model = LiteraryWork
@@ -50,6 +56,10 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
             "subtitleEnglish",
             "contentType",
             "category",
+            "primaryCategory",
+            "categories",
+            "tags",
+            "structure",
             "author",
             "language",
             "genres",
@@ -58,8 +68,21 @@ class CompactLiteraryWorkSerializer(serializers.ModelSerializer):
             "coverImage",
             "isFeatured",
             "publishedAt",
+            "chapterCount",
+            "totalDuration",
         )
         read_only_fields = fields
+
+    def get_chapterCount(self, obj: LiteraryWork) -> int:
+        return int(getattr(obj, "playable_chapter_count", 0))
+
+    def get_totalDuration(self, obj: LiteraryWork) -> int:
+        return int(getattr(obj, "playable_total_duration", 0) or 0)
+
+    def get_categories(self, obj: LiteraryWork) -> list[dict]:
+        values = [obj.category, *obj.categories.all()]
+        unique = {category.pk: category for category in values}
+        return ContentCategorySerializer(unique.values(), many=True).data
 
 
 class LiteraryWorkSerializer(CompactLiteraryWorkSerializer):
@@ -71,6 +94,7 @@ class LiteraryWorkSerializer(CompactLiteraryWorkSerializer):
     isPublished = serializers.BooleanField(source="is_published")
     createdAt = serializers.DateTimeField(source="created_at")
     updatedAt = serializers.DateTimeField(source="updated_at")
+    chapters = serializers.SerializerMethodField()
 
     class Meta(CompactLiteraryWorkSerializer.Meta):
         fields = CompactLiteraryWorkSerializer.Meta.fields + (
@@ -82,8 +106,37 @@ class LiteraryWorkSerializer(CompactLiteraryWorkSerializer):
             "isPublished",
             "createdAt",
             "updatedAt",
+            "chapters",
         )
         read_only_fields = fields
+
+    def get_chapters(self, obj: LiteraryWork) -> list[dict]:
+        from apps.catalog.track_serializers import CompactTrackSerializer
+
+        chapters = getattr(obj, "public_chapters", None)
+        if chapters is None:
+            chapters = obj.audio_tracks.published().order_by(
+                "chapter_number", "track_number", "published_at", "id"
+            )
+        return CompactTrackSerializer(
+            chapters,
+            many=True,
+            context=self.context,
+        ).data
+
+
+class CatalogItemSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=("track", "work"))
+    content = serializers.SerializerMethodField()
+
+    def get_content(self, obj: dict) -> dict:
+        if obj["kind"] == "work":
+            return CompactLiteraryWorkSerializer(
+                obj["content"], context=self.context
+            ).data
+        from apps.catalog.track_serializers import CompactTrackSerializer
+
+        return CompactTrackSerializer(obj["content"], context=self.context).data
 
 
 class CompactAlbumSerializer(serializers.ModelSerializer):

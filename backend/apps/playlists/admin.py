@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Prefetch, Q, Sum
 from django.forms.models import BaseInlineFormSet
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.template.loader import render_to_string
@@ -22,7 +22,7 @@ from unfold.contrib.filters.admin import (
 )
 
 from apps.catalog.admin import AudioTrackAdmin
-from apps.catalog.models import AudioTrack, TrackProcessingStatus
+from apps.catalog.models import AudioTrack, TrackProcessingStatus, WorkStructure
 from apps.catalog.services import EditorialService
 from apps.common.admin import (
     CoverPreviewAdminMixin,
@@ -51,13 +51,31 @@ class PlaylistItemAdminFormSet(BaseInlineFormSet):
         super().clean()
         if any(self.errors):
             return
-        desired_tracks = [
-            form.cleaned_data["track"]
+        desired_targets = [
+            form.cleaned_data.get("track") or form.cleaned_data.get("work")
             for form in self.forms
             if form.cleaned_data and not form.cleaned_data.get("DELETE")
         ]
-        if len({track.pk for track in desired_tracks}) != len(desired_tracks):
-            raise ValidationError("Each track may appear only once in a playlist.")
+        if any(target is None for target in desired_targets):
+            raise ValidationError(
+                "Select exactly one track or serialized work per item."
+            )
+        identities = [
+            ("track" if form.cleaned_data.get("track") else "work", target.pk)
+            for form, target in zip(
+                [
+                    form
+                    for form in self.forms
+                    if form.cleaned_data and not form.cleaned_data.get("DELETE")
+                ],
+                desired_targets,
+                strict=True,
+            )
+        ]
+        if len(set(identities)) != len(identities):
+            raise ValidationError(
+                "Each track or work may appear only once in a playlist."
+            )
         positions = [
             form.cleaned_data["position"]
             for form in self.forms
@@ -68,21 +86,28 @@ class PlaylistItemAdminFormSet(BaseInlineFormSet):
                 "Each playlist item must have a unique integer position."
             )
         if self.instance.is_published:
-            if not desired_tracks:
+            if not desired_targets:
                 raise ValidationError(
                     "Published playlists must contain at least one ready track."
                 )
             now = timezone.now()
-            unavailable = [
-                track.title_ne
-                for track in desired_tracks
-                if not (
-                    track.is_published
-                    and track.processing_status == TrackProcessingStatus.READY
-                    and track.published_at
-                    and track.published_at <= now
-                )
-            ]
+            unavailable = []
+            for target in desired_targets:
+                if isinstance(target, AudioTrack):
+                    ready = (
+                        target.is_published
+                        and target.processing_status == TrackProcessingStatus.READY
+                        and target.published_at
+                        and target.published_at <= now
+                    )
+                else:
+                    ready = (
+                        target.structure == WorkStructure.SERIALIZED
+                        and target.is_published
+                        and target.audio_tracks.published().exists()
+                    )
+                if not ready:
+                    unavailable.append(target.title_ne)
             if unavailable:
                 raise ValidationError(
                     "Published playlists may contain only published, ready tracks. "
@@ -96,46 +121,63 @@ class PlaylistItemAdminFormSet(BaseInlineFormSet):
         for index, form in enumerate(self.forms):
             if not form.cleaned_data or form.cleaned_data.get("DELETE"):
                 continue
+            track = form.cleaned_data.get("track")
+            work = form.cleaned_data.get("work")
             desired.append(
                 (
                     form.cleaned_data["position"],
                     index,
-                    form.cleaned_data["track"],
+                    "track" if track else "work",
+                    track or work,
                 )
             )
         desired.sort(key=lambda row: (row[0], row[1]))
-        desired_tracks = [row[2] for row in desired]
-        desired_ids = {track.pk for track in desired_tracks}
+        desired_targets = [(row[2], row[3]) for row in desired]
+        desired_keys = {(kind, target.pk) for kind, target in desired_targets}
         current = list(
-            PlaylistItem.objects.filter(playlist=self.instance).select_related("track")
+            PlaylistItem.objects.filter(playlist=self.instance).select_related(
+                "track", "work"
+            )
         )
-        current_ids = {item.track_id for item in current}
+        current_by_key = {
+            ("track", item.track_id) if item.track_id else ("work", item.work_id): item
+            for item in current
+        }
 
         for item in current:
-            if item.track_id not in desired_ids:
-                playlist_item_service.remove(
-                    playlist=self.instance,
-                    track=item.track,
-                    actor=self.admin_user,
+            key = ("track", item.track_id) if item.track_id else ("work", item.work_id)
+            if key not in desired_keys:
+                if item.track_id:
+                    playlist_item_service.remove(
+                        playlist=self.instance, track=item.track, actor=self.admin_user
+                    )
+                else:
+                    playlist_item_service.remove_work(
+                        playlist=self.instance, work=item.work, actor=self.admin_user
+                    )
+        ordered_item_ids = []
+        for kind, target in desired_targets:
+            item = current_by_key.get((kind, target.pk))
+            if item is None:
+                item = (
+                    playlist_item_service.add(
+                        playlist=self.instance, track=target, user=self.admin_user
+                    )
+                    if kind == "track"
+                    else playlist_item_service.add_work(
+                        playlist=self.instance, work=target, user=self.admin_user
+                    )
                 )
-        for track in desired_tracks:
-            if track.pk not in current_ids:
-                playlist_item_service.add(
-                    playlist=self.instance,
-                    track=track,
-                    user=self.admin_user,
-                )
-        playlist_item_service.reorder(
-            playlist=self.instance,
-            track_ids=[track.pk for track in desired_tracks],
-            actor=self.admin_user,
+            ordered_item_ids.append(item.pk)
+        playlist_item_service.reorder_items(
+            playlist=self.instance, item_ids=ordered_item_ids, actor=self.admin_user
         )
         self.new_objects = []
         self.changed_objects = []
         self.deleted_objects = []
         return list(
             PlaylistItem.objects.filter(playlist=self.instance)
-            .select_related("track")
+            .select_related("track", "work")
             .order_by("position")
         )
 
@@ -143,7 +185,20 @@ class PlaylistItemAdminFormSet(BaseInlineFormSet):
 class PlaylistItemAdminForm(forms.ModelForm):
     class Meta:
         model = PlaylistItem
-        fields = ("position", "track")
+        fields = ("position", "track", "work")
+
+    def clean(self):
+        cleaned = super().clean()
+        if not self.has_changed() or cleaned.get("DELETE"):
+            return cleaned
+        if bool(cleaned.get("track")) == bool(cleaned.get("work")):
+            raise ValidationError("Select exactly one track or serialized work.")
+        work = cleaned.get("work")
+        if work and work.structure != WorkStructure.SERIALIZED:
+            raise ValidationError(
+                {"work": "Only serialized works belong in playlists as a parent item."}
+            )
+        return cleaned
 
     def _get_validation_exclusions(self):
         exclusions = super()._get_validation_exclusions()
@@ -157,11 +212,12 @@ class PlaylistItemAdminForm(forms.ModelForm):
 class PlaylistItemInline(TabularInline):
     model = PlaylistItem
     extra = 1
-    autocomplete_fields = ("track",)
+    autocomplete_fields = ("track", "work")
     ordering = ("position", "created_at", "id")
     fields = (
         "position",
         "track",
+        "work",
         "track_duration",
         "track_narrator",
         "track_author",
@@ -194,7 +250,7 @@ class PlaylistItemInline(TabularInline):
         return (
             super()
             .get_queryset(request)
-            .select_related("track__narrator", "track__work__author")
+            .select_related("track__narrator", "track__work__author", "work__author")
             .defer(
                 "track__transcript",
                 "track__waveform_data",
@@ -208,19 +264,25 @@ class PlaylistItemInline(TabularInline):
 
     @admin.display(description="Duration")
     def track_duration(self, obj):
+        if not obj.track_id:
+            return "Expanded chapters"
         return AudioTrackAdmin.format_duration(obj.track.duration_seconds)
 
     @admin.display(description="Narrator")
     def track_narrator(self, obj):
-        return obj.track.narrator
+        return obj.track.narrator if obj.track_id else "Varies by chapter"
 
     @admin.display(description="Author")
     def track_author(self, obj):
-        return obj.track.work.author
+        return obj.track.work.author if obj.track_id else obj.work.author
 
     @admin.display(description="Processing")
     def processing_status(self, obj):
-        return obj.track.get_processing_status_display()
+        return (
+            obj.track.get_processing_status_display()
+            if obj.track_id
+            else "Serialized work"
+        )
 
 
 @admin.register(Playlist)
@@ -338,8 +400,8 @@ class PlaylistAdmin(
         ] + super().get_urls()
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).exclude(
-            playlist_type=PlaylistType.USER
+        queryset = (
+            super().get_queryset(request).exclude(playlist_type=PlaylistType.USER)
         )
         if is_admin_autocomplete_request(request):
             return queryset.only("id", "slug", "title_ne", "title_en")
@@ -434,10 +496,16 @@ class PlaylistAdmin(
             return obj._admin_preview_items
         items = list(
             PlaylistItem.objects.filter(playlist=obj)
-            .filter(
-                Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt="")
+            .select_related("track", "work")
+            .prefetch_related(
+                Prefetch(
+                    "work__audio_tracks",
+                    queryset=AudioTrack.objects.published()
+                    .filter(Q(stream_file_low__gt="") | Q(stream_file_high__gt=""))
+                    .order_by("chapter_number", "track_number", "id"),
+                    to_attr="admin_preview_chapters",
+                )
             )
-            .select_related("track")
             .defer(
                 "track__transcript",
                 "track__waveform_data",
@@ -445,11 +513,19 @@ class PlaylistAdmin(
                 "track__description_en",
                 "track__audio_master_file",
             )
-            .order_by("position", "created_at", "id")[: self.preview_track_limit + 1]
+            .order_by("position", "created_at", "id")
         )
+        tracks = []
+        for item in items:
+            if item.track_id and (
+                item.track.stream_file_low or item.track.stream_file_high
+            ):
+                tracks.append(item.track)
+            elif item.work_id:
+                tracks.extend(getattr(item.work, "admin_preview_chapters", ()))
         result = (
-            items[: self.preview_track_limit],
-            len(items) > self.preview_track_limit,
+            tracks[: self.preview_track_limit],
+            len(tracks) > self.preview_track_limit,
         )
         obj._admin_preview_items = result
         return result
@@ -460,8 +536,7 @@ class PlaylistAdmin(
             return "Available after the playlist is saved."
         items, truncated = self._preview_items(obj)
         manifest = []
-        for item in items:
-            track = item.track
+        for track in items:
             qualities = []
             for quality, available in (
                 ("low", bool(track.stream_file_low)),
@@ -494,7 +569,7 @@ class PlaylistAdmin(
                 "admin/catalog/album/play_all_preview.html",
                 {
                     "album": obj,
-                    "tracks": [item.track for item in items],
+                    "tracks": items,
                     "manifest_json": json.dumps(manifest),
                     "truncated": truncated,
                     "limit": self.preview_track_limit,
@@ -511,7 +586,11 @@ class PlaylistAdmin(
         if not request.user.has_perm("catalog.view_audiotrack"):
             raise PermissionDenied
         track = (
-            AudioTrack.objects.filter(pk=track_id, playlist_items__playlist=playlist)
+            AudioTrack.objects.filter(pk=track_id)
+            .filter(
+                Q(playlist_items__playlist=playlist)
+                | Q(work__playlist_items__playlist=playlist)
+            )
             .select_related("narrator")
             .first()
         )
@@ -685,8 +764,10 @@ class PlaylistItemAdmin(ProtectedDeleteAdminMixin, ModelAdmin):
     ordering = ("playlist", "position", "created_at", "id")
 
     def get_queryset(self, request):
-        return super().get_queryset(request).exclude(
-            playlist__playlist_type=PlaylistType.USER
+        return (
+            super()
+            .get_queryset(request)
+            .exclude(playlist__playlist_type=PlaylistType.USER)
         )
 
     @admin.display(description="Duration")

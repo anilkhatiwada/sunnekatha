@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from apps.catalog.models import AudioTrack
+from apps.catalog.models import AudioTrack, LiteraryWork
 from apps.common.models import UUIDTimeStampedModel
 from apps.common.slugs import generate_unique_slug
 from apps.common.uploads import image_upload_path
@@ -152,6 +152,15 @@ class PlaylistItem(models.Model):
         AudioTrack,
         related_name="playlist_items",
         on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    work = models.ForeignKey(
+        LiteraryWork,
+        related_name="playlist_items",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     position = models.PositiveIntegerField(db_index=True)
     added_by = models.ForeignKey(
@@ -166,9 +175,22 @@ class PlaylistItem(models.Model):
     class Meta:
         ordering = ("position", "created_at", "id")
         constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(track__isnull=False, work__isnull=True)
+                    | models.Q(track__isnull=True, work__isnull=False)
+                ),
+                name="playlist_item_exactly_one_target",
+            ),
             models.UniqueConstraint(
                 fields=("playlist", "track"),
+                condition=models.Q(track__isnull=False),
                 name="playlist_unique_track",
+            ),
+            models.UniqueConstraint(
+                fields=("playlist", "work"),
+                condition=models.Q(work__isnull=False),
+                name="playlist_unique_work",
             ),
             models.UniqueConstraint(
                 fields=("playlist", "position"),
@@ -183,4 +205,4 @@ class PlaylistItem(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.playlist}: {self.position} — {self.track}"
+        return f"{self.playlist}: {self.position} — {self.track or self.work}"

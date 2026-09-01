@@ -5,6 +5,8 @@ import type {
   ListeningProgress,
   Mood,
   Narrator,
+  LiteraryWork,
+  CatalogItem,
 } from "@/types";
 import type { CatalogPlaylist } from "@/types/playlist";
 
@@ -33,6 +35,14 @@ export type HomeSection =
   | {
       kind: "tracks";
       items: CatalogTrack[];
+    } & HomeSectionBase
+  | {
+      kind: "works";
+      items: LiteraryWork[];
+    } & HomeSectionBase
+  | {
+      kind: "catalog";
+      items: CatalogItem[];
     } & HomeSectionBase
   | {
       kind: "playlists";
@@ -78,4 +88,5 @@ export interface HomeContinueListeningItem {
 export type HomeHero =
   | { kind: "playlist"; content: CatalogPlaylist }
   | { kind: "track"; content: CatalogTrack }
+  | { kind: "work"; content: LiteraryWork }
   | { kind: "album"; content: HomeAlbum };

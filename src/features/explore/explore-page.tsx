@@ -9,6 +9,7 @@ import {
   NarratorCard,
   PlaylistCard,
   TrackCard,
+  LiteraryWorkCard,
 } from "@/components/cards";
 import { ExploreCollectionCard } from "@/components/cards/explore-collection-card";
 import { FilterChips } from "@/components/common/filter-chips";
@@ -217,7 +218,7 @@ export function ExplorePageContent({
       <section aria-labelledby="new-releases-heading">
         <SectionHeading
           id="new-releases-heading"
-          title="New tracks"
+          title="New releases"
           description={
             genre || mood
               ? "New audio matching this collection"
@@ -233,13 +234,20 @@ export function ExplorePageContent({
           />
         ) : releasesQuery.data.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
-            {releasesQuery.data.map((track) => (
-              <TrackCard
-                key={track.id}
-                track={track}
-                onPlay={(track) => void playTrack(track)}
-              />
-            ))}
+            {releasesQuery.data.map((item) =>
+              item.kind === "track" ? (
+                <TrackCard
+                  key={`track-${item.content.id}`}
+                  track={item.content}
+                  onPlay={(track) => void playTrack(track)}
+                />
+              ) : (
+                <LiteraryWorkCard
+                  key={`work-${item.content.id}`}
+                  work={item.content}
+                />
+              ),
+            )}
           </div>
         ) : (
           <EmptyState

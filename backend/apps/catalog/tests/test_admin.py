@@ -8,6 +8,7 @@ from django.utils import timezone
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     BooleanRadioFilter,
+    ChoicesDropdownFilter,
     MultipleChoicesDropdownFilter,
     RangeDateTimeFilter,
     RangeNumericFilter,
@@ -49,6 +50,7 @@ def test_literary_work_admin_has_requested_columns_filters_search_and_fieldsets(
     )
     assert model_admin.list_filter == (
         ("category", AutocompleteSelectFilter),
+        ("structure", ChoicesDropdownFilter),
         PublicationStatusFilter,
         ("is_featured", BooleanRadioFilter),
         ("copyright_status", MultipleChoicesDropdownFilter),

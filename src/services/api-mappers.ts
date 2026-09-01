@@ -6,6 +6,7 @@ import type {
   ApiCompactTrack,
   ApiDetailedTrack,
   ApiListeningProgress,
+  ApiCompactLiteraryWork,
   ApiNarratorSummary,
   ApiNarrator,
   ApiPlaylistDetail,
@@ -24,6 +25,7 @@ import type {
   NarratorSummary,
   Narrator,
   Track,
+  LiteraryWork,
 } from "@/types";
 
 export const DEFAULT_ARTWORK_PATH = "/icons/pwa-512.png";
@@ -96,6 +98,7 @@ export function mapCompactTrack(value: ApiCompactTrack): CatalogTrack {
     language: value.language,
     genres: value.genres,
     moods: value.moods,
+    tags: value.tags ?? [],
     playCount: value.playCount,
     isPremium: value.isPremium,
     isExplicit: value.isExplicit,
@@ -111,8 +114,38 @@ export function mapDetailedTrack(value: ApiDetailedTrack): CatalogTrack {
     literaryWork: {
       title: value.literaryWork.title,
       type: value.literaryWork.type,
+      structure: value.literaryWork.structure,
       chapterNumber: value.literaryWork.chapterNumber ?? undefined,
     },
+  };
+}
+
+export function mapCompactLiteraryWork(value: ApiCompactLiteraryWork): LiteraryWork {
+  return {
+    id: value.id,
+    slug: value.slug,
+    title: value.title,
+    titleEnglish: value.titleEnglish || undefined,
+    subtitle: value.subtitle || value.subtitleEnglish || undefined,
+    description: "",
+    contentType: value.contentType,
+    category: value.primaryCategory ?? value.category
+      ? mapTaxonomy((value.primaryCategory ?? value.category)!)
+      : undefined,
+    categories: (value.categories ?? []).map(mapTaxonomy),
+    tags: (value.tags ?? []).map(mapTaxonomy),
+    structure: value.structure,
+    author: mapAuthorSummary(value.author),
+    language: value.language,
+    genres: value.genres,
+    moods: value.moods,
+    publicationYear: value.publicationYear ?? undefined,
+    coverImage: value.coverImage || DEFAULT_ARTWORK_PATH,
+    publishedAt: value.publishedAt,
+    copyrightStatus: "",
+    tracks: [],
+    chapterCount: value.chapterCount ?? 0,
+    totalDuration: value.totalDuration ?? 0,
   };
 }
 
@@ -153,6 +186,9 @@ export function mapPlaylistDetail(
     ...mapCompactPlaylist(value),
     description: value.description || value.descriptionEnglish,
     tracks: value.tracks.map(mapCompactTrack),
+    items: value.items?.map((item) => item.kind === "track"
+      ? { ...item, content: mapCompactTrack(item.content) }
+      : { ...item, content: mapCompactLiteraryWork(item.content) }),
   };
 }
 

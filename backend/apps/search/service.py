@@ -128,7 +128,9 @@ class SearchService:
     def querysets(self, query, *, content_type=None):
         aliases = matching_aliases(query)
         tracks = ranked_search(
-            public_track_queryset().defer(
+            public_track_queryset()
+            .discoverable()
+            .defer(
                 "description_ne",
                 "description_en",
                 "transcript",
@@ -152,6 +154,8 @@ class SearchService:
                 "work__genres__name_en",
                 "work__moods__name_ne",
                 "work__moods__name_en",
+                "work__tags__name_ne",
+                "work__tags__name_en",
             ),
             alias_filter=alias_q(
                 aliases,
@@ -184,6 +188,8 @@ class SearchService:
                 "author__name_en",
                 "genres__name_ne",
                 "moods__name_ne",
+                "tags__name_ne",
+                "tags__name_en",
             ),
             alias_filter=alias_q(
                 aliases,

@@ -3,7 +3,7 @@ from django.db.models import F, Max, Q
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from apps.catalog.models import AudioTrack, TrackProcessingStatus
+from apps.catalog.models import AudioTrack, LiteraryWork, TrackProcessingStatus
 from apps.common.audit import administrative_audit_service
 from apps.common.cache import public_cache_invalidation
 from apps.common.models import AdministrativeAuditAction
@@ -52,6 +52,24 @@ class PlaylistItemService:
         return item
 
     @transaction.atomic
+    def add_work(self, *, playlist: Playlist, work: LiteraryWork, user) -> PlaylistItem:
+        self._authorize(playlist=playlist, actor=user)
+        locked = Playlist.objects.select_for_update().get(pk=playlist.pk)
+        if PlaylistItem.objects.filter(playlist=locked, work=work).exists():
+            raise ValidationError({"workId": "Work is already in this playlist."})
+        last = (
+            PlaylistItem.objects.filter(playlist=locked).aggregate(Max("position"))[
+                "position__max"
+            ]
+            or 0
+        )
+        item = PlaylistItem.objects.create(
+            playlist=locked, work=work, position=last + 1, added_by=user
+        )
+        notification_service.playlist_updated(locked)
+        return item
+
+    @transaction.atomic
     def remove(self, *, playlist: Playlist, track: AudioTrack, actor) -> None:
         self._authorize(playlist=playlist, actor=actor)
         Playlist.objects.select_for_update().get(pk=playlist.pk)
@@ -61,6 +79,16 @@ class PlaylistItemService:
         ).delete()
         if not deleted:
             raise ValidationError({"trackId": "Track is not in this playlist."})
+        self._rewrite_positions(playlist)
+        notification_service.playlist_updated(playlist)
+
+    @transaction.atomic
+    def remove_work(self, *, playlist: Playlist, work: LiteraryWork, actor) -> None:
+        self._authorize(playlist=playlist, actor=actor)
+        Playlist.objects.select_for_update().get(pk=playlist.pk)
+        deleted, _ = PlaylistItem.objects.filter(playlist=playlist, work=work).delete()
+        if not deleted:
+            raise ValidationError({"workId": "Work is not in this playlist."})
         self._rewrite_positions(playlist)
         notification_service.playlist_updated(playlist)
 
@@ -100,6 +128,34 @@ class PlaylistItemService:
         )
 
     @transaction.atomic
+    def reorder_items(self, *, playlist: Playlist, item_ids: list, actor=None) -> None:
+        self._authorize(playlist=playlist, actor=actor)
+        Playlist.objects.select_for_update().get(pk=playlist.pk)
+        items = list(PlaylistItem.objects.select_for_update().filter(playlist=playlist))
+        existing = [item.pk for item in items]
+        if len(item_ids) != len(set(item_ids)) or set(item_ids) != set(existing):
+            raise ValidationError(
+                {"itemIds": "Provide every current playlist item exactly once."}
+            )
+        by_id = {item.pk: item for item in items}
+        PlaylistItem.objects.filter(playlist=playlist).update(
+            position=F("position") + len(items) + 1
+        )
+        for position, item_id in enumerate(item_ids, start=1):
+            item = by_id[item_id]
+            item.position = position
+            item.save(update_fields=("position",))
+        notification_service.playlist_updated(playlist)
+        administrative_audit_service.record(
+            actor=actor,
+            action=AdministrativeAuditAction.PLAYLIST_REORDERED,
+            obj=playlist,
+            reason="Playlist items reordered.",
+            before={"position": [str(item_id) for item_id in existing]},
+            after={"position": [str(item_id) for item_id in item_ids]},
+        )
+
+    @transaction.atomic
     def recalculate_positions(self, *, playlist: Playlist, actor) -> int:
         self._authorize(playlist=playlist, actor=actor)
         locked = Playlist.objects.select_for_update().get(pk=playlist.pk)
@@ -125,10 +181,14 @@ class PlaylistItemService:
         self._authorize(playlist=playlist, actor=actor)
         locked = Playlist.objects.select_for_update().get(pk=playlist.pk)
         now = timezone.now()
-        unavailable = PlaylistItem.objects.filter(playlist=locked).exclude(
+        valid_tracks = Q(
             track__is_published=True,
             track__processing_status=TrackProcessingStatus.READY,
             track__published_at__lte=now,
+        ) & (Q(track__stream_file_low__gt="") | Q(track__stream_file_high__gt=""))
+        valid_works = Q(work__in=LiteraryWork.objects.discoverable())
+        unavailable = PlaylistItem.objects.filter(playlist=locked).exclude(
+            valid_tracks | valid_works
         )
         removed, _ = unavailable.delete()
         if removed:
@@ -163,6 +223,7 @@ class PlaylistItemService:
                 PlaylistItem(
                     playlist=duplicate,
                     track_id=item.track_id,
+                    work_id=item.work_id,
                     position=item.position,
                     added_by=user,
                 )
@@ -213,13 +274,23 @@ class PlaylistItemService:
         for playlist in locked_queryset.only("pk"):
             items = PlaylistItem.objects.filter(playlist=playlist)
             has_items = items.exists()
-            has_unavailable = items.filter(
-                Q(track__is_published=False)
-                | ~Q(track__processing_status=TrackProcessingStatus.READY)
-                | Q(track__published_at__isnull=True)
-                | Q(track__published_at__gt=now)
-                | (Q(track__stream_file_low="") & Q(track__stream_file_high=""))
-            ).exists()
+            unavailable_tracks = (
+                items.filter(track__isnull=False)
+                .filter(
+                    Q(track__is_published=False)
+                    | ~Q(track__processing_status=TrackProcessingStatus.READY)
+                    | Q(track__published_at__isnull=True)
+                    | Q(track__published_at__gt=now)
+                    | (Q(track__stream_file_low="") & Q(track__stream_file_high=""))
+                )
+                .exists()
+            )
+            unavailable_works = (
+                items.filter(work__isnull=False)
+                .exclude(work__in=LiteraryWork.objects.discoverable())
+                .exists()
+            )
+            has_unavailable = unavailable_tracks or unavailable_works
             if has_items and not has_unavailable:
                 eligible_ids.append(playlist.pk)
         targets = list(locked_queryset.filter(pk__in=eligible_ids, is_published=False))

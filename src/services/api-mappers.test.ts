@@ -4,10 +4,12 @@ import {
   DEFAULT_ARTWORK_PATH,
   DEFAULT_AVATAR_PATH,
   mapCompactTrack,
+  mapCompactLiteraryWork,
   mapPlayableTrack,
 } from "@/services/api-mappers";
 import type {
   ApiCompactTrack,
+  ApiCompactLiteraryWork,
   ApiStreamResponse,
 } from "@/types/backend-api";
 
@@ -74,5 +76,29 @@ describe("backend API mappers", () => {
 
     expect(mapPlayableTrack(response).audioUrl).toBe(response.url);
     expect(mapPlayableTrack(response).introduction?.duration).toBe(9);
+  });
+
+  it("maps serialized work discovery metadata without flattening chapters", () => {
+    const category = {
+      id: "category-id", slug: "novel", name: "उपन्यास", nameEnglish: "Novel",
+      description: "", image: null, sortOrder: 1, isActive: true,
+    };
+    const work: ApiCompactLiteraryWork = {
+      id: "work-id", slug: "serialized-work", title: "धारावाहिक उपन्यास",
+      titleEnglish: "Serialized Novel", subtitle: "", subtitleEnglish: "",
+      contentType: "novel_chapter", category, primaryCategory: category,
+      categories: [category], tags: [{ ...category, id: "tag-id", slug: "family", nameEnglish: "Family" }],
+      structure: "serialized", author: compactTrack.author, language: "ne",
+      genres: ["novel"], moods: ["reflective"], publicationYear: 2026,
+      coverImage: null, isFeatured: true, publishedAt: "2026-09-01T00:00:00Z",
+      chapterCount: 8, totalDuration: 3600,
+    };
+
+    const mapped = mapCompactLiteraryWork(work);
+
+    expect(mapped.structure).toBe("serialized");
+    expect(mapped.chapterCount).toBe(8);
+    expect(mapped.tags[0]?.slug).toBe("family");
+    expect(mapped.tracks).toEqual([]);
   });
 });

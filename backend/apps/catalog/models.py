@@ -22,7 +22,7 @@ from apps.common.validators import (
     validate_permission_document_upload,
 )
 from apps.narrators.models import Narrator
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 
 
 class CopyrightStatus(models.TextChoices):
@@ -73,6 +73,11 @@ class AlbumType(models.TextChoices):
     SERIES = "series", "Series"
 
 
+class WorkStructure(models.TextChoices):
+    STANDALONE = "standalone", "Standalone"
+    SERIALIZED = "serialized", "Serialized"
+
+
 class TrackProcessingStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     PROCESSING = "processing", "Processing"
@@ -113,6 +118,25 @@ class LiteraryWorkQuerySet(models.QuerySet):
             published_at__lte=timezone.now(),
         )
 
+    def serialized(self):
+        return self.filter(structure=WorkStructure.SERIALIZED)
+
+    def discoverable(self):
+        return (
+            self.published()
+            .filter(
+                structure=WorkStructure.SERIALIZED,
+                audio_tracks__is_published=True,
+                audio_tracks__processing_status=TrackProcessingStatus.READY,
+                audio_tracks__published_at__lte=timezone.now(),
+            )
+            .filter(
+                models.Q(audio_tracks__stream_file_low__gt="")
+                | models.Q(audio_tracks__stream_file_high__gt="")
+            )
+            .distinct()
+        )
+
 
 class AlbumQuerySet(models.QuerySet):
     def published(self):
@@ -127,6 +151,16 @@ class AudioTrackQuerySet(models.QuerySet):
             published_at__lte=timezone.now(),
         )
 
+    def discoverable(self):
+        return self.published().filter(work__structure=WorkStructure.STANDALONE)
+
+    def chapters_for(self, work):
+        return (
+            self.published()
+            .filter(work=work)
+            .order_by("chapter_number", "published_at", "id")
+        )
+
 
 class LiteraryWork(UUIDTimeStampedModel):
     slug = models.SlugField(max_length=220, unique=True, allow_unicode=True)
@@ -136,6 +170,12 @@ class LiteraryWork(UUIDTimeStampedModel):
     subtitle_en = models.CharField(max_length=300, blank=True)
     description_ne = models.TextField(blank=True)
     description_en = models.TextField(blank=True)
+    structure = models.CharField(
+        max_length=16,
+        choices=WorkStructure.choices,
+        default=WorkStructure.STANDALONE,
+        db_index=True,
+    )
     category = models.ForeignKey(
         ContentCategory,
         related_name="literary_works",
@@ -153,6 +193,15 @@ class LiteraryWork(UUIDTimeStampedModel):
     )
     genres = models.ManyToManyField(Genre, related_name="literary_works", blank=True)
     moods = models.ManyToManyField(Mood, related_name="literary_works", blank=True)
+    categories = models.ManyToManyField(
+        ContentCategory,
+        related_name="categorized_literary_works",
+        blank=True,
+        help_text=(
+            "Additional browse categories. The primary category is always included."
+        ),
+    )
+    tags = models.ManyToManyField(Tag, related_name="literary_works", blank=True)
     publication_year = models.PositiveSmallIntegerField(
         blank=True,
         null=True,
@@ -195,10 +244,27 @@ class LiteraryWork(UUIDTimeStampedModel):
                 fields=("category", "is_published"),
                 name="work_category_public_idx",
             ),
+            models.Index(
+                fields=("structure", "is_published", "-published_at"),
+                name="work_structure_public_idx",
+            ),
         ]
 
     def clean(self):
         super().clean()
+        if (
+            self.pk
+            and self.structure == WorkStructure.SERIALIZED
+            and self.audio_tracks.filter(chapter_number__isnull=True).exists()
+        ):
+            raise ValidationError(
+                {
+                    "structure": (
+                        "Assign a chapter number to every track before marking "
+                        "this work as serialized."
+                    )
+                }
+            )
         if self.publication_year and self.publication_year > date.today().year:
             raise ValidationError(
                 {"publication_year": "Publication year cannot be in the future."}
@@ -216,6 +282,8 @@ class LiteraryWork(UUIDTimeStampedModel):
                 fallback="literary-work",
             )
         super().save(*args, **kwargs)
+        if self.category_id:
+            self.categories.add(self.category_id)
 
     def __str__(self):
         return self.title_ne
@@ -288,6 +356,11 @@ class AudioTrack(UUIDTimeStampedModel):
     title_en = models.CharField(max_length=250, blank=True)
     description_ne = models.TextField(blank=True)
     description_en = models.TextField(blank=True)
+    cover_image = models.ImageField(
+        upload_to=image_upload_path,
+        validators=[validate_image_upload],
+        blank=True,
+    )
     narrator = models.ForeignKey(
         Narrator,
         related_name="audio_tracks",
@@ -377,7 +450,12 @@ class AudioTrack(UUIDTimeStampedModel):
                     )
                 ),
                 name="track_publish_requires_ready_timestamp",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=("work", "chapter_number"),
+                condition=models.Q(chapter_number__isnull=False),
+                name="catalog_unique_work_chapter_number",
+            ),
         ]
         indexes = [
             models.Index(
@@ -389,8 +467,12 @@ class AudioTrack(UUIDTimeStampedModel):
                 name="track_narrator_public_idx",
             ),
             models.Index(
-                fields=("work", "track_number"),
+                fields=("work", "chapter_number"),
                 name="track_work_order_idx",
+            ),
+            models.Index(
+                fields=("work", "track_number"),
+                name="track_work_legacy_order_idx",
             ),
             models.Index(
                 fields=("album", "track_number"),
@@ -419,6 +501,12 @@ class AudioTrack(UUIDTimeStampedModel):
             errors["published_at"] = "Published tracks require a publication time."
         if self.is_published and self.processing_status != TrackProcessingStatus.READY:
             errors["processing_status"] = "Only ready tracks can be published."
+        if (
+            self.work_id
+            and self.work.structure == WorkStructure.SERIALIZED
+            and self.chapter_number is None
+        ):
+            errors["chapter_number"] = "Serialized tracks require a chapter number."
         if errors:
             raise ValidationError(errors)
 

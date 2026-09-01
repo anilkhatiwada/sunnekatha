@@ -12,6 +12,9 @@ export interface LiteraryWork {
   description: string;
   contentType: ContentType;
   category?: ContentCategory;
+  categories: ContentCategory[];
+  tags: ContentCategory[];
+  structure: "standalone" | "serialized";
   author: AuthorSummary;
   language: string;
   genres: string[];
@@ -21,7 +24,13 @@ export interface LiteraryWork {
   publishedAt: string;
   copyrightStatus: string;
   tracks: CatalogTrack[];
+  chapterCount: number;
+  totalDuration: number;
 }
+
+export type CatalogItem =
+  | { kind: "track"; content: CatalogTrack }
+  | { kind: "work"; content: LiteraryWork };
 
 export interface Album {
   id: string;

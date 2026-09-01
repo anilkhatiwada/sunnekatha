@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.taxonomy.models import ContentCategory, Genre, Language, Mood
+from apps.taxonomy.models import ContentCategory, Genre, Language, Mood, Tag
 
 
 class TaxonomySerializer(serializers.ModelSerializer):
@@ -45,3 +45,8 @@ class LanguageSerializer(TaxonomySerializer):
 class ContentCategorySerializer(TaxonomySerializer):
     class Meta(TaxonomySerializer.Meta):
         model = ContentCategory
+
+
+class TagSerializer(TaxonomySerializer):
+    class Meta(TaxonomySerializer.Meta):
+        model = Tag

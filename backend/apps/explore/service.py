@@ -31,7 +31,7 @@ class ExploreService:
             items__track__processing_status=TrackProcessingStatus.READY,
             items__track__published_at__lte=timezone.now(),
         )
-        tracks = public_track_queryset()
+        tracks = public_track_queryset().discoverable()
         content_counts = {
             row["work__category_id"]: row["track_count"]
             for row in tracks.values("work__category_id").annotate(
